@@ -1,0 +1,13 @@
+[package]
+name = "mmheroes"
+version = "0.1.0"
+authors = ["Sergej Jaskiewicz <jaskiewiczs@icloud.com>"]
+edition = "2018"
+
+[dependencies]
+mmheroes-core = { path = "../mmheroes-core-rs" }
+pancurses = "0.16.1"
+
+[profile.release]
+opt-level = "s"  # Optimize for size.
+lto = true
