@@ -45,85 +45,110 @@ struct PancursesRenderer<'a> {
     window: &'a ScreenRAII,
 }
 
+#[derive(Debug)]
+struct CursesError;
+
+macro_rules! handle_curses_error {
+    ($call:expr) => {
+        {
+            let rc = $call;
+            if rc == pancurses::OK {
+                Ok(())
+            } else {
+                Err(CursesError)
+            }
+        }
+    };
+}
+
 impl Renderer for PancursesRenderer<'_> {
-    fn clear_screen(&mut self) {
-        self.window.clear();
+    type Error = CursesError;
+
+    fn clear_screen(&mut self) -> Result<(), Self::Error> {
+        handle_curses_error!(self.window.clear())
     }
 
-    fn flush(&mut self) {
-        self.window.refresh();
+    fn flush(&mut self) -> Result<(), Self::Error> {
+        handle_curses_error!(self.window.refresh())
     }
 
-    fn move_cursor_to(&mut self, line: i32, column: i32) {
-        self.window.mv(line, column);
+    fn write_str(&mut self, s: &str) -> Result<(), Self::Error> {
+        handle_curses_error!(self.window.addnstr(s, s.len()))
     }
 
-    fn get_cursor_position(&mut self) -> (i32, i32) {
-        self.window.get_cur_yx()
+    fn move_cursor_to(&mut self, line: i32, column: i32) -> Result<(), Self::Error> {
+        handle_curses_error!(self.window.mv(line, column))
     }
 
+    fn get_cursor_position(&mut self) -> Result<(i32, i32), Self::Error> {
+        Ok(self.window.get_cur_yx())
+    }
 
-    fn set_color(&mut self, foreground: Color, background: Color) {
-        self.window.color_set(
+    fn set_color(&mut self, foreground: Color, background: Color) -> Result<(), Self::Error> {
+        handle_curses_error!(self.window.color_set(
             *self
                 .color_pairs
                 .get(&(foreground, background))
                 .expect("Unknown color pair"),
-        );
+        ))
     }
 
-    fn write_str<S: AsRef<str>>(&mut self, string: S) {
-        let s = string.as_ref();
-        self.window.addnstr(s, s.len());
-    }
-
-    fn getch(&mut self) -> ui::Input {
-        let input = self.window.getch();
-        {
-            let log = self.log.lock().unwrap();
-            log.borrow_mut().push(input);
-        }
-        match input {
-            Some(pancurses::Input::KeyUp) => ui::Input::KeyUp,
-            Some(pancurses::Input::KeyDown) => ui::Input::KeyDown,
-            Some(pancurses::Input::Character('\n')) => ui::Input::Enter,
-            Some(_) => ui::Input::Other,
-            None => ui::Input::EOF,
+    fn getch(&mut self) -> Result<ui::Input, Self::Error> {
+        loop {
+            let input = self.window.getch();
+            {
+                let log = self.log.lock().unwrap();
+                log.borrow_mut().push(input);
+            }
+            let ui_input = match input {
+                None | Some(pancurses::Input::KeyResize) => continue,
+                Some(pancurses::Input::KeyUp) => ui::Input::KeyUp,
+                Some(pancurses::Input::KeyDown) => ui::Input::KeyDown,
+                Some(pancurses::Input::Character('\n')) => ui::Input::Enter,
+                Some(_) => ui::Input::Other,
+            };
+            break Ok(ui_input)
         }
     }
 
-    fn sleep_ms(&mut self, ms: Milliseconds) {
-        napms(ms.0);
+    fn sleep_ms(&mut self, ms: Milliseconds) -> Result<(), Self::Error> {
+        handle_curses_error!(napms(ms.0))
     }
 }
 
 fn main() {
+    use std::io::Write;
+
     let window = ScreenRAII::new();
     start_color();
-    use_default_colors();
     set_blink(true);
     curs_set(1);
 
     cbreak();
     noecho();
 
-    window.clear();
-    window.refresh();
-
     window.keypad(true);
     window.nodelay(false);
 
+    // Resize the terminal. We want 24 lines and 80 columns.
+    print!("\x1B[8;24;80t");
+    std::io::stdout().flush();
     resize_term(24, 80);
+
+    window.clear();
+    window.refresh();
 
     let color_pairs = [
         (Color::White, Color::Black),
         (Color::Gray, Color::Black),
         (Color::Red, Color::Black),
         (Color::Green, Color::Black),
-        (Color::Yellow, Color::Black),
+        (Color::YellowBright, Color::Black),
         (Color::Cyan, Color::Black),
         (Color::WhiteBright, Color::Black),
         (Color::Black, Color::White),
+        (Color::Black, Color::Yellow),
+        (Color::Black, Color::Gray)
     ];
 
     let mut color_pairs_map = std::collections::HashMap::<(Color, Color), i16>::new();
@@ -135,7 +160,7 @@ fn main() {
 
     window.bkgd(COLOR_PAIR(
         *color_pairs_map
-            .get(&(Color::WhiteBright, Color::Black))
+            .get(&(Color::White, Color::Black))
             .unwrap() as chtype,
     ));
 
@@ -177,5 +202,5 @@ fn main() {
         eprintln!("Key presses to reproduce: {:?}", log.borrow());
     }));
 
-    game_ui.run()
+    game_ui.run().unwrap()
 }

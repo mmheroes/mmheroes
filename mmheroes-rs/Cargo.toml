@@ -5,7 +5,7 @@ authors = ["Sergej Jaskiewicz <jaskiewiczs@icloud.com>"]
 edition = "2018"
 
 [dependencies]
-mmheroes-core = { path = "../mmheroes-core-rs" }
+mmheroes_core = { path = "../mmheroes-core-rs" }
 pancurses = "0.16.1"
 
 [profile.release]
