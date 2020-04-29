@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16096" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+    <device id="retina5_5" orientation="landscape" appearance="light"/>
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
+        <capability name="Safe area layout guides" minToolsVersion="9.0"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <scenes>
+        <!--View Controller-->
+        <scene sceneID="tne-QT-ifu">
+            <objects>
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="mmheroes_ios" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
+                        <rect key="frame" x="0.0" y="0.0" width="736" height="414"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gWi-fu-xLS" customClass="GameView" customModule="mmheroes_ios" customModuleProvider="target">
+                                <rect key="frame" x="66" y="0.0" width="604.33333333333337" height="414"/>
+                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="gWi-fu-xLS" secondAttribute="height" multiplier="1124:770" id="ha8-XQ-RAt"/>
+                                </constraints>
+                            </view>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <gestureRecognizers/>
+                        <constraints>
+                            <constraint firstItem="gWi-fu-xLS" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="3PU-g9-S8i"/>
+                            <constraint firstItem="gWi-fu-xLS" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="8bC-Xf-vdC" secondAttribute="leading" constant="44" id="NSY-eW-ygc"/>
+                            <constraint firstItem="gWi-fu-xLS" firstAttribute="trailing" relation="lessThanOrEqual" secondItem="6Tk-OE-BBY" secondAttribute="trailing" id="Q14-3e-E3Z"/>
+                            <constraint firstItem="gWi-fu-xLS" firstAttribute="top" relation="greaterThanOrEqual" secondItem="6Tk-OE-BBY" secondAttribute="top" id="Qxp-jj-X05"/>
+                            <constraint firstItem="gWi-fu-xLS" firstAttribute="height" secondItem="8bC-Xf-vdC" secondAttribute="height" priority="900" id="THX-bM-55h"/>
+                            <constraint firstItem="gWi-fu-xLS" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="fX9-8j-3wb"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" relation="lessThanOrEqual" secondItem="gWi-fu-xLS" secondAttribute="trailing" constant="45" id="hPt-7l-RhO"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="leading" relation="lessThanOrEqual" secondItem="gWi-fu-xLS" secondAttribute="leading" id="oSI-Up-IMQ"/>
+                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" relation="greaterThanOrEqual" secondItem="gWi-fu-xLS" secondAttribute="bottom" id="zdF-2T-LGw"/>
+                        </constraints>
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
+                        <variation key="default">
+                            <mask key="constraints">
+                                <exclude reference="hPt-7l-RhO"/>
+                                <exclude reference="NSY-eW-ygc"/>
+                            </mask>
+                        </variation>
+                        <variation key="heightClass=regular-widthClass=regular">
+                            <mask key="constraints">
+                                <include reference="hPt-7l-RhO"/>
+                                <include reference="NSY-eW-ygc"/>
+                            </mask>
+                        </variation>
+                        <connections>
+                            <outletCollection property="gestureRecognizers" destination="mf2-E5-AQ1" appends="YES" id="FZ2-LI-bcR"/>
+                            <outletCollection property="gestureRecognizers" destination="uQR-Um-PqY" appends="YES" id="7uD-Qo-1Sd"/>
+                            <outletCollection property="gestureRecognizers" destination="fwm-dM-SfW" appends="YES" id="IO5-Sb-IPB"/>
+                        </connections>
+                    </view>
+                    <connections>
+                        <outlet property="gameView" destination="gWi-fu-xLS" id="Dbn-b3-ksE"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
+                <swipeGestureRecognizer direction="up" id="mf2-E5-AQ1" userLabel="Swipe Up">
+                    <connections>
+                        <action selector="moveUp:" destination="BYZ-38-t0r" id="IHw-s1-Z4r"/>
+                    </connections>
+                </swipeGestureRecognizer>
+                <swipeGestureRecognizer direction="down" id="uQR-Um-PqY" userLabel="Swipe Down">
+                    <connections>
+                        <action selector="moveDown:" destination="BYZ-38-t0r" id="2Mi-xh-9WC"/>
+                    </connections>
+                </swipeGestureRecognizer>
+                <tapGestureRecognizer id="fwm-dM-SfW" userLabel="Tap">
+                    <connections>
+                        <action selector="confirm:" destination="BYZ-38-t0r" id="ybG-hc-oFH"/>
+                    </connections>
+                </tapGestureRecognizer>
+            </objects>
+            <point key="canvasLocation" x="137.5" y="136.875"/>
+        </scene>
+    </scenes>
+</document>
