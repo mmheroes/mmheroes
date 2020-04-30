@@ -48,10 +48,10 @@ final class UIKitMMHeroesRenderer {
 
     private let font: UIFont
 
-    private let requestDrawingRenderedContent: (NSAttributedString) -> Void
+    private let requestDrawingRenderedContent: (NSAttributedString, Caret) -> Void
 
     init(font: UIFont,
-         _ requestDrawingRenderedContent: @escaping (NSAttributedString) -> Void) {
+         _ requestDrawingRenderedContent: @escaping (NSAttributedString, Caret) -> Void) {
         self.font = font
         self.requestDrawingRenderedContent = requestDrawingRenderedContent
     }
@@ -124,7 +124,10 @@ extension UIKitMMHeroesRenderer: Renderer {
             result.append(NSAttributedString(string: "\n", attributes: [.font : font]))
         }
 
-        requestDrawingRenderedContent(result)
+        let caret = Caret(line: currentLine,
+                          column: currentColumn,
+                          color: MMHEROES_Color_White)
+        requestDrawingRenderedContent(result, caret)
 
         didFinishRedrawingCondition.lock()
         defer { didFinishRedrawingCondition.unlock() }
@@ -197,28 +200,11 @@ extension UIKitMMHeroesRenderer: Renderer {
 }
 
 extension MMHEROES_Color {
+
+    private static let uiColors = [#colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), #colorLiteral(red: 0.6666666667, green: 0, blue: 0.3333333333, alpha: 1), #colorLiteral(red: 0, green: 0.6666666667, blue: 0.3333333333, alpha: 1), #colorLiteral(red: 0.6666666667, green: 0.3333333333, blue: 0, alpha: 1), #colorLiteral(red: 0, green: 0.3333333333, blue: 0.6666666667, alpha: 1), #colorLiteral(red: 0.6666666667, green: 0, blue: 0.6666666667, alpha: 1), #colorLiteral(red: 0, green: 0.6666666667, blue: 0.6666666667, alpha: 1), #colorLiteral(red: 0.6666666667, green: 0.6666666667, blue: 0.6666666667, alpha: 1),
+                                   #colorLiteral(red: 0.3333333333, green: 0.3333333333, blue: 0.3333333333, alpha: 1), #colorLiteral(red: 1, green: 0.3333333333, blue: 0.3333333333, alpha: 1), #colorLiteral(red: 0.3333333333, green: 1, blue: 0.3333333333, alpha: 1), #colorLiteral(red: 1, green: 1, blue: 0.3333333333, alpha: 1), #colorLiteral(red: 0.3333333333, green: 0.3333333333, blue: 1, alpha: 1), #colorLiteral(red: 1, green: 0.3333333333, blue: 1, alpha: 1), #colorLiteral(red: 0.3333333333, green: 1, blue: 1, alpha: 1), #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1)]
+
     func makeUIColor() -> UIColor {
-        switch self {
-        case MMHEROES_Color_Black:
-            return #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
-        case MMHEROES_Color_Yellow:
-            return #colorLiteral(red: 0.6, green: 0.6, blue: 0, alpha: 1)
-        case MMHEROES_Color_White:
-            return #colorLiteral(red: 0.7490196078, green: 0.7490196078, blue: 0.7490196078, alpha: 1)
-        case MMHEROES_Color_Gray:
-            return #colorLiteral(red: 0.4, green: 0.4, blue: 0.4, alpha: 1)
-        case MMHEROES_Color_Red:
-            return #colorLiteral(red: 0.8980392157, green: 0, blue: 0, alpha: 1)
-        case MMHEROES_Color_Green:
-            return #colorLiteral(red: 0, green: 0.8509803922, blue: 0, alpha: 1)
-        case MMHEROES_Color_YellowBright:
-            return #colorLiteral(red: 0.8980392157, green: 0.8980392157, blue: 0, alpha: 1)
-        case MMHEROES_Color_Cyan:
-            return #colorLiteral(red: 0, green: 0.8980392157, blue: 0.8980392157, alpha: 1)
-        case MMHEROES_Color_WhiteBright:
-            return #colorLiteral(red: 0.9960784314, green: 0.9882352941, blue: 1, alpha: 1)
-        default:
-            fatalError("unreachable")
-        }
+        Self.uiColors[Int(self.rawValue)]
     }
 }

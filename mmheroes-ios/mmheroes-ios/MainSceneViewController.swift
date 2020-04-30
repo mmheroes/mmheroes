@@ -43,9 +43,10 @@ final class MainSceneViewController: UIViewController {
     }
 
     private func startGame() {
-        let mainRenderer = UIKitMMHeroesRenderer(font: font) { [weak self] result in
+        let mainRenderer = UIKitMMHeroesRenderer(font: font) { [weak self] text, caret in
             DispatchQueue.main.async {
-                self?.gameView.content = result
+                self?.gameView.text = text
+                self?.gameView.caret = caret
                 self?.gameView.font = self?.font
                 self?.gameView.setNeedsDisplay()
             }
@@ -190,6 +191,10 @@ final class MainSceneViewController: UIViewController {
             assertionFailure(String(describing: error))
         }
         super.decodeRestorableState(with: coder)
+    }
+
+    override var prefersHomeIndicatorAutoHidden: Bool {
+        return true
     }
 }
 
