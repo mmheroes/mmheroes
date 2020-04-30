@@ -1,6 +1,6 @@
 import UIKit
 
-final class ViewController: UIViewController {
+final class MainSceneViewController: UIViewController {
 
     @IBOutlet var gameView: GameView!
 
@@ -118,6 +118,16 @@ final class ViewController: UIViewController {
 
     @objc func anyKey(_ sender: Any) {
         renderer?.sendInput(MMHEROES_Input_Other)
+    }
+
+    override func encodeRestorableState(with coder: NSCoder) {
+        super.encodeRestorableState(with: coder)
+        // TODO: Save game state so that it could be resumed later
+    }
+
+    override func decodeRestorableState(with coder: NSCoder) {
+        super.decodeRestorableState(with: coder)
+        // TODO
     }
 }
 

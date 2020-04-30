@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		875B3B142459E47D00E4BF6B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B132459E47D00E4BF6B /* AppDelegate.swift */; };
-		875B3B182459E47D00E4BF6B /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B172459E47D00E4BF6B /* ViewController.swift */; };
+		875B3B182459E47D00E4BF6B /* MainSceneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */; };
 		875B3B1B2459E47D00E4BF6B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 875B3B192459E47D00E4BF6B /* Main.storyboard */; };
 		875B3B1D2459E47E00E4BF6B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 875B3B1C2459E47E00E4BF6B /* Assets.xcassets */; };
 		875B3B202459E47E00E4BF6B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 875B3B1E2459E47E00E4BF6B /* LaunchScreen.storyboard */; };
@@ -17,12 +17,15 @@
 		875B3B2F2459EB3000E4BF6B /* UIKitMMHeroesRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B2E2459EB3000E4BF6B /* UIKitMMHeroesRenderer.swift */; };
 		875B3B31245A2D2400E4BF6B /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B30245A2D2400E4BF6B /* GameView.swift */; };
 		875B3B33245A35ED00E4BF6B /* StringExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B32245A35ED00E4BF6B /* StringExtensions.swift */; };
+		875B3B3A245B315B00E4BF6B /* Version in Frameworks */ = {isa = PBXBuildFile; productRef = 875B3B39245B315B00E4BF6B /* Version */; };
+		875B3B3C245B33B700E4BF6B /* NSCoderExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B3B245B33B700E4BF6B /* NSCoderExtensions.swift */; };
+		875B3B3E245B385400E4BF6B /* ApplicationInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		875B3B102459E47D00E4BF6B /* mmheroes-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "mmheroes-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		875B3B132459E47D00E4BF6B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		875B3B172459E47D00E4BF6B /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainSceneViewController.swift; sourceTree = "<group>"; };
 		875B3B1A2459E47D00E4BF6B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		875B3B1C2459E47E00E4BF6B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		875B3B1F2459E47E00E4BF6B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -34,6 +37,8 @@
 		875B3B32245A35ED00E4BF6B /* StringExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringExtensions.swift; sourceTree = "<group>"; };
 		875B3B34245A4F5C00E4BF6B /* mmheroes-ios.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "mmheroes-ios.entitlements"; sourceTree = "<group>"; };
 		875B3B35245A532B00E4BF6B /* libmmheroes_core.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmmheroes_core.a; path = "../mmheroes-core-rs/target/release/libmmheroes_core.a"; sourceTree = "<group>"; };
+		875B3B3B245B33B700E4BF6B /* NSCoderExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSCoderExtensions.swift; sourceTree = "<group>"; };
+		875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationInfo.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -42,6 +47,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				875B3B2A2459E6A400E4BF6B /* libmmheroes_core.a in Frameworks */,
+				875B3B3A245B315B00E4BF6B /* Version in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -70,7 +76,9 @@
 			children = (
 				875B3B34245A4F5C00E4BF6B /* mmheroes-ios.entitlements */,
 				875B3B132459E47D00E4BF6B /* AppDelegate.swift */,
-				875B3B172459E47D00E4BF6B /* ViewController.swift */,
+				875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */,
+				875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */,
+				875B3B3B245B33B700E4BF6B /* NSCoderExtensions.swift */,
 				875B3B32245A35ED00E4BF6B /* StringExtensions.swift */,
 				875B3B2C2459E75500E4BF6B /* GameRunner.swift */,
 				875B3B2E2459EB3000E4BF6B /* UIKitMMHeroesRenderer.swift */,
@@ -108,6 +116,9 @@
 			dependencies = (
 			);
 			name = "mmheroes-ios";
+			packageProductDependencies = (
+				875B3B39245B315B00E4BF6B /* Version */,
+			);
 			productName = "mmheroes-ios";
 			productReference = 875B3B102459E47D00E4BF6B /* mmheroes-ios.app */;
 			productType = "com.apple.product-type.application";
@@ -136,6 +147,9 @@
 				Base,
 			);
 			mainGroup = 875B3B072459E47D00E4BF6B;
+			packageReferences = (
+				875B3B38245B315B00E4BF6B /* XCRemoteSwiftPackageReference "Version" */,
+			);
 			productRefGroup = 875B3B112459E47D00E4BF6B /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -163,9 +177,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				875B3B3E245B385400E4BF6B /* ApplicationInfo.swift in Sources */,
 				875B3B33245A35ED00E4BF6B /* StringExtensions.swift in Sources */,
-				875B3B182459E47D00E4BF6B /* ViewController.swift in Sources */,
+				875B3B182459E47D00E4BF6B /* MainSceneViewController.swift in Sources */,
 				875B3B142459E47D00E4BF6B /* AppDelegate.swift in Sources */,
+				875B3B3C245B33B700E4BF6B /* NSCoderExtensions.swift in Sources */,
 				875B3B2F2459EB3000E4BF6B /* UIKitMMHeroesRenderer.swift in Sources */,
 				875B3B2D2459E75500E4BF6B /* GameRunner.swift in Sources */,
 				875B3B31245A2D2400E4BF6B /* GameView.swift in Sources */,
@@ -379,6 +395,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		875B3B38245B315B00E4BF6B /* XCRemoteSwiftPackageReference "Version" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mxcl/Version.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		875B3B39245B315B00E4BF6B /* Version */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 875B3B38245B315B00E4BF6B /* XCRemoteSwiftPackageReference "Version" */;
+			productName = Version;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 875B3B082459E47D00E4BF6B /* Project object */;
 }
