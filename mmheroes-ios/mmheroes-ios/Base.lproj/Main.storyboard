@@ -16,10 +16,10 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gWi-fu-xLS" customClass="GameView" customModule="mmheroes_ios" customModuleProvider="target">
-                                <rect key="frame" x="66" y="0.0" width="604.33333333333337" height="414"/>
+                                <rect key="frame" x="12" y="0.0" width="712" height="414"/>
                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" secondItem="gWi-fu-xLS" secondAttribute="height" multiplier="1124:770" id="ha8-XQ-RAt"/>
+                                    <constraint firstAttribute="width" secondItem="gWi-fu-xLS" secondAttribute="height" multiplier="1.72" id="ha8-XQ-RAt"/>
                                 </constraints>
                             </view>
                         </subviews>

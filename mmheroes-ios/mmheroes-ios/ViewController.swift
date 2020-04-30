@@ -10,6 +10,8 @@ final class ViewController: UIViewController {
 
     private var rendered: NSMutableAttributedString?
 
+    private var font = UIFont(name: "Menlo", size: 12)!
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -23,10 +25,10 @@ final class ViewController: UIViewController {
     }
 
     private func setUpGame() {
-        let font = UIFont(name: "Menlo", size: 11)!
         let renderer = UIKitMMHeroesRenderer(font: font) { [weak self] result in
             DispatchQueue.main.async {
                 self?.gameView.content = result
+                self?.gameView.font = self?.font
                 self?.gameView.setNeedsDisplay()
             }
         }
@@ -36,8 +38,9 @@ final class ViewController: UIViewController {
         self.runner = runner
 
         let gameThread = Thread {
+            var generator = SystemRandomNumberGenerator()
             while true {
-                try! runner.run(seed: 0, mode: MMHEROES_GameMode_God)
+                try! runner.run(seed: generator.next(), mode: MMHEROES_GameMode_God)
             }
         }
 

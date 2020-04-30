@@ -12,11 +12,12 @@ private struct ConsoleLine {
     var fragments: [TextFragment] = []
 }
 
-private let numberOfLines = 24
-private let numberOfColumns = 80
-
 /// This renderer runs in a background thread.
 final class UIKitMMHeroesRenderer {
+
+    static let numberOfLines = 24
+
+    static let numberOfColumns = 80
 
     private var lines = [ConsoleLine](repeating: ConsoleLine(), count: numberOfLines)
 
@@ -82,10 +83,12 @@ extension UIKitMMHeroesRenderer: Renderer {
     }
 
     func flush() {
-        let resultLines: [NSMutableAttributedString] = (0 ..< numberOfLines).map { _ in
-            let spaces = String(repeating: " ", count: numberOfColumns)
-            return NSMutableAttributedString(string: spaces, attributes: [.font : font])
-        }
+        let resultLines: [NSMutableAttributedString] =
+            (0 ..< Self.numberOfLines).map { _ in
+                let spaces = String(repeating: " ", count: Self.numberOfColumns)
+                return NSMutableAttributedString(string: spaces,
+                                                 attributes: [.font : font])
+            }
         for i in 0 ..< lines.count {
             lines[i].fragments.sort { lhs, rhs in
                 if lhs.startColumn == rhs.startColumn {
