@@ -1,50 +1,88 @@
 import UIKit
 
+private let gameStateRestorationKey =
+    "com.jaskiewiczs.mmheroes.gameStateRestorationKey"
+
 final class MainSceneViewController: UIViewController {
 
     @IBOutlet var gameView: GameView!
 
-    private var runner: GameRunner?
-    private var renderer: UIKitMMHeroesRenderer?
+    private var mainRenderer: UIKitMMHeroesRenderer?
     private var gameThread: Thread?
-
-    private var rendered: NSMutableAttributedString?
 
     private var font = UIFont(name: "Menlo", size: 12)!
 
+    private let gameStateLock = NSLock()
+
+    /// This variable is used for state restoration.
+    private var gameState = GameState() // guarded by gameStateLock
+    private var runner: GameRunner?     // guarded by gameStateLock
+
+    private var gameHasStarted = false
+
     override func viewDidLoad() {
         super.viewDidLoad()
-
         setUpKeyCommands()
-
-        setUpGame()
-
         gameView.didRedraw = { [weak self] in
-            self?.renderer?.viewDidFinishRedrawing()
+            self?.mainRenderer?.viewDidFinishRedrawing()
         }
     }
 
-    private func setUpGame() {
-        let renderer = UIKitMMHeroesRenderer(font: font) { [weak self] result in
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        if !gameHasStarted {
+            gameHasStarted = true
+            startGame()
+        }
+    }
+
+    deinit {
+        gameThread?.cancel()
+        mainRenderer?.sendInput(MMHEROES_Input_EOF)
+    }
+
+    private func startGame() {
+        let mainRenderer = UIKitMMHeroesRenderer(font: font) { [weak self] result in
             DispatchQueue.main.async {
                 self?.gameView.content = result
                 self?.gameView.font = self?.font
                 self?.gameView.setNeedsDisplay()
             }
         }
-        self.renderer = renderer
+        self.mainRenderer = mainRenderer
 
-        let runner = GameRunner(renderer: renderer)
-        self.runner = runner
+        let gameThread = Thread { [weak self] in
+            while !Thread.current.isCancelled {
+                self?.gameStateLock.lock()
+                guard let gameState = self?.gameState else {
+                    // We don't need to unlock the lock here, since self is already gone,
+                    // and the lock with it.
+                    return
+                }
 
-        let gameThread = Thread {
-            var generator = SystemRandomNumberGenerator()
-            while true {
-                try! runner.run(seed: generator.next(), mode: MMHEROES_GameMode_God)
+                let recordedInputRenderer = RecordedInputRenderer(input: gameState.input)
+                let tryRenderer = TryRenderer(primaryRenderer: recordedInputRenderer,
+                                              fallbackRenderer: mainRenderer)
+                let runner = GameRunner(renderer: tryRenderer)
+                self?.runner = runner
+                self?.gameStateLock.unlock()
+                
+                do {
+                    try runner.run(seed: gameState.seed, mode: MMHEROES_GameMode_God)
+                } catch UIKitMMHeroesRenderer.Error.threadCancelled {
+                    return
+                } catch {
+                    assertionFailure(String(describing: error))
+                }
+                self?.gameStateLock.lock()
+                self?.gameState = GameState()
+                self?.runner = nil
+                self?.gameStateLock.unlock()
             }
         }
 
-        gameThread.name = "mmheroes-game-loop"
+        gameThread.name = "com.jaskiewiczs.mmheroes.game-loop-thread"
 
         self.gameThread = gameThread
 
@@ -105,29 +143,53 @@ final class MainSceneViewController: UIViewController {
     }
 
     @IBAction func moveUp(_ sender: Any) {
-        renderer?.sendInput(MMHEROES_Input_KeyUp)
+        didReceiveInput(MMHEROES_Input_KeyUp)
     }
 
     @IBAction func moveDown(_ sender: Any) {
-        renderer?.sendInput(MMHEROES_Input_KeyDown)
+        didReceiveInput(MMHEROES_Input_KeyDown)
     }
 
     @IBAction func confirm(_ sender: Any) {
-        renderer?.sendInput(MMHEROES_Input_Enter)
+        didReceiveInput(MMHEROES_Input_Enter)
     }
 
     @objc func anyKey(_ sender: Any) {
-        renderer?.sendInput(MMHEROES_Input_Other)
+        didReceiveInput(MMHEROES_Input_Other)
+    }
+
+    private func didReceiveInput(_ input: MMHEROES_Input) {
+        guard let renderer = self.mainRenderer else { return }
+        if renderer.sendInput(input) {
+            gameState.input.append(input)
+        }
     }
 
     override func encodeRestorableState(with coder: NSCoder) {
         super.encodeRestorableState(with: coder)
-        // TODO: Save game state so that it could be resumed later
+        gameStateLock.lock()
+        defer { gameStateLock.unlock() }
+        do {
+            try coder.encodeEncodable(gameState,
+                                      forKey: gameStateRestorationKey)
+        } catch {
+            assertionFailure(String(describing: error))
+        }
     }
 
     override func decodeRestorableState(with coder: NSCoder) {
+        gameStateLock.lock()
+        defer { gameStateLock.unlock() }
+        do {
+            gameState = try coder
+                .decodeDecodable(GameState.self,
+                                 forKey: gameStateRestorationKey)
+        } catch DecodingError.valueNotFound {
+            // do nothing
+        } catch {
+            assertionFailure(String(describing: error))
+        }
         super.decodeRestorableState(with: coder)
-        // TODO
     }
 }
 

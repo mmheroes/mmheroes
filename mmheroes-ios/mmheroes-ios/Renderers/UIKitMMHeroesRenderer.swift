@@ -15,6 +15,10 @@ private struct ConsoleLine {
 /// This renderer runs in a background thread.
 final class UIKitMMHeroesRenderer {
 
+    enum Error: Swift.Error {
+        case threadCancelled
+    }
+
     static let numberOfLines = 24
 
     static let numberOfColumns = 80
@@ -37,10 +41,10 @@ final class UIKitMMHeroesRenderer {
     }
 
     private let inputStateCondition = NSCondition()
-    private var inputState = InputState.ignoringInput
+    private var inputState = InputState.ignoringInput // guarded by inputStateCondition
 
     private let didFinishRedrawingCondition = NSCondition()
-    private var didFinishRedrawing = false
+    private var didFinishRedrawing = false // guarded by didFinishRedrawingCondition
 
     private let font: UIFont
 
@@ -54,13 +58,17 @@ final class UIKitMMHeroesRenderer {
 
     /// This method is called from the main thread when the user produces
     /// some input.
-    func sendInput(_ input: MMHEROES_Input) {
+    /// Returns `true` if the input has been accepted.
+    @discardableResult
+    func sendInput(_ input: MMHEROES_Input) -> Bool {
         inputStateCondition.lock()
         defer { inputStateCondition.unlock() }
         if case .waitingForInput = inputState {
             inputState = .receivedInput(input)
             inputStateCondition.signal()
+            return true
         }
+        return false
     }
 
     func viewDidFinishRedrawing() {
@@ -73,7 +81,8 @@ final class UIKitMMHeroesRenderer {
 
 extension UIKitMMHeroesRenderer: Renderer {
 
-    func clearScreen() {
+    func clearScreen() throws {
+        if Thread.current.isCancelled { throw Error.threadCancelled }
         for i in 0 ..< lines.count {
             lines[i].fragments.removeAll(keepingCapacity: true)
         }
@@ -82,7 +91,8 @@ extension UIKitMMHeroesRenderer: Renderer {
         currentPriority = 0
     }
 
-    func flush() {
+    func flush() throws {
+        if Thread.current.isCancelled { throw Error.threadCancelled }
         let resultLines: [NSMutableAttributedString] =
             (0 ..< Self.numberOfLines).map { _ in
                 let spaces = String(repeating: " ", count: Self.numberOfColumns)
@@ -124,7 +134,8 @@ extension UIKitMMHeroesRenderer: Renderer {
         didFinishRedrawing = false
     }
 
-    func writeString(_ string: String) {
+    func writeString(_ string: String) throws {
+        if Thread.current.isCancelled { throw Error.threadCancelled }
         for (line, endsWithNewline) in string.lines {
             if !line.isEmpty {
                 let attributedString = NSAttributedString(
@@ -147,25 +158,30 @@ extension UIKitMMHeroesRenderer: Renderer {
         currentPriority += 1
     }
 
-    func moveCursor(toLine line: Int, column: Int) {
+    func moveCursor(toLine line: Int, column: Int) throws {
+        if Thread.current.isCancelled { throw Error.threadCancelled }
         self.currentLine = line
         self.currentColumn = column
     }
 
-    func getCursorPosition() -> (Int, Int) {
+    func getCursorPosition() throws -> (Int, Int) {
+        if Thread.current.isCancelled { throw Error.threadCancelled }
         return (currentLine, currentColumn)
     }
 
-    func setColor(foreground: MMHEROES_Color, background: MMHEROES_Color) {
+    func setColor(foreground: MMHEROES_Color, background: MMHEROES_Color) throws {
+        if Thread.current.isCancelled { throw Error.threadCancelled }
         foregroundColor = foreground.makeUIColor()
         backgorundColor = background.makeUIColor()
     }
 
-    func getch() -> MMHEROES_Input {
+    func getch() throws -> MMHEROES_Input {
+        if Thread.current.isCancelled { throw Error.threadCancelled }
         inputStateCondition.lock()
         defer { inputStateCondition.unlock() }
         inputState = .waitingForInput
         while true {
+            if Thread.current.isCancelled { throw Error.threadCancelled }
             if case .receivedInput(let input) = inputState {
                 inputState = .ignoringInput
                 return input
@@ -174,7 +190,8 @@ extension UIKitMMHeroesRenderer: Renderer {
         }
     }
 
-    func sleep(ms: Int) {
+    func sleep(ms: Int) throws {
+        if Thread.current.isCancelled { throw Error.threadCancelled }
         Thread.sleep(forTimeInterval: TimeInterval(ms) / 1000)
     }
 }

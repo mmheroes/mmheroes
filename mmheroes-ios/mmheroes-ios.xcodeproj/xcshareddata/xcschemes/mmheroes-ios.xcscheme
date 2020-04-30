@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "875B3B0F2459E47D00E4BF6B"
-               BuildableName = "mmheroes-ios.app"
+               BuildableName = "MMHEROES.EXE.app"
                BlueprintName = "mmheroes-ios"
                ReferencedContainer = "container:mmheroes-ios.xcodeproj">
             </BuildableReference>
@@ -46,7 +46,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "875B3B0F2459E47D00E4BF6B"
-            BuildableName = "mmheroes-ios.app"
+            BuildableName = "MMHEROES.EXE.app"
             BlueprintName = "mmheroes-ios"
             ReferencedContainer = "container:mmheroes-ios.xcodeproj">
          </BuildableReference>
@@ -63,7 +63,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "875B3B0F2459E47D00E4BF6B"
-            BuildableName = "mmheroes-ios.app"
+            BuildableName = "MMHEROES.EXE.app"
             BlueprintName = "mmheroes-ios"
             ReferencedContainer = "container:mmheroes-ios.xcodeproj">
          </BuildableReference>

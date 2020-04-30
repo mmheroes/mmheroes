@@ -1,4 +1,4 @@
-protocol Renderer {
+protocol Renderer: AnyObject {
 
     func clearScreen() throws
 
@@ -24,7 +24,7 @@ private class Box<T> {
     }
 }
 
-class GameRunner {
+final class GameRunner {
 
     private let renderer: Renderer
 

@@ -27,9 +27,14 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication,
+                     shouldSaveSecureApplicationState coder: NSCoder) -> Bool {
+        self.application(application, shouldSaveApplicationState: coder)
+    }
+
+    func application(_ application: UIApplication,
                      shouldSaveApplicationState coder: NSCoder) -> Bool {
         do {
-            try coder.encode(applicationInfo, forKey: applicationInfoKey)
+            try coder.encodeEncodable(applicationInfo, forKey: applicationInfoKey)
             return true
         } catch {
             return false
@@ -37,10 +42,15 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func application(_ application: UIApplication,
+                     shouldRestoreSecureApplicationState coder: NSCoder) -> Bool {
+        self.application(application, shouldRestoreApplicationState: coder)
+    }
+
+    func application(_ application: UIApplication,
                      shouldRestoreApplicationState coder: NSCoder) -> Bool {
         do {
-            let previousRunApplicationInfo =
-                try coder.decode(ApplicationInfo.self, forKey: applicationInfoKey)
+            let previousRunApplicationInfo = try coder
+                .decodeDecodable(ApplicationInfo.self, forKey: applicationInfoKey)
             return
                 previousRunApplicationInfo.version.major == applicationInfo.version.major
         } catch {

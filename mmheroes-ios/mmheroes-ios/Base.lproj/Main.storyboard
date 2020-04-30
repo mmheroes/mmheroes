@@ -2,6 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="16096" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
     <device id="retina5_5" orientation="landscape" appearance="light"/>
     <dependencies>
+        <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="16087"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -10,12 +11,12 @@
         <!--MainSceneViewController-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController restorationIdentifier="MainSceneViewController" storyboardIdentifier="MainSceneViewController" id="BYZ-38-t0r" userLabel="MainSceneViewController" customClass="MainSceneViewController" customModule="mmheroes_ios" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController restorationIdentifier="MainSceneViewController" storyboardIdentifier="MainSceneViewController" id="BYZ-38-t0r" userLabel="MainSceneViewController" customClass="MainSceneViewController" customModule="MMHEROES_EXE" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="736" height="414"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" restorationIdentifier="GameView" translatesAutoresizingMaskIntoConstraints="NO" id="gWi-fu-xLS" customClass="GameView" customModule="mmheroes_ios" customModuleProvider="target">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="gWi-fu-xLS" customClass="GameView" customModule="MMHEROES_EXE" customModuleProvider="target">
                                 <rect key="frame" x="12" y="0.0" width="712" height="414"/>
                                 <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <constraints>
