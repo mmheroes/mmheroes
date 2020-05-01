@@ -8,12 +8,12 @@
 
 /* Begin PBXBuildFile section */
 		873C33F5245B755000754F00 /* Caret.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873C33F4245B755000754F00 /* Caret.swift */; };
+		873C33F8245BA0F300754F00 /* libmmheroes_core_ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 873C33F7245BA0F300754F00 /* libmmheroes_core_ios.a */; platformFilter = ios; };
 		875B3B142459E47D00E4BF6B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B132459E47D00E4BF6B /* AppDelegate.swift */; };
 		875B3B182459E47D00E4BF6B /* MainSceneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */; };
 		875B3B1B2459E47D00E4BF6B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 875B3B192459E47D00E4BF6B /* Main.storyboard */; };
 		875B3B1D2459E47E00E4BF6B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 875B3B1C2459E47E00E4BF6B /* Assets.xcassets */; };
 		875B3B202459E47E00E4BF6B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 875B3B1E2459E47E00E4BF6B /* LaunchScreen.storyboard */; };
-		875B3B2A2459E6A400E4BF6B /* libmmheroes_core.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 875B3B282459E60F00E4BF6B /* libmmheroes_core.a */; platformFilter = ios; };
 		875B3B2D2459E75500E4BF6B /* GameRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B2C2459E75500E4BF6B /* GameRunner.swift */; };
 		875B3B2F2459EB3000E4BF6B /* UIKitMMHeroesRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B2E2459EB3000E4BF6B /* UIKitMMHeroesRenderer.swift */; };
 		875B3B31245A2D2400E4BF6B /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B30245A2D2400E4BF6B /* GameView.swift */; };
@@ -29,6 +29,7 @@
 
 /* Begin PBXFileReference section */
 		873C33F4245B755000754F00 /* Caret.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Caret.swift; sourceTree = "<group>"; };
+		873C33F7245BA0F300754F00 /* libmmheroes_core_ios.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmmheroes_core_ios.a; path = "../mmheroes-core-rs/iOS/target/universal/debug/libmmheroes_core_ios.a"; sourceTree = "<group>"; };
 		875B3B102459E47D00E4BF6B /* MMHEROES.EXE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MMHEROES.EXE.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		875B3B132459E47D00E4BF6B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainSceneViewController.swift; sourceTree = "<group>"; };
@@ -56,7 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				875B3B2A2459E6A400E4BF6B /* libmmheroes_core.a in Frameworks */,
+				873C33F8245BA0F300754F00 /* libmmheroes_core_ios.a in Frameworks */,
 				875B3B3A245B315B00E4BF6B /* Version in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -105,6 +106,7 @@
 		875B3B272459E60F00E4BF6B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				873C33F7245BA0F300754F00 /* libmmheroes_core_ios.a */,
 				875B3B35245A532B00E4BF6B /* libmmheroes_core.a */,
 				875B3B282459E60F00E4BF6B /* libmmheroes_core.a */,
 			);
@@ -138,6 +140,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 875B3B242459E47E00E4BF6B /* Build configuration list for PBXNativeTarget "mmheroes-ios" */;
 			buildPhases = (
+				873C33F6245B8A7B00754F00 /* Compile Rust dependencies */,
 				875B3B0C2459E47D00E4BF6B /* Sources */,
 				875B3B0D2459E47D00E4BF6B /* Frameworks */,
 				875B3B0E2459E47D00E4BF6B /* Resources */,
@@ -202,6 +205,27 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		873C33F6245B8A7B00754F00 /* Compile Rust dependencies */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Compile Rust dependencies";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# The $PATH used by Xcode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\n# --xcode-integ determines --release and --targets from XCode's env vars.\n# Depending your setup, specify the rustup toolchain explicitly.\ncargo lipo -vv --xcode-integ --manifest-path $SRCROOT/../mmheroes-core-rs/iOS/Cargo.toml\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		875B3B0C2459E47D00E4BF6B /* Sources */ = {
@@ -375,10 +399,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "../mmheroes-core-rs/target/universal/release";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/universal/debug";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.jaskiewiczs.mmheroes-ios";
 				PRODUCT_NAME = MMHEROES.EXE;
-				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "../mmheroes-core-rs/mmheroes.h";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -398,10 +422,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "../mmheroes-core-rs/target/universal/release";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/universal/release";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.jaskiewiczs.mmheroes-ios";
 				PRODUCT_NAME = MMHEROES.EXE;
-				SUPPORTS_MACCATALYST = YES;
+				SUPPORTS_MACCATALYST = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "../mmheroes-core-rs/mmheroes.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Osize";
 				SWIFT_VERSION = 5.0;
