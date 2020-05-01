@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		873C33F5245B755000754F00 /* Caret.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873C33F4245B755000754F00 /* Caret.swift */; };
 		873C33F8245BA0F300754F00 /* libmmheroes_core_ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 873C33F7245BA0F300754F00 /* libmmheroes_core_ios.a */; platformFilter = ios; };
+		873C33FA245C360E00754F00 /* GameThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873C33F9245C360E00754F00 /* GameThread.swift */; };
 		875B3B142459E47D00E4BF6B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B132459E47D00E4BF6B /* AppDelegate.swift */; };
 		875B3B182459E47D00E4BF6B /* MainSceneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */; };
 		875B3B1B2459E47D00E4BF6B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 875B3B192459E47D00E4BF6B /* Main.storyboard */; };
@@ -30,6 +31,7 @@
 /* Begin PBXFileReference section */
 		873C33F4245B755000754F00 /* Caret.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Caret.swift; sourceTree = "<group>"; };
 		873C33F7245BA0F300754F00 /* libmmheroes_core_ios.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmmheroes_core_ios.a; path = "../mmheroes-core-rs/iOS/target/universal/debug/libmmheroes_core_ios.a"; sourceTree = "<group>"; };
+		873C33F9245C360E00754F00 /* GameThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameThread.swift; sourceTree = "<group>"; };
 		875B3B102459E47D00E4BF6B /* MMHEROES.EXE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MMHEROES.EXE.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		875B3B132459E47D00E4BF6B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainSceneViewController.swift; sourceTree = "<group>"; };
@@ -92,6 +94,7 @@
 				875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */,
 				875B3B46245B44B200E4BF6B /* GameState.swift */,
 				875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */,
+				873C33F9245C360E00754F00 /* GameThread.swift */,
 				875B3B2C2459E75500E4BF6B /* GameRunner.swift */,
 				875B3B30245A2D2400E4BF6B /* GameView.swift */,
 				873C33F4245B755000754F00 /* Caret.swift */,
@@ -241,6 +244,7 @@
 				875B3B47245B44B200E4BF6B /* GameState.swift in Sources */,
 				875B3B43245B3E3500E4BF6B /* MMHeroesExtensions.swift in Sources */,
 				875B3B3C245B33B700E4BF6B /* NSCoderExtensions.swift in Sources */,
+				873C33FA245C360E00754F00 /* GameThread.swift in Sources */,
 				87F166EF245B527000618A18 /* RecordedInputRenderer.swift in Sources */,
 				875B3B2F2459EB3000E4BF6B /* UIKitMMHeroesRenderer.swift in Sources */,
 				875B3B2D2459E75500E4BF6B /* GameRunner.swift in Sources */,
@@ -320,7 +324,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -375,7 +379,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 10.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;

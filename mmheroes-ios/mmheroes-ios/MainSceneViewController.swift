@@ -12,11 +12,11 @@ final class MainSceneViewController: UIViewController {
 
     private var font = UIFont(name: "Menlo", size: 12)!
 
-    private let gameStateLock = NSLock()
+    let gameStateLock = NSLock()
 
     /// This variable is used for state restoration.
-    private var gameState = GameState() // guarded by gameStateLock
-    private var runner: GameRunner?     // guarded by gameStateLock
+    var gameState = GameState() // guarded by gameStateLock
+    var runner: GameRunner?     // guarded by gameStateLock
 
     private var gameHasStarted = false
 
@@ -53,35 +53,7 @@ final class MainSceneViewController: UIViewController {
         }
         self.mainRenderer = mainRenderer
 
-        let gameThread = Thread { [weak self] in
-            while !Thread.current.isCancelled {
-                self?.gameStateLock.lock()
-                guard let gameState = self?.gameState else {
-                    // We don't need to unlock the lock here, since self is already gone,
-                    // and the lock with it.
-                    return
-                }
-
-                let recordedInputRenderer = RecordedInputRenderer(input: gameState.input)
-                let tryRenderer = TryRenderer(primaryRenderer: recordedInputRenderer,
-                                              fallbackRenderer: mainRenderer)
-                let runner = GameRunner(renderer: tryRenderer)
-                self?.runner = runner
-                self?.gameStateLock.unlock()
-                
-                do {
-                    try runner.run(seed: gameState.seed, mode: MMHEROES_GameMode_God)
-                } catch UIKitMMHeroesRenderer.Error.threadCancelled {
-                    return
-                } catch {
-                    assertionFailure(String(describing: error))
-                }
-                self?.gameStateLock.lock()
-                self?.gameState = GameState()
-                self?.runner = nil
-                self?.gameStateLock.unlock()
-            }
-        }
+        let gameThread = GameThread(vc: self, mainRenderer: mainRenderer)
 
         gameThread.name = "com.jaskiewiczs.mmheroes.game-loop-thread"
 

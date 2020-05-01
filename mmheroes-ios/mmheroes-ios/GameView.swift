@@ -9,10 +9,18 @@ final class GameView: UIView {
     var font: UIFont?
     var text: NSAttributedString?
 
-    var caret = Caret()
-    let caretLayer = CAShapeLayer()
+    fileprivate let caretLayer = CaretLayer()
 
-    var blinkingTimer: Timer?
+    var caret: Caret {
+        get {
+            caretLayer.caret
+        }
+        set {
+            caretLayer.caret = newValue
+        }
+    }
+
+    private var blinkingTimer: Timer?
 
     var didRedraw: (() -> ())?
 
@@ -46,24 +54,11 @@ final class GameView: UIView {
 
     private func drawCaret(in rect: CGRect, _ terminalWindowBoundingBox: CGSize) {
         if blinkingTimer == nil {
-            let timer = Timer.scheduledTimer(withTimeInterval: 0.125,
-                                             repeats: true) { [weak self] timer in
-                guard let self = self else {
-                    timer.invalidate()
-                    return
-                }
-                CATransaction.begin()
-                // By default changes to CALayer's properties are animated.
-                // We want the layer to just blink, not fade,
-                // so we disable the default behavior.
-                CATransaction.setDisableActions(true)
-                if self.caretLayer.fillColor == nil {
-                    self.caretLayer.fillColor = self.caret.color.makeUIColor().cgColor
-                } else {
-                    self.caretLayer.fillColor = nil
-                }
-                CATransaction.commit()
-            }
+            let timer = Timer.scheduledTimer(timeInterval: 0.125,
+                                             target: caretLayer,
+                                             selector: #selector(CaretLayer.blink(_:)),
+                                             userInfo: nil,
+                                             repeats: true)
             self.blinkingTimer = timer
             timer.fire()
         }
@@ -92,5 +87,25 @@ final class GameView: UIView {
         if caretLayer.superlayer == nil {
             self.layer.addSublayer(caretLayer)
         }
+    }
+}
+
+private class CaretLayer: CAShapeLayer {
+
+    var caret = Caret()
+
+    @objc
+    func blink(_ timer: Timer) {
+        CATransaction.begin()
+        // By default changes to CALayer's properties are animated.
+        // We want the layer to just blink, not fade,
+        // so we disable the default behavior.
+        CATransaction.setDisableActions(true)
+        if fillColor == nil {
+            fillColor = self.caret.color.makeUIColor().cgColor
+        } else {
+            fillColor = nil
+        }
+        CATransaction.commit()
     }
 }
