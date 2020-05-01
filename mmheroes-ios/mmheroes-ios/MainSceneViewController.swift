@@ -7,6 +7,11 @@ final class MainSceneViewController: UIViewController {
 
     private let gameView = GameView()
 
+    private let helpButton = UIButton(type: .infoDark)
+
+    // Cache this view controller.
+    private let helpViewController = HelpViewController()
+
     private var mainRenderer: UIKitMMHeroesRenderer?
     private var gameThread: Thread?
 
@@ -22,8 +27,18 @@ final class MainSceneViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        view.backgroundColor = MMHEROES_Color_Black.makeUIColor()
+
         setupGameView()
         setupGestureRecognizers()
+        setupHelpButton()
+
+        DispatchQueue.main.async {
+            // This will asynchronously call the viewDidLoad, but will not layout
+            // everything yet and will not block the main thread
+            self.helpViewController.view.setNeedsLayout()
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -38,6 +53,7 @@ final class MainSceneViewController: UIViewController {
     override func viewWillLayoutSubviews() {
         super.viewWillLayoutSubviews()
         updateGameViewLayout()
+        updateHelpButtonPosition()
     }
 
     override func viewWillTransition(
@@ -101,6 +117,8 @@ final class MainSceneViewController: UIViewController {
         // Yep, no AutoLayout. We target iOS 8, and the features we need are not available
         // there.
 
+        let minimumContentMargin: CGFloat = 11
+
         var minX = view.bounds.minX
         var minY = view.bounds.minY
         var maxX = minX + view.bounds.width
@@ -108,13 +126,20 @@ final class MainSceneViewController: UIViewController {
 
         if #available(iOS 11.0, *) {
             let maxHorizontalInset = max(view.safeAreaInsets.left,
-                                         view.safeAreaInsets.right)
+                                         view.safeAreaInsets.right,
+                                         minimumContentMargin)
             let maxVerticalInset = max(view.safeAreaInsets.top,
-                                       view.safeAreaInsets.bottom)
+                                       view.safeAreaInsets.bottom,
+                                       minimumContentMargin)
             minX += maxHorizontalInset
             maxX -= maxHorizontalInset
             minY += maxVerticalInset
             maxY -= maxVerticalInset
+        } else {
+            minX += minimumContentMargin
+            maxX -= minimumContentMargin
+            minY += minimumContentMargin
+            maxY -= minimumContentMargin
         }
 
         var width = maxX - minX
@@ -144,6 +169,30 @@ final class MainSceneViewController: UIViewController {
         gameView.setNeedsDisplay()
     }
 
+    private func setupHelpButton() {
+        helpButton.tintColor = UIColor.white
+        helpButton.frame.size = CGSize(width: 70, height: 70)
+        helpButton.addTarget(self, action: #selector(help(_:)), for: .touchUpInside)
+        view.addSubview(helpButton)
+    }
+
+    @objc
+    private func help(_ button: UIButton) {
+        let navigationController =
+            UINavigationController(rootViewController: helpViewController)
+        navigationController.modalPresentationStyle = .pageSheet
+        navigationController.navigationBar.tintColor = .white
+        navigationController.navigationBar.barStyle = .black
+        navigationController.navigationBar.isTranslucent = true
+        present(navigationController, animated: true, completion: nil)
+    }
+
+    private func updateHelpButtonPosition() {
+        // Place the button in the lower right corner
+        helpButton.frame.origin.x = view.bounds.maxX - helpButton.frame.width
+        helpButton.frame.origin.y = view.bounds.maxY - helpButton.frame.height
+    }
+
     private func startGame() {
         let mainRenderer =
             UIKitMMHeroesRenderer(font: consoleFont) { [weak self] text, caret in
@@ -167,16 +216,33 @@ final class MainSceneViewController: UIViewController {
     }
 
     override var keyCommands: [UIKeyCommand]? {
+        guard presentedViewController == nil else {
+            // Don't respond to key presses if another view controller is active.
+            return nil
+        }
+
+        let upCommand = UIKeyCommand(input: UIKeyCommand.inputUpArrow,
+                                     modifierFlags: [],
+                                     action: #selector(moveUp(_:)))
+        if #available(iOS 9.0, *) {
+            upCommand.discoverabilityTitle = "Выбрать предыдущий вариант"
+        }
+        let downCommand = UIKeyCommand(input: UIKeyCommand.inputDownArrow,
+                                       modifierFlags: [],
+                                       action: #selector(moveDown(_:)))
+        if #available(iOS 9.0, *) {
+            downCommand.discoverabilityTitle = "Выбрать следующий вариант"
+        }
+        let confirmCommand = UIKeyCommand(input: "\r",
+                                          modifierFlags: [],
+                                          action: #selector(confirm(_:)))
+        if #available(iOS 9.0, *) {
+            confirmCommand.discoverabilityTitle = "Подтвердить выбор"
+        }
         var commands = [
-            UIKeyCommand(input: UIKeyCommand.inputUpArrow,
-                         modifierFlags: [],
-                         action: #selector(moveUp(_:))),
-            UIKeyCommand(input: UIKeyCommand.inputDownArrow,
-                         modifierFlags: [],
-                         action: #selector(moveDown(_:))),
-            UIKeyCommand(input: "\r",
-                         modifierFlags: [],
-                         action: #selector(confirm(_:))),
+            upCommand,
+            downCommand,
+            confirmCommand,
         ]
 
 
