@@ -2,9 +2,9 @@ import UIKit
 
 final class GameThread: Thread {
 
-    weak var vc: MainSceneViewController?
+    private weak var vc: MainSceneViewController?
 
-    let mainRenderer: UIKitMMHeroesRenderer
+    private let mainRenderer: UIKitMMHeroesRenderer
 
     init(vc: MainSceneViewController, mainRenderer: UIKitMMHeroesRenderer) {
         self.vc = vc

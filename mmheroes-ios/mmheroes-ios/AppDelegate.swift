@@ -15,6 +15,10 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         willFinishLaunchingWithOptions
             launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
     ) -> Bool {
+        let window = UIWindow()
+        window.rootViewController = MainSceneViewController()
+        window.makeKeyAndVisible()
+        self.window = window
         return true
     }
 

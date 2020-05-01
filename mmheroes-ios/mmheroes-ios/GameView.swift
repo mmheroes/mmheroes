@@ -22,6 +22,15 @@ final class GameView: UIView {
 
     private var blinkingTimer: Timer?
 
+    var caretHidden: Bool {
+        get {
+            caretLayer.isHidden
+        }
+        set {
+            caretLayer.isHidden = newValue
+        }
+    }
+
     var didRedraw: (() -> ())?
 
     override func draw(_ rect: CGRect) {
@@ -33,6 +42,16 @@ final class GameView: UIView {
         drawText(in: rect, terminalWindowBoundingBox)
         drawCaret(in: rect, terminalWindowBoundingBox)
         didRedraw?()
+    }
+
+    var desiredAspectRatio: CGFloat {
+        guard let font = self.font else {
+            assertionFailure("Font should be set")
+            return 1.724
+        }
+        let terminalWindowBoundingBox = terminalWindow
+            .size(withAttributes: [.font : font])
+        return terminalWindowBoundingBox.width / terminalWindowBoundingBox.height
     }
 
     private func scaleFactor(_ terminalWindowBoundingBox: CGSize) -> CGFloat {

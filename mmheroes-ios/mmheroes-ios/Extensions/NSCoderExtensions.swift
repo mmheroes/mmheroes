@@ -7,7 +7,7 @@ extension NSCoder {
     func encodeEncodable<T: Encodable>(_ encodable: T, forKey key: String) throws {
         let data = try nscoderJSONEncoder.encode(encodable)
         encode(data as Any, forKey: key)
-        if let error = self.error {
+        if #available(iOS 9.0, *), let error = self.error {
             throw error
         }
     }
@@ -21,7 +21,7 @@ extension NSCoder {
             throw DecodingError
                 .typeMismatch(Data.self, .init(codingPath: [], debugDescription: ""))
         }
-        if let error = self.error {
+        if #available(iOS 9.0, *), let error = self.error {
             throw error
         }
         return try nscoderJSONDecoder.decode(type, from: data)
