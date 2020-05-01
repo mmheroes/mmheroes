@@ -31,12 +31,12 @@ dependencies = [
 name = "mmheroes"
 version = "0.1.0"
 dependencies = [
- "mmheroes_core",
+ "mmheroes-core",
  "pancurses",
 ]
 
 [[package]]
-name = "mmheroes_core"
+name = "mmheroes-core"
 version = "0.1.0"
 
 [[package]]
