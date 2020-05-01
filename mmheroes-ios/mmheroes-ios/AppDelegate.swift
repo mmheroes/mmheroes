@@ -15,10 +15,7 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         willFinishLaunchingWithOptions
             launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil
     ) -> Bool {
-        let window = UIWindow()
-        window.rootViewController = MainSceneViewController()
-        window.makeKeyAndVisible()
-        self.window = window
+        window = UIWindow()
         return true
     }
 
@@ -27,7 +24,24 @@ final class AppDelegate: UIResponder, UIApplicationDelegate {
         didFinishLaunchingWithOptions
             launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
+        if window?.rootViewController == nil {
+            window?.rootViewController = MainSceneViewController()
+        }
+        window?.makeKeyAndVisible()
         return true
+    }
+
+    func application(
+        _ application: UIApplication,
+        viewControllerWithRestorationIdentifierPath identifierComponents: [String],
+        coder: NSCoder
+    ) -> UIViewController? {
+        if identifierComponents.last == MainSceneViewController.restorationIdentifier {
+            let vc = MainSceneViewController()
+            window?.rootViewController = vc
+            return vc
+        }
+        return nil
     }
 
     func application(_ application: UIApplication,

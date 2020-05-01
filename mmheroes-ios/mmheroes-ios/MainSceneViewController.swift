@@ -25,6 +25,16 @@ final class MainSceneViewController: UIViewController {
 
     private var gameHasStarted = false
 
+    override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
+        super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
+        restorationIdentifier = Self.restorationIdentifier
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        restorationIdentifier = Self.restorationIdentifier
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -309,6 +319,14 @@ final class MainSceneViewController: UIViewController {
         }
     }
 
+    override var prefersHomeIndicatorAutoHidden: Bool {
+        return true
+    }
+
+    // MARK: - State restoration
+
+    static let restorationIdentifier = "MainSceneViewController"
+
     override func encodeRestorableState(with coder: NSCoder) {
         super.encodeRestorableState(with: coder)
         gameStateLock.lock()
@@ -335,9 +353,4 @@ final class MainSceneViewController: UIViewController {
         }
         super.decodeRestorableState(with: coder)
     }
-
-    override var prefersHomeIndicatorAutoHidden: Bool {
-        return true
-    }
 }
-
