@@ -71,7 +71,7 @@
                         <action selector="moveDown:" destination="BYZ-38-t0r" id="2Mi-xh-9WC"/>
                     </connections>
                 </swipeGestureRecognizer>
-                <tapGestureRecognizer id="fwm-dM-SfW" userLabel="Tap">
+                <tapGestureRecognizer numberOfTapsRequired="2" id="fwm-dM-SfW" userLabel="Tap">
                     <connections>
                         <action selector="confirm:" destination="BYZ-38-t0r" id="ybG-hc-oFH"/>
                     </connections>
