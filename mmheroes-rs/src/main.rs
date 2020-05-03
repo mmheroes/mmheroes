@@ -10,7 +10,7 @@ use std::sync::Mutex;
 mod screen {
     use super::{endwin, initscr, Window};
 
-    /// A RAII object repsonsible for initializing and cleaning up the curses
+    /// A RAII object responsible for initializing and cleaning up the curses
     /// window.
     pub(crate) struct ScreenRAII {
         window: Window,
@@ -40,13 +40,13 @@ mod screen {
 use screen::ScreenRAII;
 
 struct PancursesRenderer<'a> {
-    log: &'static Mutex<RefCell<Vec<Option<pancurses::Input>>>>,
+    log: &'static Mutex<RefCell<Vec<ui::Input>>>,
     color_pairs: &'a HashMap<(Color, Color), i16>,
     window: &'a ScreenRAII,
 }
 
 #[derive(Debug)]
-struct CursesError;
+struct CursesError(&'static str);
 
 macro_rules! handle_curses_error {
     ($call:expr) => {
@@ -55,7 +55,7 @@ macro_rules! handle_curses_error {
             if rc == pancurses::OK {
                 Ok(())
             } else {
-                Err(CursesError)
+                Err(CursesError(stringify!($call)))
             }
         }
     };
@@ -95,18 +95,17 @@ impl Renderer for PancursesRenderer<'_> {
 
     fn getch(&mut self) -> Result<ui::Input, Self::Error> {
         loop {
-            let input = self.window.getch();
-            {
-                let log = self.log.lock().unwrap();
-                log.borrow_mut().push(input);
-            }
-            let ui_input = match input {
+            let ui_input = match self.window.getch() {
                 None | Some(pancurses::Input::KeyResize) => continue,
                 Some(pancurses::Input::KeyUp) => ui::Input::KeyUp,
                 Some(pancurses::Input::KeyDown) => ui::Input::KeyDown,
                 Some(pancurses::Input::Character('\n')) => ui::Input::Enter,
                 Some(_) => ui::Input::Other,
             };
+            {
+                let log = self.log.lock().unwrap();
+                log.borrow_mut().push(ui_input);
+            }
             break Ok(ui_input)
         }
     }
@@ -132,7 +131,7 @@ fn main() {
 
     // Resize the terminal. We want 24 lines and 80 columns.
     print!("\x1B[8;24;80t");
-    std::io::stdout().flush();
+    std::io::stdout().flush().unwrap();
     resize_term(24, 80);
 
     window.clear();
@@ -145,10 +144,13 @@ fn main() {
         (Color::Green, Color::Black),
         (Color::YellowBright, Color::Black),
         (Color::Cyan, Color::Black),
+        (Color::CyanBright, Color::Black),
         (Color::WhiteBright, Color::Black),
         (Color::Black, Color::White),
         (Color::Black, Color::Yellow),
-        (Color::Black, Color::Gray)
+        (Color::Black, Color::Gray),
+        (Color::MagentaBright, Color::Black),
+        (Color::BlueBright, Color::Black),
     ];
 
     let mut color_pairs_map = std::collections::HashMap::<(Color, Color), i16>::new();
