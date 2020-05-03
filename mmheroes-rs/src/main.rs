@@ -49,16 +49,14 @@ struct PancursesRenderer<'a> {
 struct CursesError(&'static str);
 
 macro_rules! handle_curses_error {
-    ($call:expr) => {
-        {
-            let rc = $call;
-            if rc == pancurses::OK {
-                Ok(())
-            } else {
-                Err(CursesError(stringify!($call)))
-            }
+    ($call:expr) => {{
+        let rc = $call;
+        if rc == pancurses::OK {
+            Ok(())
+        } else {
+            Err(CursesError(stringify!($call)))
         }
-    };
+    }};
 }
 
 impl Renderer for PancursesRenderer<'_> {
@@ -89,7 +87,10 @@ impl Renderer for PancursesRenderer<'_> {
             *self
                 .color_pairs
                 .get(&(foreground, background))
-                .expect("Unknown color pair"),
+                .unwrap_or_else(|| panic!(
+                    "Unknown color pair: ({:?}, {:?})",
+                    foreground, background
+                )),
         ))
     }
 
@@ -106,7 +107,7 @@ impl Renderer for PancursesRenderer<'_> {
                 let log = self.log.lock().unwrap();
                 log.borrow_mut().push(ui_input);
             }
-            break Ok(ui_input)
+            break Ok(ui_input);
         }
     }
 
@@ -149,8 +150,10 @@ fn main() {
         (Color::Black, Color::White),
         (Color::Black, Color::Yellow),
         (Color::Black, Color::Gray),
+        (Color::Magenta, Color::Black),
         (Color::MagentaBright, Color::Black),
         (Color::BlueBright, Color::Black),
+        (Color::Blue, Color::Black),
     ];
 
     let mut color_pairs_map = std::collections::HashMap::<(Color, Color), i16>::new();
@@ -161,9 +164,7 @@ fn main() {
     }
 
     window.bkgd(COLOR_PAIR(
-        *color_pairs_map
-            .get(&(Color::White, Color::Black))
-            .unwrap() as chtype,
+        *color_pairs_map.get(&(Color::White, Color::Black)).unwrap() as chtype,
     ));
 
     // We save each pressed key to this log, so that if a panic occurs,
