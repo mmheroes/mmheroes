@@ -1,14 +1,16 @@
 import UIKit
 
-private struct TextFragment {
+private struct TextFragment: Codable {
     let startColumn: Int
     let priority: Int
-    let text: NSAttributedString
+    let foregroundColor: MMHEROES_Color
+    let backgroundColor: MMHEROES_Color
+    let text: String
 
-    var endColumn: Int { startColumn + text.string.count }
+    var endColumn: Int { startColumn + text.count }
 }
 
-private struct ConsoleLine {
+private struct ConsoleLine: Codable {
     var fragments: [TextFragment] = []
 }
 
@@ -27,8 +29,8 @@ final class GameRunner {
     /// Strings that are added later have greater priority.
     private var currentPriority = 0
 
-    private var foregroundColor = MMHEROES_Color_White.makeUIColor()
-    private var backgorundColor = MMHEROES_Color_Black.makeUIColor()
+    private var foregroundColor = MMHEROES_Color_White
+    private var backgroundColor = MMHEROES_Color_Black
 
     private enum InputState {
         case waitingForInput
@@ -38,16 +40,18 @@ final class GameRunner {
     private var inputState = InputState.waitingForInput
 
     private let worker: DispatchQueue
-    private let gameUI: GameUI
+    var gameUI: GameUI
     private let font: UIFont
     private let requestDrawingRenderedContent: (NSAttributedString, Caret) -> Void
 
+    let inputRecorder = InputRecorder()
+
     init(worker: DispatchQueue,
-         gameUI: GameUI,
          font: UIFont,
          _ requestDrawingRenderedContent: @escaping (NSAttributedString, Caret) -> Void) {
         self.worker = worker
-        self.gameUI = gameUI
+        let game = Game(mode: MMHEROES_GameMode_Normal, seed: .random(in: 0 ... .max))
+        self.gameUI = GameUI(game: game)
         self.font = font
         self.requestDrawingRenderedContent = requestDrawingRenderedContent
     }
@@ -66,11 +70,15 @@ final class GameRunner {
             return
         }
         inputState = .ignoringInput
+        inputRecorder.record(input)
         guard gameUI.continueGame(input: input) else {
             worker.async { completion(.gameEnded) }
             return
         }
+        render(completion: completion)
+    }
 
+    func render(completion: @escaping (GameStatus) -> Void) {
         var requests = gameUI.requests()
 
         // По очереди выполняем все запросы. Запрос 'sleep' — особый случай.
@@ -132,7 +140,15 @@ final class GameRunner {
                 let endIndex = resultLineString
                     .index(resultLineString.startIndex, offsetBy: fragment.endColumn)
                 let range = NSRange(startIndex ..< endIndex, in: resultLineString)
-                resultLines[i].replaceCharacters(in: range, with: fragment.text)
+                let fragmentAttributedText = NSAttributedString(
+                    string: fragment.text,
+                    attributes: [
+                        .font : font,
+                        .foregroundColor : fragment.foregroundColor.makeUIColor(),
+                        .backgroundColor : fragment.backgroundColor.makeUIColor()
+                    ]
+                )
+                resultLines[i].replaceCharacters(in: range, with: fragmentAttributedText)
             }
         }
 
@@ -151,15 +167,11 @@ final class GameRunner {
     private func writeString(_ string: String) {
         for (line, endsWithNewline) in string.lines {
             if !line.isEmpty {
-                let attributedString = NSAttributedString(
-                    string: String(line),
-                    attributes: [.foregroundColor : foregroundColor,
-                                 .backgroundColor : backgorundColor,
-                                 .font : font]
-                )
                 let fragment = TextFragment(startColumn: currentColumn,
                                             priority: currentPriority,
-                                            text: attributedString)
+                                            foregroundColor: foregroundColor,
+                                            backgroundColor: backgroundColor,
+                                            text: String(line))
                 currentColumn += line.count
                 lines[currentLine].fragments.append(fragment)
             }
@@ -177,12 +189,61 @@ final class GameRunner {
     }
 
     private func setColor(foreground: MMHEROES_Color, background: MMHEROES_Color) {
-        foregroundColor = foreground.makeUIColor()
-        backgorundColor = background.makeUIColor()
+        foregroundColor = foreground
+        backgroundColor = background
     }
 
     private func sleep(ms: Int, completion: @escaping () -> Void) {
         worker.asyncAfter(deadline: .now() + .milliseconds(ms), execute: completion)
+    }
+}
+
+extension GameRunner {
+
+    private struct RestorableState: Codable {
+        var lines: [ConsoleLine]
+        var currentLine: Int
+        var currentColumn: Int
+        var currentPriority: Int
+        var foregroundColor: MMHEROES_Color
+        var backgorundColor: MMHEROES_Color
+        var seed: UInt64
+        var mode: MMHEROES_GameMode
+        var recordedInput: String
+    }
+    
+    func restoreGameState(from coder: NSCoder) throws {
+        let restorableState = try coder.decodeDecodable(
+            RestorableState.self,
+            forKey: Bundle.main.bundleIdentifier! + "GameRunner.restorableState"
+        )
+        lines = restorableState.lines
+        currentLine = restorableState.currentLine
+        currentColumn = restorableState.currentColumn
+        currentPriority = restorableState.currentPriority
+        foregroundColor = restorableState.foregroundColor
+        backgroundColor = restorableState.backgorundColor
+        let game = Game(mode: restorableState.mode, seed: restorableState.seed)
+        gameUI = GameUI(game: game)
+        inputRecorder.recording = restorableState.recordedInput
+        gameUI.replay(recordedInput: restorableState.recordedInput)
+    }
+
+    func encodeGameState(to coder: NSCoder) throws {
+        inputRecorder.flush()
+        let restorableState = RestorableState(lines: lines,
+                                              currentLine: currentLine,
+                                              currentColumn: currentColumn,
+                                              currentPriority: currentPriority,
+                                              foregroundColor: foregroundColor,
+                                              backgorundColor: backgroundColor,
+                                              seed: gameUI.game.seed,
+                                              mode: gameUI.game.mode,
+                                              recordedInput: inputRecorder.recording)
+        try coder.encodeEncodable(
+            restorableState,
+            forKey: Bundle.main.bundleIdentifier! + "GameRunner.restorableState"
+        )
     }
 }
 

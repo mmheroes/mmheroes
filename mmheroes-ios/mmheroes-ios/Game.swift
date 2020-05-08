@@ -15,9 +15,13 @@ struct Time: RawRepresentable {
 
 final class Game {
 
+    let mode: MMHEROES_GameMode
+    let seed: UInt64
     fileprivate let handle: OpaquePointer
 
     init(mode: MMHEROES_GameMode, seed: UInt64) {
+        self.mode = mode
+        self.seed = seed
         handle = mmheroes_game_create(mode, seed, nil, allocator)
     }
 
@@ -52,6 +56,13 @@ final class GameUI {
 
     deinit {
         mmheroes_game_ui_destroy(handle, nil, deallocator)
+    }
+
+    @discardableResult
+    func replay(recordedInput: String) -> Bool {
+        recordedInput.withCString(encodedAs: UTF8.self) { buf in
+            mmheroes_replay(handle, buf, UInt(recordedInput.utf8.count))
+        }
     }
 
     func continueGame(input: MMHEROES_Input) -> Bool {
@@ -114,3 +125,41 @@ extension RendererRequestIterator: Sequence, IteratorProtocol {
         return nil
     }
 }
+
+final class InputRecorder {
+
+    private let handle: OpaquePointer
+
+    private var sink: UnsafeMutablePointer<MMHEROES_InputRecorderSink>
+
+    var recording: String
+
+    init(recording: String = "") {
+        self.recording = recording
+        sink = .allocate(capacity: 1)
+        sink.initialize(to: .init())
+        handle = mmheroes_input_recorder_create(sink, nil, allocator)
+        sink.pointee =
+            .init(context: Unmanaged.passRetained(self).toOpaque()) { context, buf, len in
+                let recorder = Unmanaged<InputRecorder>.fromOpaque(context!)
+                    .takeUnretainedValue()
+                let buffer = UnsafeBufferPointer(start: buf, count: Int(len))
+                recorder.recording += String(decoding: buffer, as: UTF8.self)
+                return true
+            }
+    }
+
+    deinit {
+        mmheroes_input_recorder_destroy(handle, nil, deallocator)
+        sink.deallocate()
+    }
+
+    func record(_ input: MMHEROES_Input) {
+        mmheroes_input_recorder_record(handle, input)
+    }
+
+    func flush() {
+        mmheroes_input_recorder_flush(handle)
+    }
+}
+

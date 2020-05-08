@@ -23,7 +23,6 @@
 		875B3B3C245B33B700E4BF6B /* NSCoderExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B3B245B33B700E4BF6B /* NSCoderExtensions.swift */; };
 		875B3B3E245B385400E4BF6B /* ApplicationInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */; };
 		875B3B43245B3E3500E4BF6B /* MMHeroesExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B42245B3E3500E4BF6B /* MMHeroesExtensions.swift */; };
-		875B3B47245B44B200E4BF6B /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B46245B44B200E4BF6B /* GameState.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -47,7 +46,6 @@
 		875B3B3B245B33B700E4BF6B /* NSCoderExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSCoderExtensions.swift; sourceTree = "<group>"; };
 		875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationInfo.swift; sourceTree = "<group>"; };
 		875B3B42245B3E3500E4BF6B /* MMHeroesExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MMHeroesExtensions.swift; sourceTree = "<group>"; };
-		875B3B46245B44B200E4BF6B /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -87,7 +85,6 @@
 				875B3B34245A4F5C00E4BF6B /* mmheroes-ios.entitlements */,
 				875B3B132459E47D00E4BF6B /* AppDelegate.swift */,
 				875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */,
-				875B3B46245B44B200E4BF6B /* GameState.swift */,
 				875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */,
 				873C33FC245C8E8400754F00 /* HelpViewController.swift */,
 				8754BDDF2465571000DC466E /* Game.swift */,
@@ -227,7 +224,6 @@
 				873C33FD245C8E8400754F00 /* HelpViewController.swift in Sources */,
 				873C33FB245C71E700754F00 /* AppDelegate.swift in Sources */,
 				875B3B182459E47D00E4BF6B /* MainSceneViewController.swift in Sources */,
-				875B3B47245B44B200E4BF6B /* GameState.swift in Sources */,
 				8754BDE02465571000DC466E /* Game.swift in Sources */,
 				875B3B43245B3E3500E4BF6B /* MMHeroesExtensions.swift in Sources */,
 				875B3B3C245B33B700E4BF6B /* NSCoderExtensions.swift in Sources */,

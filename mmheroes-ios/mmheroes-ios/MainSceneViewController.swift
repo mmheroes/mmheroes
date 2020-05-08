@@ -14,9 +14,6 @@ final class MainSceneViewController: UIViewController {
 
     private var gameRunner: GameRunner?
 
-    /// This variable is used for state restoration.
-    var gameState = GameState()
-
     private var gameHasStarted = false
 
     private let consoleFont: UIFont = {
@@ -57,8 +54,7 @@ final class MainSceneViewController: UIViewController {
         super.viewWillAppear(animated)
 
         if !gameHasStarted {
-            gameHasStarted = true
-            startGame()
+            startGame(restoredState: nil)
         }
     }
 
@@ -196,13 +192,10 @@ final class MainSceneViewController: UIViewController {
         helpButton.frame.origin.y = view.bounds.maxY - helpButton.frame.height
     }
 
-    private func startGame() {
-        let game = Game(mode: MMHEROES_GameMode_SelectInitialParameters,
-                        seed: .random(in: 0 ... .max))
-        let gameUI = GameUI(game: game)
+    private func startGame(restoredState: NSCoder?) {
+        gameHasStarted = true
 
         let runner = GameRunner(worker: .main,
-                                gameUI: gameUI,
                                 font: consoleFont) { [weak self] text, caret in
             self?.gameView.text = text
             self?.gameView.caret = caret
@@ -210,6 +203,18 @@ final class MainSceneViewController: UIViewController {
         }
 
         self.gameRunner = runner
+
+        do {
+            if let restoredState = restoredState {
+                try runner.restoreGameState(from: restoredState)
+                runner.render(completion: { _ in })
+                return
+            }
+        } catch DecodingError.valueNotFound {
+            // do nothing
+        } catch {
+            assertionFailure(String(describing: error))
+        }
 
         continueGame(MMHEROES_Input_Enter)
     }
@@ -223,19 +228,15 @@ final class MainSceneViewController: UIViewController {
         let upCommand = UIKeyCommand(input: UIKeyCommand.inputUpArrow,
                                      modifierFlags: [],
                                      action: #selector(moveUp(_:)))
-        if #available(iOS 9.0, *) {
-            upCommand.discoverabilityTitle = "Выбрать предыдущий вариант"
-        }
         let downCommand = UIKeyCommand(input: UIKeyCommand.inputDownArrow,
                                        modifierFlags: [],
                                        action: #selector(moveDown(_:)))
-        if #available(iOS 9.0, *) {
-            downCommand.discoverabilityTitle = "Выбрать следующий вариант"
-        }
         let confirmCommand = UIKeyCommand(input: "\r",
                                           modifierFlags: [],
                                           action: #selector(confirm(_:)))
         if #available(iOS 9.0, *) {
+            upCommand.discoverabilityTitle = "Выбрать предыдущий вариант"
+            downCommand.discoverabilityTitle = "Выбрать следующий вариант"
             confirmCommand.discoverabilityTitle = "Подтвердить выбор"
         }
         var commands = [
@@ -307,7 +308,7 @@ final class MainSceneViewController: UIViewController {
             case .unexpectedInput, .expectingMoreInput:
                 break // Do nothing
             case .gameEnded:
-                self?.startGame()
+                self?.startGame(restoredState: nil)
             }
         }
     }
@@ -322,24 +323,17 @@ final class MainSceneViewController: UIViewController {
 
     override func encodeRestorableState(with coder: NSCoder) {
         super.encodeRestorableState(with: coder)
-        do {
-            try coder.encodeEncodable(gameState,
-                                      forKey: gameStateRestorationKey)
-        } catch {
-            assertionFailure(String(describing: error))
+        if let gameRunner = self.gameRunner {
+            do {
+                try gameRunner.encodeGameState(to: coder)
+            } catch {
+                assertionFailure(String(describing: error))
+            }
         }
     }
 
     override func decodeRestorableState(with coder: NSCoder) {
-        do {
-            gameState = try coder
-                .decodeDecodable(GameState.self,
-                                 forKey: gameStateRestorationKey)
-        } catch DecodingError.valueNotFound {
-            // do nothing
-        } catch {
-            assertionFailure(String(describing: error))
-        }
+        startGame(restoredState: coder)
         super.decodeRestorableState(with: coder)
     }
 }
