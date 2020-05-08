@@ -1,6 +1,6 @@
 use mmheroes_core::{
     logic::{Game, GameMode},
-    ui::{self, *},
+    ui::{self, renderer::RendererRequest, *},
 };
 use pancurses::*;
 use std::cell::RefCell;
@@ -39,80 +39,20 @@ mod screen {
 
 use screen::ScreenRAII;
 
-struct PancursesRenderer<'a> {
-    log: &'static Mutex<RefCell<Vec<ui::Input>>>,
-    color_pairs: &'a HashMap<(Color, Color), i16>,
-    window: &'a ScreenRAII,
-}
-
-#[derive(Debug)]
-struct CursesError(&'static str);
-
-macro_rules! handle_curses_error {
-    ($call:expr) => {{
-        let rc = $call;
-        if rc == pancurses::OK {
-            Ok(())
-        } else {
-            Err(CursesError(stringify!($call)))
+fn getch(window: &ScreenRAII, log: &Mutex<RefCell<Vec<ui::Input>>>) -> ui::Input {
+    loop {
+        let ui_input = match window.getch() {
+            None | Some(pancurses::Input::KeyResize) => continue,
+            Some(pancurses::Input::KeyUp) => ui::Input::KeyUp,
+            Some(pancurses::Input::KeyDown) => ui::Input::KeyDown,
+            Some(pancurses::Input::Character('\n')) => ui::Input::Enter,
+            Some(_) => ui::Input::Other,
+        };
+        {
+            let log = log.lock().unwrap();
+            log.borrow_mut().push(ui_input);
         }
-    }};
-}
-
-impl Renderer for PancursesRenderer<'_> {
-    type Error = CursesError;
-
-    fn clear_screen(&mut self) -> Result<(), Self::Error> {
-        handle_curses_error!(self.window.clear())
-    }
-
-    fn flush(&mut self) -> Result<(), Self::Error> {
-        handle_curses_error!(self.window.refresh())
-    }
-
-    fn write_str(&mut self, s: &str) -> Result<(), Self::Error> {
-        handle_curses_error!(self.window.addnstr(s, s.len()))
-    }
-
-    fn move_cursor_to(&mut self, line: i32, column: i32) -> Result<(), Self::Error> {
-        handle_curses_error!(self.window.mv(line, column))
-    }
-
-    fn get_cursor_position(&mut self) -> Result<(i32, i32), Self::Error> {
-        Ok(self.window.get_cur_yx())
-    }
-
-    fn set_color(&mut self, foreground: Color, background: Color) -> Result<(), Self::Error> {
-        handle_curses_error!(self.window.color_set(
-            *self
-                .color_pairs
-                .get(&(foreground, background))
-                .unwrap_or_else(|| panic!(
-                    "Unknown color pair: ({:?}, {:?})",
-                    foreground, background
-                )),
-        ))
-    }
-
-    fn getch(&mut self) -> Result<ui::Input, Self::Error> {
-        loop {
-            let ui_input = match self.window.getch() {
-                None | Some(pancurses::Input::KeyResize) => continue,
-                Some(pancurses::Input::KeyUp) => ui::Input::KeyUp,
-                Some(pancurses::Input::KeyDown) => ui::Input::KeyDown,
-                Some(pancurses::Input::Character('\n')) => ui::Input::Enter,
-                Some(_) => ui::Input::Other,
-            };
-            {
-                let log = self.log.lock().unwrap();
-                log.borrow_mut().push(ui_input);
-            }
-            break Ok(ui_input);
-        }
-    }
-
-    fn sleep_ms(&mut self, ms: Milliseconds) -> Result<(), Self::Error> {
-        handle_curses_error!(napms(ms.0))
+        break ui_input;
     }
 }
 
@@ -142,6 +82,7 @@ fn main() {
         (Color::White, Color::Black),
         (Color::Gray, Color::Black),
         (Color::Red, Color::Black),
+        (Color::RedBright, Color::Black),
         (Color::Green, Color::Black),
         (Color::YellowBright, Color::Black),
         (Color::Cyan, Color::Black),
@@ -156,7 +97,7 @@ fn main() {
         (Color::Blue, Color::Black),
     ];
 
-    let mut color_pairs_map = std::collections::HashMap::<(Color, Color), i16>::new();
+    let mut color_pairs_map = HashMap::<(Color, Color), i16>::new();
 
     for (i, &(foreground, background)) in color_pairs.iter().enumerate() {
         init_pair(i as i16, foreground as i16, background as i16);
@@ -177,12 +118,6 @@ fn main() {
         &*Box::leak(log)
     };
 
-    let mut renderer = PancursesRenderer {
-        log: log,
-        color_pairs: &color_pairs_map,
-        window: &window,
-    };
-
     let mode = match std::env::args().nth(1).as_deref() {
         Some("-3dec-happy-birthday-Diamond") => GameMode::God,
         Some(_) => GameMode::SelectInitialParameters,
@@ -194,7 +129,8 @@ fn main() {
         .unwrap()
         .as_millis() as u64;
 
-    let mut game_ui = GameUI::new(&mut renderer, Game::new(mode, seed));
+    let mut game = Game::new(mode, seed);
+    let mut game_ui = GameUI::new(&mut game);
 
     let default_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panic_info| {
@@ -205,5 +141,30 @@ fn main() {
         eprintln!("Key presses to reproduce: {:?}", log.borrow());
     }));
 
-    game_ui.run().unwrap()
+    let mut input = ui::Input::Enter;
+    while game_ui.continue_game(input) {
+        for request in game_ui.requests() {
+            match request {
+                RendererRequest::ClearScreen => window.clear(),
+                RendererRequest::Flush => window.refresh(),
+                RendererRequest::WriteStr(s) => window.addnstr(s, s.len()),
+                RendererRequest::MoveCursor { line, column } => {
+                    window.mv(line as i32, column as i32)
+                }
+                RendererRequest::SetColor {
+                    foreground,
+                    background,
+                } => window.color_set(
+                    *color_pairs_map
+                        .get(&(foreground, background))
+                        .unwrap_or_else(|| {
+                            panic!("Unknown color pair: ({:?}, {:?})", foreground, background)
+                        }),
+                ),
+                RendererRequest::Sleep(ms) => napms(ms.0),
+            };
+        }
+
+        input = getch(&window, log);
+    }
 }
