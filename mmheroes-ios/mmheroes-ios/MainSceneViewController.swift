@@ -12,8 +12,12 @@ final class MainSceneViewController: UIViewController {
     // Cache this view controller.
     private let helpViewController = HelpViewController()
 
-    private var mainRenderer: UIKitMMHeroesRenderer?
-    private var gameThread: Thread?
+    private var gameRunner: GameRunner?
+
+    /// This variable is used for state restoration.
+    var gameState = GameState()
+
+    private var gameHasStarted = false
 
     private let consoleFont: UIFont = {
         if #available(iOS 13.0, *) {
@@ -22,14 +26,6 @@ final class MainSceneViewController: UIViewController {
             return UIFont(name: "Menlo", size: 12)!
         }
     }()
-
-    let gameStateLock = NSLock()
-
-    /// This variable is used for state restoration.
-    var gameState = GameState() // guarded by gameStateLock
-    var runner: GameRunner?     // guarded by gameStateLock
-
-    private var gameHasStarted = false
 
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -90,16 +86,7 @@ final class MainSceneViewController: UIViewController {
         )
     }
 
-    deinit {
-        gameThread?.cancel()
-        mainRenderer?.sendInput(MMHEROES_Input_EOF)
-    }
-
     private func setupGameView() {
-        gameView.didRedraw = { [weak self] in
-            self?.mainRenderer?.viewDidFinishRedrawing()
-        }
-
         gameView.font = consoleFont
         gameView.backgroundColor = MMHEROES_Color_Black.makeUIColor()
 
@@ -210,25 +197,21 @@ final class MainSceneViewController: UIViewController {
     }
 
     private func startGame() {
-        let mainRenderer =
-            UIKitMMHeroesRenderer(font: consoleFont) { [weak self] text, caret in
-                DispatchQueue.main.async {
-                    self?.gameView.text = text
-                    self?.gameView.caret = caret
-                    self?.gameView.font = self?.consoleFont
-                    self?.gameView.setNeedsDisplay()
-                }
-            }
+        let game = Game(mode: MMHEROES_GameMode_SelectInitialParameters,
+                        seed: .random(in: 0 ... .max))
+        let gameUI = GameUI(game: game)
 
-        self.mainRenderer = mainRenderer
+        let runner = GameRunner(worker: .main,
+                                gameUI: gameUI,
+                                font: consoleFont) { [weak self] text, caret in
+            self?.gameView.text = text
+            self?.gameView.caret = caret
+            self?.gameView.setNeedsDisplay()
+        }
 
-        let gameThread = GameThread(vc: self, mainRenderer: mainRenderer)
+        self.gameRunner = runner
 
-        gameThread.name = "com.jaskiewiczs.mmheroes.game-loop-thread"
-
-        self.gameThread = gameThread
-
-        gameThread.start()
+        continueGame(MMHEROES_Input_Enter)
     }
 
     override var keyCommands: [UIKeyCommand]? {
@@ -303,25 +286,29 @@ final class MainSceneViewController: UIViewController {
     }
 
     @IBAction func moveUp(_ sender: Any) {
-        didReceiveInput(MMHEROES_Input_KeyUp)
+        continueGame(MMHEROES_Input_KeyUp)
     }
 
     @IBAction func moveDown(_ sender: Any) {
-        didReceiveInput(MMHEROES_Input_KeyDown)
+        continueGame(MMHEROES_Input_KeyDown)
     }
 
     @IBAction func confirm(_ sender: Any) {
-        didReceiveInput(MMHEROES_Input_Enter)
+        continueGame(MMHEROES_Input_Enter)
     }
 
     @objc func anyKey(_ sender: Any) {
-        didReceiveInput(MMHEROES_Input_Other)
+        continueGame(MMHEROES_Input_Other)
     }
 
-    private func didReceiveInput(_ input: MMHEROES_Input) {
-        guard let renderer = self.mainRenderer else { return }
-        if renderer.sendInput(input) {
-            gameState.input.append(input)
+    private func continueGame(_ input: MMHEROES_Input) {
+        gameRunner?.continueGame(input: input) { [weak self] status in
+            switch status {
+            case .unexpectedInput, .expectingMoreInput:
+                break // Do nothing
+            case .gameEnded:
+                self?.startGame()
+            }
         }
     }
 
@@ -335,8 +322,6 @@ final class MainSceneViewController: UIViewController {
 
     override func encodeRestorableState(with coder: NSCoder) {
         super.encodeRestorableState(with: coder)
-        gameStateLock.lock()
-        defer { gameStateLock.unlock() }
         do {
             try coder.encodeEncodable(gameState,
                                       forKey: gameStateRestorationKey)
@@ -346,8 +331,6 @@ final class MainSceneViewController: UIViewController {
     }
 
     override func decodeRestorableState(with coder: NSCoder) {
-        gameStateLock.lock()
-        defer { gameStateLock.unlock() }
         do {
             gameState = try coder
                 .decodeDecodable(GameState.self,

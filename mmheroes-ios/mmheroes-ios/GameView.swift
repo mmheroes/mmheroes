@@ -1,7 +1,7 @@
 import UIKit
 
-private let terminalWindow = (0 ..< UIKitMMHeroesRenderer.numberOfLines).map { _ in
-    String(repeating: " ", count: UIKitMMHeroesRenderer.numberOfColumns)
+private let terminalWindow = (0 ..< GameRunner.numberOfLines).map { _ in
+    String(repeating: " ", count: GameRunner.numberOfColumns)
 }.joined(separator: "\n") as NSString
 
 final class GameView: UIView {
@@ -31,8 +31,6 @@ final class GameView: UIView {
         }
     }
 
-    var didRedraw: (() -> ())?
-
     override func draw(_ rect: CGRect) {
         guard let font = self.font else { return }
 
@@ -41,7 +39,6 @@ final class GameView: UIView {
 
         drawText(in: rect, terminalWindowBoundingBox)
         drawCaret(in: rect, terminalWindowBoundingBox)
-        didRedraw?()
     }
 
     var desiredAspectRatio: CGFloat {
@@ -83,10 +80,10 @@ final class GameView: UIView {
         }
 
         let columnHeight = terminalWindowBoundingBox.width /
-            CGFloat(UIKitMMHeroesRenderer.numberOfColumns)
+            CGFloat(GameRunner.numberOfColumns)
 
         let lineHeight = terminalWindowBoundingBox.height /
-            CGFloat(UIKitMMHeroesRenderer.numberOfLines)
+            CGFloat(GameRunner.numberOfLines)
 
         let factor = scaleFactor(terminalWindowBoundingBox)
         let transform = CGAffineTransform(scaleX: factor, y: factor)

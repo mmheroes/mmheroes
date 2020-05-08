@@ -9,15 +9,14 @@
 /* Begin PBXBuildFile section */
 		873C33F5245B755000754F00 /* Caret.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873C33F4245B755000754F00 /* Caret.swift */; };
 		873C33F8245BA0F300754F00 /* libmmheroes_core_ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 873C33F7245BA0F300754F00 /* libmmheroes_core_ios.a */; platformFilter = ios; };
-		873C33FA245C360E00754F00 /* GameThread.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873C33F9245C360E00754F00 /* GameThread.swift */; };
 		873C33FB245C71E700754F00 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B132459E47D00E4BF6B /* AppDelegate.swift */; };
 		873C33FD245C8E8400754F00 /* HelpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873C33FC245C8E8400754F00 /* HelpViewController.swift */; };
 		873C33FF245C9C5B00754F00 /* help.html in Resources */ = {isa = PBXBuildFile; fileRef = 873C33FE245C9C5B00754F00 /* help.html */; };
+		8754BDE02465571000DC466E /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8754BDDF2465571000DC466E /* Game.swift */; };
 		875B3B182459E47D00E4BF6B /* MainSceneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */; };
 		875B3B1D2459E47E00E4BF6B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 875B3B1C2459E47E00E4BF6B /* Assets.xcassets */; };
 		875B3B202459E47E00E4BF6B /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 875B3B1E2459E47E00E4BF6B /* LaunchScreen.storyboard */; };
 		875B3B2D2459E75500E4BF6B /* GameRunner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B2C2459E75500E4BF6B /* GameRunner.swift */; };
-		875B3B2F2459EB3000E4BF6B /* UIKitMMHeroesRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B2E2459EB3000E4BF6B /* UIKitMMHeroesRenderer.swift */; };
 		875B3B31245A2D2400E4BF6B /* GameView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B30245A2D2400E4BF6B /* GameView.swift */; };
 		875B3B33245A35ED00E4BF6B /* StringExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B32245A35ED00E4BF6B /* StringExtensions.swift */; };
 		875B3B3A245B315B00E4BF6B /* Version in Frameworks */ = {isa = PBXBuildFile; productRef = 875B3B39245B315B00E4BF6B /* Version */; };
@@ -25,16 +24,14 @@
 		875B3B3E245B385400E4BF6B /* ApplicationInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */; };
 		875B3B43245B3E3500E4BF6B /* MMHeroesExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B42245B3E3500E4BF6B /* MMHeroesExtensions.swift */; };
 		875B3B47245B44B200E4BF6B /* GameState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B46245B44B200E4BF6B /* GameState.swift */; };
-		87F166EF245B527000618A18 /* RecordedInputRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F166EE245B527000618A18 /* RecordedInputRenderer.swift */; };
-		87F166F1245B549100618A18 /* TryRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87F166F0245B549100618A18 /* TryRenderer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		873C33F4245B755000754F00 /* Caret.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Caret.swift; sourceTree = "<group>"; };
 		873C33F7245BA0F300754F00 /* libmmheroes_core_ios.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmmheroes_core_ios.a; path = "../mmheroes-core-rs/iOS/target/universal/debug/libmmheroes_core_ios.a"; sourceTree = "<group>"; };
-		873C33F9245C360E00754F00 /* GameThread.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameThread.swift; sourceTree = "<group>"; };
 		873C33FC245C8E8400754F00 /* HelpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewController.swift; sourceTree = "<group>"; };
 		873C33FE245C9C5B00754F00 /* help.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = help.html; sourceTree = "<group>"; };
+		8754BDDF2465571000DC466E /* Game.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
 		875B3B102459E47D00E4BF6B /* MMHEROES.EXE.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MMHEROES.EXE.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		875B3B132459E47D00E4BF6B /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainSceneViewController.swift; sourceTree = "<group>"; };
@@ -43,7 +40,6 @@
 		875B3B212459E47E00E4BF6B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		875B3B282459E60F00E4BF6B /* libmmheroes_core.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmmheroes_core.a; path = "../mmheroes-core-rs/target/universal/release/libmmheroes_core.a"; sourceTree = "<group>"; };
 		875B3B2C2459E75500E4BF6B /* GameRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameRunner.swift; sourceTree = "<group>"; };
-		875B3B2E2459EB3000E4BF6B /* UIKitMMHeroesRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIKitMMHeroesRenderer.swift; sourceTree = "<group>"; };
 		875B3B30245A2D2400E4BF6B /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		875B3B32245A35ED00E4BF6B /* StringExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringExtensions.swift; sourceTree = "<group>"; };
 		875B3B34245A4F5C00E4BF6B /* mmheroes-ios.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "mmheroes-ios.entitlements"; sourceTree = "<group>"; };
@@ -52,8 +48,6 @@
 		875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationInfo.swift; sourceTree = "<group>"; };
 		875B3B42245B3E3500E4BF6B /* MMHeroesExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MMHeroesExtensions.swift; sourceTree = "<group>"; };
 		875B3B46245B44B200E4BF6B /* GameState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameState.swift; sourceTree = "<group>"; };
-		87F166EE245B527000618A18 /* RecordedInputRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordedInputRenderer.swift; sourceTree = "<group>"; };
-		87F166F0245B549100618A18 /* TryRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TryRenderer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,7 +83,6 @@
 		875B3B122459E47D00E4BF6B /* mmheroes-ios */ = {
 			isa = PBXGroup;
 			children = (
-				87F166ED245B525700618A18 /* Renderers */,
 				875B3B41245B3E2400E4BF6B /* Extensions */,
 				875B3B34245A4F5C00E4BF6B /* mmheroes-ios.entitlements */,
 				875B3B132459E47D00E4BF6B /* AppDelegate.swift */,
@@ -97,7 +90,7 @@
 				875B3B46245B44B200E4BF6B /* GameState.swift */,
 				875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */,
 				873C33FC245C8E8400754F00 /* HelpViewController.swift */,
-				873C33F9245C360E00754F00 /* GameThread.swift */,
+				8754BDDF2465571000DC466E /* Game.swift */,
 				875B3B2C2459E75500E4BF6B /* GameRunner.swift */,
 				875B3B30245A2D2400E4BF6B /* GameView.swift */,
 				873C33F4245B755000754F00 /* Caret.swift */,
@@ -127,16 +120,6 @@
 				875B3B42245B3E3500E4BF6B /* MMHeroesExtensions.swift */,
 			);
 			path = Extensions;
-			sourceTree = "<group>";
-		};
-		87F166ED245B525700618A18 /* Renderers */ = {
-			isa = PBXGroup;
-			children = (
-				875B3B2E2459EB3000E4BF6B /* UIKitMMHeroesRenderer.swift */,
-				87F166EE245B527000618A18 /* RecordedInputRenderer.swift */,
-				87F166F0245B549100618A18 /* TryRenderer.swift */,
-			);
-			path = Renderers;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -241,16 +224,13 @@
 				875B3B3E245B385400E4BF6B /* ApplicationInfo.swift in Sources */,
 				875B3B33245A35ED00E4BF6B /* StringExtensions.swift in Sources */,
 				873C33F5245B755000754F00 /* Caret.swift in Sources */,
-				87F166F1245B549100618A18 /* TryRenderer.swift in Sources */,
 				873C33FD245C8E8400754F00 /* HelpViewController.swift in Sources */,
 				873C33FB245C71E700754F00 /* AppDelegate.swift in Sources */,
 				875B3B182459E47D00E4BF6B /* MainSceneViewController.swift in Sources */,
 				875B3B47245B44B200E4BF6B /* GameState.swift in Sources */,
+				8754BDE02465571000DC466E /* Game.swift in Sources */,
 				875B3B43245B3E3500E4BF6B /* MMHeroesExtensions.swift in Sources */,
 				875B3B3C245B33B700E4BF6B /* NSCoderExtensions.swift in Sources */,
-				873C33FA245C360E00754F00 /* GameThread.swift in Sources */,
-				87F166EF245B527000618A18 /* RecordedInputRenderer.swift in Sources */,
-				875B3B2F2459EB3000E4BF6B /* UIKitMMHeroesRenderer.swift in Sources */,
 				875B3B2D2459E75500E4BF6B /* GameRunner.swift in Sources */,
 				875B3B31245A2D2400E4BF6B /* GameView.swift in Sources */,
 			);
