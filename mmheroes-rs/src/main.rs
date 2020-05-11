@@ -1,6 +1,6 @@
 use mmheroes_core::{
     logic::{Game, GameMode},
-    ui::{self, renderer::RendererRequest, *},
+    ui::{self, renderer::RendererRequest, recording, *},
 };
 use pancurses::*;
 use std::cell::RefCell;
@@ -39,7 +39,10 @@ mod screen {
 
 use screen::ScreenRAII;
 
-fn getch(window: &ScreenRAII, log: &Mutex<RefCell<Vec<ui::Input>>>) -> ui::Input {
+type Log = String;
+type Logger = Mutex<RefCell<recording::InputRecorder<'static, Log>>>;
+
+fn getch<'a>(window: &ScreenRAII, logger: &Logger) -> ui::Input {
     loop {
         let ui_input = match window.getch() {
             None | Some(pancurses::Input::KeyResize) => continue,
@@ -49,8 +52,8 @@ fn getch(window: &ScreenRAII, log: &Mutex<RefCell<Vec<ui::Input>>>) -> ui::Input
             Some(_) => ui::Input::Other,
         };
         {
-            let log = log.lock().unwrap();
-            log.borrow_mut().push(ui_input);
+            let logger = logger.lock().unwrap();
+            logger.borrow_mut().record_input(ui_input).unwrap();
         }
         break ui_input;
     }
@@ -110,12 +113,13 @@ fn main() {
 
     // We save each pressed key to this log, so that if a panic occurs,
     // we could print it and the player could send a useful bug report.
-    let log = {
-        let log = Box::new(Mutex::new(RefCell::new(Vec::new())));
+    let logger = {
+        let log = &mut *Box::leak(Box::new(Log::new()));
+        let logger = Box::new(Mutex::new(RefCell::new(recording::InputRecorder::new(log))));
 
-        // Leak the log object so that we could obtain a reference with static lifetime.
-        // This is needed for accessing it in the panic handler.
-        &*Box::leak(log)
+        // Leak the log and the logger object so that we could obtain a reference with
+        // static lifetime. This is needed for accessing it in the panic handler.
+        &*Box::leak(logger)
     };
 
     let mode = match std::env::args().nth(1).as_deref() {
@@ -136,9 +140,11 @@ fn main() {
     std::panic::set_hook(Box::new(move |panic_info| {
         endwin(); // Switch back to normal terminal I/O.
         default_hook(panic_info); // Print panic message and optionally a backtrace.
-        let log = log.lock().unwrap();
-        eprintln!("Game seed: {}", seed);
-        eprintln!("Key presses to reproduce: {:?}", log.borrow());
+        eprintln!("Зерно игры: {}", seed);
+        let logger = logger.lock().unwrap();
+        logger.borrow_mut().flush().unwrap();
+        eprintln!("Шаги для воспроизведения бага: {:?}", logger.borrow_mut().output());
+        eprintln!("Пожалуйста, отправь зерно игры и шаги для воспроизведения бага разработчику.")
     }));
 
     let mut input = ui::Input::Enter;
@@ -165,6 +171,6 @@ fn main() {
             };
         }
 
-        input = getch(&window, log);
+        input = getch(&window, logger);
     }
 }
