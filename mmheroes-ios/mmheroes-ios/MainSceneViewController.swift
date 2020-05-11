@@ -25,6 +25,7 @@ final class MainSceneViewController: UIViewController {
     }()
 
     private let selectionFeedbackGenerator = makeSelectionFeedbackGenerator()
+    private let confirmationFeedbackGenerator = makeImpactFeedbackGenerator(style: .medium)
 
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -302,6 +303,9 @@ final class MainSceneViewController: UIViewController {
     }
 
     @IBAction func confirm(_ sender: Any) {
+        if sender is UIGestureRecognizer {
+            confirmationFeedbackGenerator.impactOccurred()
+        }
         continueGame(MMHEROES_Input_Enter)
     }
 
@@ -316,10 +320,15 @@ final class MainSceneViewController: UIViewController {
                 break // Do nothing
             case .expectingMoreInput:
                 self?.selectionFeedbackGenerator.prepare()
+                self?.confirmationFeedbackGenerator.prepare()
             case .gameEnded:
                 self?.startGame(restoredState: nil)
             }
         }
+        // TODO: Add various haptic feedback for events.
+        // For example, vibration on the "ding" screen,
+        // failure feedback on death and success feedback on success.
+        // Need proper FFI for that.
     }
 
     override var prefersHomeIndicatorAutoHidden: Bool {
