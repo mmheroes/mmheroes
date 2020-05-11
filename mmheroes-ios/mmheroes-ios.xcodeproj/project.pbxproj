@@ -24,6 +24,7 @@
 		875B3B3E245B385400E4BF6B /* ApplicationInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */; };
 		875B3B43245B3E3500E4BF6B /* MMHeroesExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B42245B3E3500E4BF6B /* MMHeroesExtensions.swift */; };
 		87E562572469A03B005FC120 /* FeedbackGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E562562469A03B005FC120 /* FeedbackGenerator.swift */; };
+		87E562592469A510005FC120 /* SelectOptionGestureRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E562582469A510005FC120 /* SelectOptionGestureRecognizer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +49,7 @@
 		875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationInfo.swift; sourceTree = "<group>"; };
 		875B3B42245B3E3500E4BF6B /* MMHeroesExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MMHeroesExtensions.swift; sourceTree = "<group>"; };
 		87E562562469A03B005FC120 /* FeedbackGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedbackGenerator.swift; sourceTree = "<group>"; };
+		87E562582469A510005FC120 /* SelectOptionGestureRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectOptionGestureRecognizer.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +91,7 @@
 				875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */,
 				875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */,
 				87E562562469A03B005FC120 /* FeedbackGenerator.swift */,
+				87E562582469A510005FC120 /* SelectOptionGestureRecognizer.swift */,
 				873C33FC245C8E8400754F00 /* HelpViewController.swift */,
 				8754BDDF2465571000DC466E /* Game.swift */,
 				875B3B2C2459E75500E4BF6B /* GameRunner.swift */,
@@ -231,6 +234,7 @@
 				8754BDE02465571000DC466E /* Game.swift in Sources */,
 				875B3B43245B3E3500E4BF6B /* MMHeroesExtensions.swift in Sources */,
 				875B3B3C245B33B700E4BF6B /* NSCoderExtensions.swift in Sources */,
+				87E562592469A510005FC120 /* SelectOptionGestureRecognizer.swift in Sources */,
 				875B3B2D2459E75500E4BF6B /* GameRunner.swift in Sources */,
 				875B3B31245A2D2400E4BF6B /* GameView.swift in Sources */,
 			);

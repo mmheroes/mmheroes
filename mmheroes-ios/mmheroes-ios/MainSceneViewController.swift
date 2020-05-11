@@ -100,17 +100,16 @@ final class MainSceneViewController: UIViewController {
         tapGestureRecognizer.addTarget(self, action: #selector(confirm(_:)))
         view.addGestureRecognizer(tapGestureRecognizer)
 
-        // Swipe up means "Go to the previous option"
-        let swipeUpGestureRecognizer = UISwipeGestureRecognizer()
-        swipeUpGestureRecognizer.direction = .up
-        swipeUpGestureRecognizer.addTarget(self, action: #selector(moveUp(_:)))
+        let swipeUpGestureRecognizer =
+            SelectOptionGestureRecognizer { [weak self] gr, direction in
+                switch direction {
+                case .up:
+                    self?.moveUp(gr)
+                case .down:
+                    self?.moveDown(gr)
+                }
+            }
         view.addGestureRecognizer(swipeUpGestureRecognizer)
-
-        // Swipe down means "Go to the next option"
-        let swipeDownGestureRecognizer = UISwipeGestureRecognizer()
-        swipeDownGestureRecognizer.direction = .down
-        swipeDownGestureRecognizer.addTarget(self, action: #selector(moveDown(_:)))
-        view.addGestureRecognizer(swipeDownGestureRecognizer)
     }
 
     private func updateGameViewLayout() {
@@ -289,12 +288,16 @@ final class MainSceneViewController: UIViewController {
     }
 
     @IBAction func moveUp(_ sender: Any) {
-        selectionFeedbackGenerator.selectionChanged()
+        if sender is UIGestureRecognizer {
+            selectionFeedbackGenerator.selectionChanged()
+        }
         continueGame(MMHEROES_Input_KeyUp)
     }
 
     @IBAction func moveDown(_ sender: Any) {
-        selectionFeedbackGenerator.selectionChanged()
+        if sender is UIGestureRecognizer {
+            selectionFeedbackGenerator.selectionChanged()
+        }
         continueGame(MMHEROES_Input_KeyDown)
     }
 
