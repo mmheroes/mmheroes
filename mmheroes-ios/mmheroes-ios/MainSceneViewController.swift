@@ -24,6 +24,8 @@ final class MainSceneViewController: UIViewController {
         }
     }()
 
+    private let selectionFeedbackGenerator = makeSelectionFeedbackGenerator()
+
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
         restorationIdentifier = Self.restorationIdentifier
@@ -287,10 +289,12 @@ final class MainSceneViewController: UIViewController {
     }
 
     @IBAction func moveUp(_ sender: Any) {
+        selectionFeedbackGenerator.selectionChanged()
         continueGame(MMHEROES_Input_KeyUp)
     }
 
     @IBAction func moveDown(_ sender: Any) {
+        selectionFeedbackGenerator.selectionChanged()
         continueGame(MMHEROES_Input_KeyDown)
     }
 
@@ -305,8 +309,10 @@ final class MainSceneViewController: UIViewController {
     private func continueGame(_ input: MMHEROES_Input) {
         gameRunner?.continueGame(input: input) { [weak self] status in
             switch status {
-            case .unexpectedInput, .expectingMoreInput:
+            case .unexpectedInput:
                 break // Do nothing
+            case .expectingMoreInput:
+                self?.selectionFeedbackGenerator.prepare()
             case .gameEnded:
                 self?.startGame(restoredState: nil)
             }
