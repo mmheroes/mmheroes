@@ -72,7 +72,7 @@ fn pause() {}
 
 #[cfg(not(target_os = "windows"))]
 fn resize_terminal(height: i32, width: i32) {
-    println!("\x1B[8;{};{}t", width, height);
+    println!("\x1B[8;{};{}t", height, width);
     resize_term(height, width);
 }
 
