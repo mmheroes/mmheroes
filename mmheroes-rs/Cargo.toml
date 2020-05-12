@@ -6,7 +6,10 @@ edition = "2018"
 
 [dependencies]
 mmheroes-core = { path = "../mmheroes-core-rs" }
-pancurses = "0.16.1"
+
+[dependencies.pancurses]
+version = "0.16.1"
+features = ["win32"]
 
 [profile.release]
 opt-level = "s"  # Optimize for size.

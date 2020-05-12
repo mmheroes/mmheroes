@@ -1,6 +1,6 @@
 use mmheroes_core::{
     logic::{Game, GameMode},
-    ui::{self, renderer::RendererRequest, recording, *},
+    ui::{self, recording, renderer::RendererRequest, *},
 };
 use pancurses::*;
 use std::cell::RefCell;
@@ -59,9 +59,29 @@ fn getch<'a>(window: &ScreenRAII, logger: &Logger) -> ui::Input {
     }
 }
 
-fn main() {
-    use std::io::Write;
+#[cfg(target_os = "windows")]
+fn pause() {
+    let _ = std::process::Command::new("cmd.exe")
+        .arg("/c")
+        .arg("pause")
+        .status();
+}
 
+#[cfg(not(target_os = "windows"))]
+fn pause() {}
+
+#[cfg(not(target_os = "windows"))]
+fn resize_terminal(height: i32, width: i32) {
+    println!("\x1B[8;{};{}t", width, height);
+    resize_term(height, width);
+}
+
+#[cfg(target_os = "windows")]
+fn resize_terminal(height: i32, width: i32) {
+    resize_term(height, width);
+}
+
+fn main() {
     let window = ScreenRAII::new();
     start_color();
     set_blink(true);
@@ -73,13 +93,7 @@ fn main() {
     window.keypad(true);
     window.nodelay(false);
 
-    #[cfg(not(target_os = "windows"))]
-    {
-        // Resize the terminal. We want 24 lines and 80 columns.
-        print!("\x1B[8;24;80t");
-        std::io::stdout().flush().unwrap();
-    }
-    resize_term(24, 80);
+    resize_terminal(24, 80);
 
     window.clear();
     window.refresh();
@@ -146,8 +160,12 @@ fn main() {
         eprintln!("Зерно игры: {}", seed);
         let logger = logger.lock().unwrap();
         logger.borrow_mut().flush().unwrap();
-        eprintln!("Шаги для воспроизведения бага: {:?}", logger.borrow_mut().output());
-        eprintln!("Пожалуйста, отправь зерно игры и шаги для воспроизведения бага разработчику.")
+        eprintln!(
+            "Шаги для воспроизведения бага: {:?}",
+            logger.borrow_mut().output()
+        );
+        eprintln!("Пожалуйста, отправь зерно игры и шаги для воспроизведения бага разработчику.");
+        pause();
     }));
 
     let mut input = ui::Input::Enter;
