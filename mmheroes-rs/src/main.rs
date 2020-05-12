@@ -73,9 +73,12 @@ fn main() {
     window.keypad(true);
     window.nodelay(false);
 
-    // Resize the terminal. We want 24 lines and 80 columns.
-    print!("\x1B[8;24;80t");
-    std::io::stdout().flush().unwrap();
+    #[cfg(not(target_os = "windows"))]
+    {
+        // Resize the terminal. We want 24 lines and 80 columns.
+        print!("\x1B[8;24;80t");
+        std::io::stdout().flush().unwrap();
+    }
     resize_term(24, 80);
 
     window.clear();
