@@ -25,10 +25,6 @@ final class Game {
         handle = mmheroes_game_create(mode, seed, nil, allocator)
     }
 
-    var availableActions: Int {
-        Int(mmheroes_game_get_available_actions(handle))
-    }
-
     var dayAndTime: (Int, Time)? {
         var day: UInt8 = 255
         var time = Time(rawValue: 255)
