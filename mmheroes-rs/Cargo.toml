@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 mmheroes-core = { path = "../mmheroes-core-rs" }
+app_dirs = "1.2.1"
 
 [dependencies.pancurses]
 version = "0.16.1"

@@ -7,6 +7,11 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
+const APP_INFO: app_dirs::AppInfo = app_dirs::AppInfo {
+    name: "mmheroes",
+    author: "broadwaylamb",
+};
+
 mod screen {
     use super::{endwin, initscr, Window};
 
@@ -34,6 +39,39 @@ mod screen {
         fn deref(&self) -> &Self::Target {
             &self.window
         }
+    }
+}
+
+mod high_scores {
+    use mmheroes_core::ui::high_scores::{decode, encode, HighScore, BUFFER_SIZE, SCORE_COUNT};
+    use std::fs::*;
+    use std::io::Read;
+
+    use std::path::PathBuf;
+
+    fn hi_file_path() -> PathBuf {
+        use app_dirs::*;
+        let dir = app_root(AppDataType::UserData, &crate::APP_INFO).unwrap_or(PathBuf::from("."));
+        dir.join("MMHEROES.HI")
+    }
+
+    pub(crate) fn load() -> Option<[HighScore; SCORE_COUNT]> {
+        let mut f = match OpenOptions::new().read(true).open(hi_file_path()) {
+            Ok(f) => f,
+            Err(_) => return None,
+        };
+
+        let mut buffer = [0u8; BUFFER_SIZE];
+        if let Err(_) = f.read_exact(&mut buffer) {
+            return None;
+        }
+
+        decode(&buffer)
+    }
+
+    pub(crate) fn save(scores: &[HighScore; SCORE_COUNT]) {
+        let encoded = encode(scores);
+        let _ = write(hi_file_path(), encoded.as_ref());
     }
 }
 
@@ -151,7 +189,8 @@ fn main() {
         .as_millis() as u64;
 
     let mut game = Game::new(mode, seed);
-    let mut game_ui = GameUI::new(&mut game);
+
+    let mut game_ui = GameUI::new(&mut game, high_scores::load());
 
     let default_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panic_info| {
@@ -194,4 +233,6 @@ fn main() {
 
         input = getch(&window, logger);
     }
+
+    high_scores::save(&game_ui.high_scores);
 }
