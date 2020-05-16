@@ -13,6 +13,11 @@ struct Time: RawRepresentable {
     }
 }
 
+struct HighScore {
+    var name: String
+    var money: MMHEROES_Money
+}
+
 final class Game {
 
     let mode: MMHEROES_GameMode
@@ -39,36 +44,101 @@ final class Game {
     }
 }
 
+private func convertHighScoresToFFIFriendlyPointer<R>(
+    _ highScores: [HighScore],
+    _ body: (UnsafeBufferPointer<MMHEROES_HighScore>) -> R
+) -> R {
+    precondition(highScores.count >= Int(MMHEROES_SCORE_COUNT))
+    var ffiHighScores = [MMHEROES_HighScore]()
+    ffiHighScores.reserveCapacity(Int(MMHEROES_SCORE_COUNT))
+    func doTheWork(_ iterator: IndexingIterator<[HighScore]>) -> R {
+        var iterator = iterator
+        if var highScore = iterator.next() {
+            return highScore.name.withUTF8 { buffer in
+                ffiHighScores
+                    .append(MMHEROES_HighScore(name: buffer.baseAddress,
+                                               name_len: UInt(buffer.count),
+                                               score: highScore.money))
+                return doTheWork(iterator)
+            }
+        } else {
+            precondition(ffiHighScores.count >= Int(MMHEROES_SCORE_COUNT))
+            return ffiHighScores.withUnsafeBufferPointer(body)
+        }
+    }
+
+    return doTheWork(highScores.makeIterator())
+}
+
 final class GameUI {
 
     private let handle: OpaquePointer
 
     let game: Game
 
-    init(game: Game) {
+    init(game: Game, highScores: [HighScore]? = nil) {
         self.game = game
-        handle = mmheroes_game_ui_create(game.handle, nil, allocator)
+        if let highScores = highScores {
+            handle = convertHighScoresToFFIFriendlyPointer(highScores) { buffer in
+                mmheroes_game_ui_create(game.handle,
+                                        buffer.baseAddress,
+                                        nil,
+                                        allocator)
+            }
+        } else {
+            handle = mmheroes_game_ui_create(game.handle, nil, nil, allocator)
+        }
     }
 
     deinit {
         mmheroes_game_ui_destroy(handle, nil, deallocator)
     }
 
+    var highScores: [HighScore] {
+        get {
+            withExtendedLifetime(self) {
+                var result = [MMHEROES_HighScore](repeating: MMHEROES_HighScore(),
+                                                  count: Int(MMHEROES_SCORE_COUNT))
+                mmheroes_game_ui_get_high_scores(handle, &result)
+
+                return result.map { ffiHighScore in
+                    let nameBuf = UnsafeBufferPointer(start: ffiHighScore.name,
+                                                      count: Int(ffiHighScore.name_len))
+                    let name = String(decoding: nameBuf, as: UTF8.self)
+                    return HighScore(name: name, money: ffiHighScore.score)
+                }
+            }
+        }
+        set {
+            withExtendedLifetime(self) {
+                convertHighScoresToFFIFriendlyPointer(newValue) { buffer in
+                    mmheroes_game_ui_set_high_scores(handle, buffer.baseAddress)
+                }
+            }
+        }
+    }
+
     @discardableResult
     func replay(recordedInput: String) -> Bool {
-        recordedInput.withCString(encodedAs: UTF8.self) { buf in
-            mmheroes_replay(handle, buf, UInt(recordedInput.utf8.count))
+        withExtendedLifetime(self) {
+            recordedInput.withCString(encodedAs: UTF8.self) { buf in
+                mmheroes_replay(handle, buf, UInt(recordedInput.utf8.count))
+            }
         }
     }
 
     func continueGame(input: MMHEROES_Input) -> Bool {
-        mmheroes_continue(handle, input)
+        withExtendedLifetime(self) {
+            mmheroes_continue(handle, input)
+        }
     }
 
     func requests() -> RendererRequestIterator {
-        var iterator = MMHEROES_RendererRequestIterator()
-        mmheroes_renderer_request_iterator_begin(&iterator, handle)
-        return RendererRequestIterator(underlying: iterator)
+        withExtendedLifetime(self) {
+            var iterator = MMHEROES_RendererRequestIterator()
+            mmheroes_renderer_request_iterator_begin(&iterator, handle)
+            return RendererRequestIterator(underlying: iterator)
+        }
     }
 }
 
