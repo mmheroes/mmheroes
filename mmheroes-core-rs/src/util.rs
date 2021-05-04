@@ -6,229 +6,130 @@ use core::iter::{FromIterator, IntoIterator};
 use core::mem::MaybeUninit;
 use core::ops::{Deref, DerefMut};
 
-/// https://stackoverflow.com/a/36259524
-macro_rules! array {
-    (@as_expr $e:expr) => { $e };
-
-    (@accum (0, $($_es:expr),*) -> ($($body:tt)*)) => {
-        array!(@as_expr [$($body)*])
-    };
-
-    (@accum (1, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (0, $($es),*) -> ($($body)* $($es,)*))
-    };
-
-    (@accum (2, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (0, $($es),*) -> ($($body)* $($es,)* $($es,)*))
-    };
-
-    (@accum (4, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (2, $($es,)* $($es),*) -> ($($body)*))
-    };
-
-    (@accum (8, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (4, $($es,)* $($es),*) -> ($($body)*))
-    };
-
-    (@accum (16, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (8, $($es,)* $($es),*) -> ($($body)*))
-    };
-
-    (@accum (32, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (16, $($es,)* $($es),*) -> ($($body)*))
-    };
-
-    (@accum (64, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (32, $($es,)* $($es),*) -> ($($body)*))
-    };
-
-    (@accum (128, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (64, $($es,)* $($es),*) -> ($($body)*))
-    };
-
-    (@accum (256, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (128, $($es,)* $($es),*) -> ($($body)*))
-    };
-
-    (@accum (512, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (256, $($es,)* $($es),*) -> ($($body)*))
-    };
-
-    (@accum (1024, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (512, $($es,)* $($es),*) -> ($($body)*))
-    };
-
-    (@accum (2048, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (1024, $($es,)* $($es),*) -> ($($body)*))
-    };
-
-    (@accum (4096, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (2048, $($es,)* $($es),*) -> ($($body)*))
-    };
-
-    (@accum (8192, $($es:expr),*) -> ($($body:tt)*)) => {
-        array!(@accum (4096, $($es,)* $($es),*) -> ($($body)*))
-    };
-
-    [$e:expr; $n:tt] => {
-        array!(@accum ($n, $e) -> ())
-    };
-}
-
-pub trait TinyVecStorage {
-    type Element;
-    fn as_slice(&self) -> &[MaybeUninit<Self::Element>];
-    fn as_mut_slice(&mut self) -> &mut [MaybeUninit<Self::Element>];
-}
-
-pub(crate) struct TinyVec<Storage: TinyVecStorage> {
-    storage: Storage,
+pub(crate) struct TinyVec<T, const CAPACITY: usize> {
+    storage: [MaybeUninit<T>; CAPACITY],
     count: usize,
 }
 
-impl<Storage: TinyVecStorage> TinyVec<Storage> {
+impl<T, const CAPACITY: usize> TinyVec<T, CAPACITY> {
     pub(crate) fn len(&self) -> usize {
         self.count
     }
 }
 
-macro_rules! tiny_vec_ty {
-    ($ty:ty; $capacity:literal) => {
-        $crate::util::TinyVec::<[core::mem::MaybeUninit<$ty>; $capacity]>
-    };
-}
+impl<T, const CAPACITY: usize> TinyVec<T, CAPACITY> {
+    pub(crate) fn new() -> Self {
 
-macro_rules! __tiny_vec_implementation {
-    ($capacity:tt) => {
-        impl<T> TinyVecStorage for [MaybeUninit<T>; $capacity] {
-            type Element = T;
-
-            fn as_slice(&self) -> &[MaybeUninit<Self::Element>] {
-                self.as_ref()
-            }
-
-            fn as_mut_slice(&mut self) -> &mut [MaybeUninit<Self::Element>] {
-                self.as_mut()
-            }
+        Self {
+            // This should be replaced with [MaybeUninit::uninit(); CAPACITY]
+            // as soon as the corresponding feature is stabilized.
+            // For now we use this workaround, see // See http://doc.rust-lang.org/1.51.0/core/mem/union.MaybeUninit.html#initializing-an-array-element-by-element
+            storage: unsafe { MaybeUninit::uninit().assume_init() },
+            count: 0,
         }
+    }
 
-        impl<Element> tiny_vec_ty![Element; $capacity] {
-            pub(crate) fn new() -> Self {
-                Self {
-                    storage: array![MaybeUninit::uninit(); $capacity],
-                    count: 0,
-                }
-            }
-
-            pub(crate) fn push(&mut self, value: Element) {
-                assert!(self.count < self.storage.len(), "Capacity is exceeded");
-                unsafe {
-                    self.storage[self.count].as_mut_ptr().write(value)
-                }
-                self.count += 1;
-            }
+    pub(crate) fn push(&mut self, value: T) {
+        assert!(self.count < self.storage.len(), "Capacity is exceeded");
+        unsafe {
+            self.storage[self.count].as_mut_ptr().write(value)
         }
+        self.count += 1;
+    }
 
-        impl<Element> Deref for tiny_vec_ty![Element; $capacity] {
-            type Target = [Element];
-
-            fn deref(&self) -> &Self::Target {
-                let slice = &self.storage[..self.count];
-                unsafe {
-                    &*(slice as *const [MaybeUninit<Element>] as *const [Element])
-                }
-            }
-        }
-
-        impl<Element> DerefMut for tiny_vec_ty![Element; $capacity] {
-            fn deref_mut(&mut self) -> &mut Self::Target {
-                let slice = &mut self.storage[..self.count];
-                unsafe {
-                    &mut *(slice as *mut [MaybeUninit<Element>] as *mut [Element])
-                }
-            }
-        }
-
-        impl<Element, Index: core::slice::SliceIndex<[Element]>> core::ops::Index<Index> for tiny_vec_ty![Element; $capacity] {
-            type Output = <Index as core::slice::SliceIndex<[Element]>>::Output;
-
-            fn index(&self, index: Index) -> &Self::Output {
-                core::ops::Index::index(&**self, index)
-            }
-        }
-
-        impl<Element: Clone> tiny_vec_ty![Element; $capacity] {
-
-            #[allow(dead_code)] // False positive here
-            pub(crate) fn extend_from_slice(&mut self, other: &[Element]) {
-                for element in other {
-                    self.push(element.clone())
-                }
-            }
-        }
-
-        impl<Element: Clone> Clone for tiny_vec_ty![Element; $capacity] {
-            fn clone(&self) -> Self {
-                let mut result = Self::new();
-                for element in &**self {
-                    result.push(element.clone());
-                }
-                result
-            }
-        }
-
-        impl<Element: Debug> Debug for tiny_vec_ty![Element; $capacity] {
-            fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-                Debug::fmt(&**self, f)
-            }
-        }
-
-        impl<Element: PartialEq> PartialEq for tiny_vec_ty![Element; $capacity] {
-            fn eq(&self, other: &Self) -> bool {
-                PartialEq::eq(&**self, &**other)
-            }
-        }
-
-        impl<Element: Eq> Eq for tiny_vec_ty![Element; $capacity] {}
-
-        impl<Element: PartialOrd> PartialOrd for tiny_vec_ty![Element; $capacity] {
-            fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-                PartialOrd::partial_cmp(&**self, &**other)
-            }
-        }
-
-        impl<Element: Ord> Ord for tiny_vec_ty![Element; $capacity] {
-            fn cmp(&self, other: &Self) -> Ordering {
-                Ord::cmp(&**self, &**other)
-            }
-        }
-
-        impl<Element> FromIterator<Element> for tiny_vec_ty![Element; $capacity] {
-            fn from_iter<I: IntoIterator<Item = Element>>(iter: I) -> Self {
-                let mut v = Self::new();
-                for element in iter {
-                    v.push(element);
-                }
-                v
-            }
-        }
-    };
-}
-
-__tiny_vec_implementation!(16);
-__tiny_vec_implementation!(128);
-__tiny_vec_implementation!(4096);
-
-impl<Storage: TinyVecStorage> TinyVec<Storage> {
     pub(crate) fn clear(&mut self) {
-        for element in self.storage.as_mut_slice().iter_mut().take(self.count) {
+        for element in self.storage.iter_mut().take(self.count) {
             unsafe { core::ptr::drop_in_place(element.as_mut_ptr()) }
         }
         self.count = 0
     }
 }
 
-impl<Storage: TinyVecStorage> Drop for TinyVec<Storage> {
+impl<T, const CAPACITY: usize> Deref for TinyVec<T, CAPACITY> {
+    type Target = [T];
+
+    fn deref(&self) -> &Self::Target {
+        let slice = &self.storage[..self.count];
+        unsafe {
+            &*(slice as *const [MaybeUninit<T>] as *const [T])
+        }
+    }
+}
+
+impl<T, const CAPACITY: usize> DerefMut for TinyVec<T, CAPACITY> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        let slice = &mut self.storage[..self.count];
+        unsafe {
+            &mut *(slice as *mut [MaybeUninit<T>] as *mut [T])
+        }
+    }
+}
+
+impl<T, Index: core::slice::SliceIndex<[T]>, const CAPACITY: usize> core::ops::Index<Index> for TinyVec<T, CAPACITY> {
+    type Output = <Index as core::slice::SliceIndex<[T]>>::Output;
+
+    fn index(&self, index: Index) -> &Self::Output {
+        core::ops::Index::index(&**self, index)
+    }
+}
+
+impl<T: Clone, const CAPACITY: usize> TinyVec<T, CAPACITY> {
+
+    #[allow(dead_code)] // False positive here
+    pub(crate) fn extend_from_slice(&mut self, other: &[T]) {
+        for element in other {
+            self.push(element.clone())
+        }
+    }
+}
+
+impl<T: Clone, const CAPACITY: usize> Clone for TinyVec<T, CAPACITY> {
+    fn clone(&self) -> Self {
+        let mut result = Self::new();
+        for element in &**self {
+            result.push(element.clone());
+        }
+        result
+    }
+}
+
+impl<T: Debug, const CAPACITY: usize> Debug for TinyVec<T, CAPACITY> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        Debug::fmt(&**self, f)
+    }
+}
+
+impl<T: PartialEq, const CAPACITY: usize> PartialEq for TinyVec<T, CAPACITY> {
+    fn eq(&self, other: &Self) -> bool {
+        PartialEq::eq(&**self, &**other)
+    }
+}
+
+impl<T: Eq, const CAPACITY: usize> Eq for TinyVec<T, CAPACITY> {}
+
+impl<T: PartialOrd, const CAPACITY: usize> PartialOrd for TinyVec<T, CAPACITY> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        PartialOrd::partial_cmp(&**self, &**other)
+    }
+}
+
+impl<T: Ord, const CAPACITY: usize> Ord for TinyVec<T, CAPACITY> {
+    fn cmp(&self, other: &Self) -> Ordering {
+        Ord::cmp(&**self, &**other)
+    }
+}
+
+impl<T, const CAPACITY: usize> FromIterator<T> for TinyVec<T, CAPACITY> {
+    fn from_iter<I: IntoIterator<Item = T>>(iter: I) -> Self {
+        let mut v = Self::new();
+        for element in iter {
+            v.push(element);
+        }
+        v
+    }
+}
+
+impl<T, const CAPACITY: usize> Drop for TinyVec<T, CAPACITY> {
     fn drop(&mut self) {
         self.clear()
     }
@@ -244,7 +145,7 @@ macro_rules! __tiny_vec_push_elements {
 
 macro_rules! tiny_vec {
     (capacity: $capacity:literal) => (
-        <tiny_vec_ty![_; $capacity]>::new()
+        <crate::util::TinyVec<_, $capacity>>::new()
     );
     (capacity: $capacity:literal, []) => (
         tiny_vec!(capacity: $capacity)
@@ -259,102 +160,90 @@ macro_rules! tiny_vec {
     )
 }
 
-pub struct TinyString<Storage: TinyVecStorage> {
-    v: TinyVec<Storage>,
+pub struct TinyString<const CAPACITY: usize> {
+    v: TinyVec<u8, CAPACITY>,
 }
 
-macro_rules! tiny_string_ty {
-    ($capacity:literal) => {
-        $crate::util::TinyString::<[core::mem::MaybeUninit<u8>; $capacity]>
-    };
+impl<const CAPACITY: usize> TinyString<CAPACITY> {
+    pub(crate) fn new() -> Self {
+        Self {
+            v: TinyVec::new()
+        }
+    }
+
+    pub(crate) fn push(&mut self, ch: char) {
+        match ch.len_utf8() {
+            1 => self.v.push(ch as u8),
+            _ => self.v.extend_from_slice(ch.encode_utf8(&mut [0; 4]).as_bytes()),
+        }
+    }
+}
+impl<const CAPACITY: usize> From<&str> for TinyString<CAPACITY> {
+    fn from(s: &str) -> Self {
+        Self {
+            v: s.bytes().collect()
+        }
+    }
 }
 
-macro_rules! __tiny_string_implementation {
-    ($capacity:literal) => {
-        impl tiny_string_ty![$capacity] {
-            pub(crate) fn new() -> Self {
-                Self {
-                    v: <tiny_vec_ty![u8; $capacity]>::new()
-                }
-            }
+impl<const CAPACITY: usize> Deref for TinyString<CAPACITY> {
+    type Target = str;
 
-            pub(crate) fn push(&mut self, ch: char) {
-                match ch.len_utf8() {
-                    1 => self.v.push(ch as u8),
-                    _ => self.v.extend_from_slice(ch.encode_utf8(&mut [0; 4]).as_bytes()),
-                }
-            }
+    fn deref(&self) -> &Self::Target {
+        unsafe {
+            core::str::from_utf8_unchecked(&*self.v)
         }
-        impl From<&str> for tiny_string_ty![$capacity] {
-            fn from(s: &str) -> Self {
-                Self {
-                    v: s.bytes().collect()
-                }
-            }
-        }
-
-        impl Deref for tiny_string_ty![$capacity] {
-            type Target = str;
-
-            fn deref(&self) -> &Self::Target {
-                unsafe {
-                    core::str::from_utf8_unchecked(&*self.v)
-                }
-            }
-        }
-
-        impl FromIterator<char> for tiny_string_ty![$capacity] {
-            fn from_iter<I: IntoIterator<Item = char>>(iter: I) -> Self {
-                let mut v = Self::new();
-                for element in iter {
-                    v.push(element);
-                }
-                v
-            }
-        }
-
-        impl PartialEq for tiny_string_ty![$capacity] {
-            fn eq(&self, other: &tiny_string_ty![$capacity]) -> bool {
-                PartialEq::eq(&self[..], &other[..])
-            }
-            fn ne(&self, other: &tiny_string_ty![$capacity]) -> bool {
-                PartialEq::ne(&self[..], &other[..])
-            }
-        }
-
-        impl PartialEq<str> for tiny_string_ty![$capacity] {
-            fn eq(&self, other: &str) -> bool {
-                PartialEq::eq(&self[..], &other[..])
-            }
-            fn ne(&self, other: &str) -> bool {
-                PartialEq::ne(&self[..], &other[..])
-            }
-        }
-
-        impl<'a> PartialEq<&'a str> for tiny_string_ty![$capacity] {
-            fn eq(&self, other: & &'a str) -> bool {
-                PartialEq::eq(&self[..], &other[..])
-            }
-            fn ne(&self, other: &&'a str) -> bool {
-                PartialEq::ne(&self[..], &other[..])
-            }
-        }
-
-        impl Debug for tiny_string_ty![$capacity] {
-            fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-                Debug::fmt(&self[..], f)
-            }
-        }
-
-        impl core::fmt::Display for tiny_string_ty![$capacity] {
-            fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
-                core::fmt::Display::fmt(&self[..], f)
-            }
-        }
-    };
+    }
 }
 
-__tiny_string_implementation!(128);
+impl<const CAPACITY: usize> FromIterator<char> for TinyString<CAPACITY> {
+    fn from_iter<I: IntoIterator<Item = char>>(iter: I) -> Self {
+        let mut v = Self::new();
+        for element in iter {
+            v.push(element);
+        }
+        v
+    }
+}
+
+impl<const N: usize, const M: usize> PartialEq<TinyString<M>> for TinyString<N> {
+    fn eq(&self, other: &TinyString<M>) -> bool {
+        PartialEq::eq(&self[..], &other[..])
+    }
+    fn ne(&self, other: &TinyString<M>) -> bool {
+        PartialEq::ne(&self[..], &other[..])
+    }
+}
+
+impl<const CAPACITY: usize> PartialEq<str> for TinyString<CAPACITY> {
+    fn eq(&self, other: &str) -> bool {
+        PartialEq::eq(&self[..], &other[..])
+    }
+    fn ne(&self, other: &str) -> bool {
+        PartialEq::ne(&self[..], &other[..])
+    }
+}
+
+impl<'a, const CAPACITY: usize> PartialEq<&'a str> for TinyString<CAPACITY> {
+    fn eq(&self, other: & &'a str) -> bool {
+        PartialEq::eq(&self[..], &other[..])
+    }
+    fn ne(&self, other: &&'a str) -> bool {
+        PartialEq::ne(&self[..], &other[..])
+    }
+}
+
+impl<const CAPACITY: usize> Debug for TinyString<CAPACITY> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        Debug::fmt(&self[..], f)
+    }
+}
+
+impl<const CAPACITY: usize> core::fmt::Display for TinyString<CAPACITY> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
+        core::fmt::Display::fmt(&self[..], f)
+    }
+}
 
 /// В переданной шкале пар `scale` находит первую пару, первый элемент которой строго
 /// больше чем `value`, и возвращает второй элемент этой пары. Если такая пара не найдена,

@@ -3,6 +3,8 @@
 //! Потому что оригинальная игра это делала. Это же круто, когда сохраняется
 //! совместимость с оригинальной игрой, правда? :)
 
+use crate::util::TinyString;
+
 const CHARACTER_MAP: [char; 256] = [
     // Первая половина полностью совпадает с ASCII.
     '\x00', '\x01', '\x02', '\x03', '\x04', '\x05', '\x06', '\x07', '\x08', '\x09',
@@ -33,7 +35,7 @@ pub(crate) const fn char_from_cp866(cp866_encoded: u8) -> char {
     CHARACTER_MAP[cp866_encoded as usize]
 }
 
-pub(crate) fn string_from_cp866(cp866_encoded: &[u8]) -> tiny_string_ty![128] {
+pub(crate) fn string_from_cp866(cp866_encoded: &[u8]) -> TinyString<128> {
     cp866_encoded
         .iter()
         .cloned()
@@ -126,7 +128,7 @@ pub(crate) fn string_to_cp866_lossy(s: &str, output: &mut [u8]) -> usize {
 mod tests {
     use super::*;
 
-    fn round_trip(input: &str) -> tiny_string_ty![128] {
+    fn round_trip(input: &str) -> TinyString<128> {
         let mut buffer = [0u8; 128];
         string_to_cp866_lossy(input, &mut buffer);
         string_from_cp866(&buffer)

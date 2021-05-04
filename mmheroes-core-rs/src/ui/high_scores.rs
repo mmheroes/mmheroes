@@ -3,7 +3,7 @@ use crate::ui::cp866_encoding;
 use crate::util::TinyString;
 use core::convert::TryInto;
 
-pub type HighScore = (tiny_string_ty![128], Money);
+pub type HighScore = (TinyString<128>, Money);
 
 pub const SCORE_COUNT: usize = 5;
 pub const RECORD_SIZE: usize = 35;

@@ -27,6 +27,7 @@ pub mod high_scores;
 use high_scores::HighScore;
 
 use crate::logic::*;
+use crate::util::TinyVec;
 
 use core::fmt::Display;
 
@@ -98,7 +99,7 @@ enum WaitingState {
     Dialog {
         current_choice: u8,
         start: (Line, Column),
-        options: tiny_vec_ty![DialogOption; 16],
+        options: TinyVec<DialogOption, 16>,
     },
 }
 
@@ -503,7 +504,7 @@ fn dialog_option_for_action(action: Action) -> DialogOption {
     (option_name, Color::CyanBright, action)
 }
 
-fn dialog_options_for_actions(actions: &[Action]) -> tiny_vec_ty![DialogOption; 16] {
+fn dialog_options_for_actions(actions: &[Action]) -> TinyVec<DialogOption, 16> {
     actions
         .iter()
         .cloned()
