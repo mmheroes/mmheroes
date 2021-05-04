@@ -69,7 +69,6 @@ impl<T, Index: core::slice::SliceIndex<[T]>, const CAPACITY: usize>
 }
 
 impl<T: Clone, const CAPACITY: usize> TinyVec<T, CAPACITY> {
-    #[allow(dead_code)] // False positive here
     pub(crate) fn extend_from_slice(&mut self, other: &[T]) {
         for element in other {
             self.push(element.clone())
