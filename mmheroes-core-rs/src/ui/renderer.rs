@@ -46,11 +46,13 @@ impl<C: RendererRequestConsumer> Renderer<C> {
     pub(in crate::ui) fn clear_screen(&mut self) {
         self.column = 0;
         self.line = 0;
-        self.request_consumer.consume_request(RendererRequest::ClearScreen)
+        self.request_consumer
+            .consume_request(RendererRequest::ClearScreen)
     }
 
     pub(in crate::ui) fn flush(&mut self) {
-        self.request_consumer.consume_request(RendererRequest::Flush)
+        self.request_consumer
+            .consume_request(RendererRequest::Flush)
     }
 
     pub(in crate::ui) fn write_str(&mut self, s: &str) {
@@ -68,13 +70,15 @@ impl<C: RendererRequestConsumer> Renderer<C> {
                 self.column += 1;
             }
         }
-        self.request_consumer.consume_request(RendererRequest::WriteStr(s));
+        self.request_consumer
+            .consume_request(RendererRequest::WriteStr(s));
     }
 
     pub(in crate::ui) fn move_cursor_to(&mut self, line: Line, column: Column) {
         self.line = line;
         self.column = column;
-        self.request_consumer.consume_request(RendererRequest::MoveCursor { line, column })
+        self.request_consumer
+            .consume_request(RendererRequest::MoveCursor { line, column })
     }
 
     pub(in crate::ui) fn get_cursor_position(&mut self) -> (Line, Column) {
@@ -82,14 +86,16 @@ impl<C: RendererRequestConsumer> Renderer<C> {
     }
 
     pub(in crate::ui) fn set_color(&mut self, foreground: Color, background: Color) {
-        self.request_consumer.consume_request(RendererRequest::SetColor {
-            foreground,
-            background,
-        })
+        self.request_consumer
+            .consume_request(RendererRequest::SetColor {
+                foreground,
+                background,
+            })
     }
 
     pub(in crate::ui) fn sleep_ms(&mut self, ms: Milliseconds) {
-        self.request_consumer.consume_request(RendererRequest::Sleep(ms))
+        self.request_consumer
+            .consume_request(RendererRequest::Sleep(ms))
     }
 
     pub(in crate::ui) fn write_fmt(&mut self, fmt: core::fmt::Arguments<'_>) {

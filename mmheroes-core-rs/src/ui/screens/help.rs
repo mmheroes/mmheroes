@@ -326,7 +326,10 @@ pub(in crate::ui) fn display_about_this_program(
     help_dialog(r, available_actions)
 }
 
-fn help_dialog(r: &mut Renderer<impl RendererRequestConsumer>, available_actions: &[Action]) -> WaitingState {
+fn help_dialog(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    available_actions: &[Action],
+) -> WaitingState {
     r.move_cursor_to(13, 0);
     writeln_colored!(White, r, "Что тебя интересует?");
     dialog(r, available_actions)

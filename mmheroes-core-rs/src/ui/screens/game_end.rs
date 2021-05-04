@@ -12,7 +12,10 @@ pub(in crate::ui) fn display_i_am_done(
     dialog(r, available_actions)
 }
 
-fn display_game_end_dead(r: &mut Renderer<impl RendererRequestConsumer>, cause: CauseOfDeath) -> WaitingState {
+fn display_game_end_dead(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    cause: CauseOfDeath,
+) -> WaitingState {
     use CauseOfDeath::*;
     r.set_color(Color::RedBright, Color::Black);
     writeln!(r, "Легче лбом колоть орехи,");
@@ -54,7 +57,9 @@ fn display_game_end_dead(r: &mut Renderer<impl RendererRequestConsumer>, cause: 
     wait_for_any_key(r)
 }
 
-fn display_game_end_alive(r: &mut Renderer<impl RendererRequestConsumer>) -> WaitingState {
+fn display_game_end_alive(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+) -> WaitingState {
     // TODO: Display proper text based on the final state
     // (cause of expelling, or congratulation)
     writeln_colored!(MagentaBright, r, "Уффффф! Во всяком случае, ты еще живой.");
@@ -96,7 +101,9 @@ pub(in crate::ui) fn display_wanna_try_again(
     dialog(r, available_actions)
 }
 
-pub(in crate::ui) fn display_disclaimer(r: &mut Renderer<impl RendererRequestConsumer>) -> WaitingState {
+pub(in crate::ui) fn display_disclaimer(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+) -> WaitingState {
     r.clear_screen();
     writeln_colored!(Green, r, "DISCLAIMER");
     writeln!(r);

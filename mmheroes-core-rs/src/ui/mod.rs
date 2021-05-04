@@ -244,9 +244,11 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                     *interaction,
                 )
             }
-            GoToProfessor(state) => {
-                screens::scene_router::display_available_professors(&mut self.renderer, state, self.game.available_actions())
-            },
+            GoToProfessor(state) => screens::scene_router::display_available_professors(
+                &mut self.renderer,
+                state,
+                self.game.available_actions(),
+            ),
             Exam(state, subject) => todo!(),
             SurfInternet(state, found_program) => {
                 screens::scene_router::display_surfing_internet(
@@ -322,7 +324,10 @@ fn display_dialog(
     r.flush();
 }
 
-fn dialog(r: &mut Renderer<impl RendererRequestConsumer>, available_actions: &[Action]) -> WaitingState {
+fn dialog(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    available_actions: &[Action],
+) -> WaitingState {
     let options = dialog_options_for_actions(available_actions);
     let start = r.get_cursor_position();
     let current_choice = 0;

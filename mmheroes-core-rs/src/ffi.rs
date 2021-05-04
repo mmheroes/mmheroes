@@ -6,10 +6,10 @@ use crate::ui::*;
 use crate::logic::{Game, GameMode, Money, Time};
 
 use crate::ui::high_scores::SCORE_COUNT;
-use crate::util::TinyString;
 use crate::ui::renderer::RendererRequestConsumer;
+use crate::util::TinyString;
 use core::ffi::c_void;
-use core::mem::{align_of, size_of, size_of_val, align_of_val};
+use core::mem::{align_of, align_of_val, size_of, size_of_val};
 
 pub type AllocatorContext = *mut c_void;
 
@@ -103,7 +103,11 @@ macro_rules! ffi_destructor {
                 return;
             }
             ffi_safely_run(|| $arg.drop_in_place());
-            deallocator(deallocator_context, $arg as *mut c_void, size_of_val(&*$arg))
+            deallocator(
+                deallocator_context,
+                $arg as *mut c_void,
+                size_of_val(&*$arg),
+            )
         }
     };
 }
@@ -185,8 +189,9 @@ pub unsafe extern "C" fn mmheroes_game_ui_create(
 
         let game = GameUI::new(game, scores, renderer_request_consumer);
 
-        let memory: *mut GameUI<_> = allocator(allocator_context, size_of_val(&game), align_of_val(&game))
-            as *mut _;
+        let memory: *mut GameUI<_> =
+            allocator(allocator_context, size_of_val(&game), align_of_val(&game))
+                as *mut _;
         if memory.is_null() {
             return null_mut();
         }
@@ -197,7 +202,10 @@ pub unsafe extern "C" fn mmheroes_game_ui_create(
     })
 }
 
-ffi_destructor!(mmheroes_game_ui_destroy, (game_ui: GameUI<FfiRendererRequestConsumer>));
+ffi_destructor!(
+    mmheroes_game_ui_destroy,
+    (game_ui: GameUI<FfiRendererRequestConsumer>)
+);
 
 /// Записывает в аргумент `out` `MMHEROES_SCORE_COUNT` элементов.
 /// `out` не должен быть нулевым указателем.
@@ -272,9 +280,19 @@ impl<'a> From<RendererRequest<'a>> for FfiRendererRequest {
                 buf: s.as_ptr(),
                 length: s.len(),
             },
-            RendererRequest::MoveCursor { line, column } => FfiRendererRequest::MoveCursor { line, column },
-            RendererRequest::SetColor { foreground, background } => FfiRendererRequest::SetColor { foreground, background },
-            RendererRequest::Sleep(milliseconds) => FfiRendererRequest::Sleep { milliseconds }
+            RendererRequest::MoveCursor { line, column } => {
+                FfiRendererRequest::MoveCursor { line, column }
+            }
+            RendererRequest::SetColor {
+                foreground,
+                background,
+            } => FfiRendererRequest::SetColor {
+                foreground,
+                background,
+            },
+            RendererRequest::Sleep(milliseconds) => {
+                FfiRendererRequest::Sleep { milliseconds }
+            }
         }
     }
 }
@@ -307,7 +325,10 @@ pub unsafe extern "C" fn mmheroes_replay(
 ///
 /// При первом вызове этой функции неважно, что передаётся в параметре `input`.
 #[no_mangle]
-pub extern "C" fn mmheroes_continue(game_ui: &mut GameUI<FfiRendererRequestConsumer>, input: Input) -> bool {
+pub extern "C" fn mmheroes_continue(
+    game_ui: &mut GameUI<FfiRendererRequestConsumer>,
+    input: Input,
+) -> bool {
     ffi_safely_run(|| game_ui.continue_game(input))
 }
 
@@ -367,7 +388,11 @@ mod tests {
             as *mut c_void
     }
 
-    unsafe extern "C" fn deallocator(_context: AllocatorContext, memory: *mut c_void, size: usize) {
+    unsafe extern "C" fn deallocator(
+        _context: AllocatorContext,
+        memory: *mut c_void,
+        size: usize,
+    ) {
         std::alloc::dealloc(memory as *mut u8, Layout::from_size_align(size, 8).unwrap())
     }
 
@@ -399,7 +424,10 @@ mod tests {
 
             let mut requests = <Vec<FfiRendererRequest>>::new();
 
-            extern "C" fn renderer_request_callback(context: *mut c_void, renderer_request: FfiRendererRequest) {
+            extern "C" fn renderer_request_callback(
+                context: *mut c_void,
+                renderer_request: FfiRendererRequest,
+            ) {
                 unsafe { (&mut *(context as *mut Vec<_>)).push(renderer_request) }
             }
 

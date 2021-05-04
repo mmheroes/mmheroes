@@ -167,9 +167,14 @@ impl Day {
         self.exams.iter().filter_map(|exam| exam.as_ref())
     }
 
-    pub fn current_exams<'a>(&'a self, location: Location, time: Time) -> impl Iterator<Item = &Exam> + 'a {
-        self.exams()
-            .filter(move |exam| exam.location == location && time >= exam.from && time < exam.to)
+    pub fn current_exams<'a>(
+        &'a self,
+        location: Location,
+        time: Time,
+    ) -> impl Iterator<Item = &Exam> + 'a {
+        self.exams().filter(move |exam| {
+            exam.location == location && time >= exam.from && time < exam.to
+        })
     }
 }
 

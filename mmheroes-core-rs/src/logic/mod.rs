@@ -394,8 +394,8 @@ impl Game {
                     let state = state.clone();
                     self.scene_router(state)
                 }
-                _ => illegal_action!(action)
-            }
+                _ => illegal_action!(action),
+            },
             Exam(state, subject) => {
                 todo!()
             }
@@ -608,11 +608,7 @@ impl Game {
         }
     }
 
-    fn enter_exam(
-        &mut self,
-        state: GameState,
-        subject: Subject,
-    ) -> TinyVec<Action, 16> {
+    fn enter_exam(&mut self, state: GameState, subject: Subject) -> TinyVec<Action, 16> {
         todo!()
     }
 
@@ -720,7 +716,7 @@ impl Game {
                 available_actions.push(Action::DontGoToProfessor);
                 self.screen = GameScreen::GoToProfessor(state);
                 available_actions
-            },
+            }
             Action::LookAtBaobab => {
                 self.screen = GameScreen::HighScores(state);
                 wait_for_any_key()
@@ -821,10 +817,7 @@ impl Game {
         self.hour_pass(state)
     }
 
-    fn interact_with_kuzmenko(
-        &mut self,
-        mut state: GameState,
-    ) -> TinyVec<Action, 16> {
+    fn interact_with_kuzmenko(&mut self, mut state: GameState) -> TinyVec<Action, 16> {
         use npc::KuzmenkoInteraction::*;
         let tomorrow = state.current_day_index + 1;
         let saturday = 5;

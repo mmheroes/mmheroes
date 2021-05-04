@@ -33,12 +33,20 @@ pub(in crate::ui) fn display_scene_router(
     dialog(r, available_actions)
 }
 
-pub(in crate::ui::screens) fn display_header_stats(r: &mut Renderer<impl RendererRequestConsumer>, state: &GameState) {
+pub(in crate::ui::screens) fn display_header_stats(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    state: &GameState,
+) {
     display_character_stats(r, state.current_day(), state.current_time(), state.player());
     display_knowledge(r, state.player());
 }
 
-fn display_character_stats(r: &mut Renderer<impl RendererRequestConsumer>, today: &Day, now: Time, player: &Player) {
+fn display_character_stats(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    today: &Day,
+    now: Time,
+    player: &Player,
+) {
     write_colored!(White, r, "Сегодня ");
     // Первый день недели — 22-е мая.
     write_colored!(WhiteBright, r, "{}", today.index() + 22);
@@ -184,7 +192,9 @@ fn display_knowledge(r: &mut Renderer<impl RendererRequestConsumer>, player: &Pl
     }
 }
 
-pub(in crate::ui::screens) fn display_short_today_timetable<C: RendererRequestConsumer>(
+pub(in crate::ui::screens) fn display_short_today_timetable<
+    C: RendererRequestConsumer,
+>(
     r: &mut Renderer<C>,
     start_line: Line,
     today: &Day,
@@ -263,11 +273,12 @@ pub(in crate::ui) fn display_available_professors(
     display_header_stats(r, state);
     r.move_cursor_to(7, 0);
     match state.location() {
-        Location::PUNK => writeln_colored!(White, r, "Ты сейчас на факультете. К кому идти?"),
+        Location::PUNK => {
+            writeln_colored!(White, r, "Ты сейчас на факультете. К кому идти?")
+        }
         Location::PDMI => writeln_colored!(White, r, "Ты сейчас в ПОМИ. К кому идти?"),
-        _ => unreachable!("В этой локации нельзя ходить к преподам")
+        _ => unreachable!("В этой локации нельзя ходить к преподам"),
     }
     writeln!(r);
     dialog(r, available_actions)
 }
-

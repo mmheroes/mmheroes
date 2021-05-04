@@ -19,7 +19,6 @@ impl<T, const CAPACITY: usize> TinyVec<T, CAPACITY> {
 
 impl<T, const CAPACITY: usize> TinyVec<T, CAPACITY> {
     pub(crate) fn new() -> Self {
-
         Self {
             // This should be replaced with [MaybeUninit::uninit(); CAPACITY]
             // as soon as the corresponding feature is stabilized.
@@ -31,9 +30,7 @@ impl<T, const CAPACITY: usize> TinyVec<T, CAPACITY> {
 
     pub(crate) fn push(&mut self, value: T) {
         assert!(self.count < self.storage.len(), "Capacity is exceeded");
-        unsafe {
-            self.storage[self.count].as_mut_ptr().write(value)
-        }
+        unsafe { self.storage[self.count].as_mut_ptr().write(value) }
         self.count += 1;
     }
 
@@ -50,22 +47,20 @@ impl<T, const CAPACITY: usize> Deref for TinyVec<T, CAPACITY> {
 
     fn deref(&self) -> &Self::Target {
         let slice = &self.storage[..self.count];
-        unsafe {
-            &*(slice as *const [MaybeUninit<T>] as *const [T])
-        }
+        unsafe { &*(slice as *const [MaybeUninit<T>] as *const [T]) }
     }
 }
 
 impl<T, const CAPACITY: usize> DerefMut for TinyVec<T, CAPACITY> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         let slice = &mut self.storage[..self.count];
-        unsafe {
-            &mut *(slice as *mut [MaybeUninit<T>] as *mut [T])
-        }
+        unsafe { &mut *(slice as *mut [MaybeUninit<T>] as *mut [T]) }
     }
 }
 
-impl<T, Index: core::slice::SliceIndex<[T]>, const CAPACITY: usize> core::ops::Index<Index> for TinyVec<T, CAPACITY> {
+impl<T, Index: core::slice::SliceIndex<[T]>, const CAPACITY: usize>
+    core::ops::Index<Index> for TinyVec<T, CAPACITY>
+{
     type Output = <Index as core::slice::SliceIndex<[T]>>::Output;
 
     fn index(&self, index: Index) -> &Self::Output {
@@ -74,7 +69,6 @@ impl<T, Index: core::slice::SliceIndex<[T]>, const CAPACITY: usize> core::ops::I
 }
 
 impl<T: Clone, const CAPACITY: usize> TinyVec<T, CAPACITY> {
-
     #[allow(dead_code)] // False positive here
     pub(crate) fn extend_from_slice(&mut self, other: &[T]) {
         for element in other {
@@ -166,22 +160,22 @@ pub struct TinyString<const CAPACITY: usize> {
 
 impl<const CAPACITY: usize> TinyString<CAPACITY> {
     pub(crate) fn new() -> Self {
-        Self {
-            v: TinyVec::new()
-        }
+        Self { v: TinyVec::new() }
     }
 
     pub(crate) fn push(&mut self, ch: char) {
         match ch.len_utf8() {
             1 => self.v.push(ch as u8),
-            _ => self.v.extend_from_slice(ch.encode_utf8(&mut [0; 4]).as_bytes()),
+            _ => self
+                .v
+                .extend_from_slice(ch.encode_utf8(&mut [0; 4]).as_bytes()),
         }
     }
 }
 impl<const CAPACITY: usize> From<&str> for TinyString<CAPACITY> {
     fn from(s: &str) -> Self {
         Self {
-            v: s.bytes().collect()
+            v: s.bytes().collect(),
         }
     }
 }
@@ -190,9 +184,7 @@ impl<const CAPACITY: usize> Deref for TinyString<CAPACITY> {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
-        unsafe {
-            core::str::from_utf8_unchecked(&*self.v)
-        }
+        unsafe { core::str::from_utf8_unchecked(&*self.v) }
     }
 }
 
@@ -225,7 +217,7 @@ impl<const CAPACITY: usize> PartialEq<str> for TinyString<CAPACITY> {
 }
 
 impl<'a, const CAPACITY: usize> PartialEq<&'a str> for TinyString<CAPACITY> {
-    fn eq(&self, other: & &'a str) -> bool {
+    fn eq(&self, other: &&'a str) -> bool {
         PartialEq::eq(&self[..], &other[..])
     }
     fn ne(&self, other: &&'a str) -> bool {

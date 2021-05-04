@@ -4,10 +4,10 @@ use crate::ui::{renderer::Renderer, screens::scene_router, *};
 
 fn solved_algebra_problems(r: &mut Renderer<impl RendererRequestConsumer>) {
     writeln_colored!(
-            WhiteBright,
-            r,
-            "\"У тебя остались нерешенные задачи по Всемирнову? Давай сюда!\""
-        );
+        WhiteBright,
+        r,
+        "\"У тебя остались нерешенные задачи по Всемирнову? Давай сюда!\""
+    );
     write_colored!(White, r, "Коля решил тебе еще ");
     write_colored!(WhiteBright, r, "{}", 2);
     writeln_colored!(White, r, " задачи по алгебре!");

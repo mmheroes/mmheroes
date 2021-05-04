@@ -38,7 +38,10 @@ fn output_remaining_problems(
     }
 }
 
-fn output_remaining_exams(r: &mut Renderer<impl RendererRequestConsumer>, number_of_exams: usize) {
+fn output_remaining_exams(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    number_of_exams: usize,
+) {
     assert!(number_of_exams as usize <= NUM_SUBJECTS);
 
     let mut output = |a, b| {
