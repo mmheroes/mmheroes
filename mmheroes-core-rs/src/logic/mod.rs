@@ -18,6 +18,8 @@ use npc::Classmate::*;
 use crate::random;
 use crate::util::TinyVec;
 
+use assert_matches::*;
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     AnyKey,
@@ -153,6 +155,7 @@ pub enum CauseOfDeath {
 /// Максимальное число возможных вариантов на главном экране.
 pub const MAX_OPTIONS_IN_SCENE_ROUTER: usize = 12;
 
+#[derive(Debug)]
 pub enum GameScreen {
     /// Самый первый экран, который видет пользователь.
     Intro,
@@ -619,7 +622,7 @@ impl Game {
         action: Action,
     ) -> TinyVec<Action, 16> {
         // TODO: Реализовать что-то помимо неудавшегося сна
-        assert!(matches!(self.screen, GameScreen::Sleep(_)));
+        assert_matches!(self.screen, GameScreen::Sleep(_));
         assert_eq!(action, Action::AnyKey);
         self.scene_router(state)
     }
@@ -679,7 +682,7 @@ impl Game {
     ) -> TinyVec<Action, 16> {
         assert_eq!(action, Action::AnyKey);
         assert_eq!(state.location, Location::PUNK);
-        assert!(matches!(self.screen, GameScreen::PashaInteraction(_, _)));
+        assert_matches!(self.screen, GameScreen::PashaInteraction(_, _));
         let player = &mut state.player;
         match interaction {
             npc::PashaInteraction::Stipend => {
@@ -751,31 +754,31 @@ impl Game {
                 todo!()
             }
             Action::InteractWithClassmate(Pasha) => {
-                assert!(matches!(
+                assert_matches!(
                     state.classmates[Pasha].current_location(),
                     ClassmateLocation::Location(Location::PUNK)
-                ));
+                );
                 self.interact_with_pasha(state)
             }
             Action::InteractWithClassmate(Misha) => {
-                assert!(matches!(
+                assert_matches!(
                     state.classmates[Misha].current_location(),
                     ClassmateLocation::Location(Location::PUNK)
-                ));
+                );
                 todo!()
             }
             Action::InteractWithClassmate(Serj) => {
-                assert!(matches!(
+                assert_matches!(
                     state.classmates[Serj].current_location(),
                     ClassmateLocation::Location(Location::PUNK)
-                ));
+                );
                 todo!()
             }
             Action::InteractWithClassmate(Sasha) => {
-                assert!(matches!(
+                assert_matches!(
                     state.classmates[Sasha].current_location(),
                     ClassmateLocation::Location(Location::PUNK)
-                ));
+                );
                 todo!()
             }
             Action::GoToWork => {
@@ -980,7 +983,7 @@ impl Game {
         interaction: npc::KolyaInteraction,
     ) -> TinyVec<Action, 16> {
         assert_eq!(state.location, Location::Mausoleum);
-        assert!(matches!(self.screen, GameScreen::KolyaInteraction(_, _)));
+        assert_matches!(self.screen, GameScreen::KolyaInteraction(_, _));
         let player = &mut state.player;
         match action {
             Action::AnyKey => {
@@ -1141,7 +1144,7 @@ impl Game {
         interaction: npc::GrishaInteraction,
     ) -> TinyVec<Action, 16> {
         use npc::GrishaInteraction::*;
-        assert!(matches!(self.screen, GameScreen::GrishaInteraction(_, _)));
+        assert_matches!(self.screen, GameScreen::GrishaInteraction(_, _));
         let player = &mut state.player;
         match action {
             Action::AnyKey => match interaction {
@@ -1336,24 +1339,24 @@ impl Game {
                 available_actions
             }
             Action::InteractWithClassmate(Kolya) => {
-                assert!(matches!(
+                assert_matches!(
                     state.classmates[Kolya].current_location(),
                     ClassmateLocation::Location(Location::Mausoleum)
-                ));
+                );
                 self.interact_with_kolya(state)
             }
             Action::InteractWithClassmate(Grisha) => {
-                assert!(matches!(
+                assert_matches!(
                     state.classmates[Grisha].current_location(),
                     ClassmateLocation::Location(Location::Mausoleum)
-                ));
+                );
                 self.interact_with_grisha(state)
             }
             Action::InteractWithClassmate(Serj) => {
-                assert!(matches!(
+                assert_matches!(
                     state.classmates[Serj].current_location(),
                     ClassmateLocation::Location(Location::Mausoleum)
-                ));
+                );
                 todo!()
             }
             Action::IAmDone => self.i_am_done(state),

@@ -143,6 +143,9 @@ impl<'input> InputRecordingParser<'input> {
 #[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
+
+    use assert_matches::*;
+
     use super::*;
 
     #[test]
@@ -245,10 +248,7 @@ mod tests {
             [Input::KeyDown, Input::KeyDown, Input::Enter, Input::Enter]
         );
 
-        assert!(matches!(
-            result,
-            Err(InputRecordingParserError::UnexpectedEOF)
-        ));
+        assert_matches!(result, Err(InputRecordingParserError::UnexpectedEOF));
     }
 
     #[test]
@@ -264,9 +264,9 @@ mod tests {
 
         assert_eq!(parsed_input, [Input::KeyDown, Input::Enter, Input::Enter]);
 
-        assert!(matches!(
+        assert_matches!(
             result,
             Err(InputRecordingParserError::UnknownCharacter { grapheme: 4 })
-        ));
+        );
     }
 }

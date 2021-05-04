@@ -12,6 +12,7 @@ edition = "2018"
 
 [dependencies]
 unicode-segmentation = "1.6.0"
+assert_matches = "1.5.0"
 
 [features]
 default = ["std"]
