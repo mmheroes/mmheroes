@@ -15,12 +15,12 @@ pub type AllocatorContext = *mut c_void;
 /// Функция, принимающая в качестве первого аргумента некоторый контекст,
 /// в качестве второго аргумента размер выделяемого блока памяти,
 /// а в качестве третьего — выравнивание.
-pub type Allocator = unsafe fn(AllocatorContext, usize, usize) -> *mut c_void;
+pub type Allocator = unsafe extern "C" fn(AllocatorContext, usize, usize) -> *mut c_void;
 
 /// Функция, принимающая в качестве первого аргумента некоторый контекст,
 /// в качестве второго — указатель на освобождаемый блок памяти,
 /// а в качестве третьего — размер освобождаемого блока.
-pub type Deallocator = unsafe fn(AllocatorContext, *mut c_void, usize);
+pub type Deallocator = unsafe extern "C" fn(AllocatorContext, *mut c_void, usize);
 
 // Unwinding through FFI boundaries is undefined behavior, so we stop any
 // unwinding and abort.
@@ -393,7 +393,7 @@ mod tests {
     use std::alloc::Layout;
     use std::ptr::{null, null_mut};
 
-    unsafe fn allocator(
+    unsafe extern "C" fn allocator(
         _context: AllocatorContext,
         size: usize,
         alignment: usize,
@@ -402,7 +402,7 @@ mod tests {
             as *mut c_void
     }
 
-    unsafe fn deallocator(_context: AllocatorContext, memory: *mut c_void, size: usize) {
+    unsafe extern "C" fn deallocator(_context: AllocatorContext, memory: *mut c_void, size: usize) {
         std::alloc::dealloc(memory as *mut u8, Layout::from_size_align(size, 8).unwrap())
     }
 
