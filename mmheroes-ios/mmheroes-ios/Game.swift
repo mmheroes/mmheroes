@@ -72,21 +72,41 @@ private func convertHighScoresToFFIFriendlyPointer<R>(
 
 final class GameUI {
 
-    private let handle: OpaquePointer
+    private var handle: OpaquePointer!
 
     let game: Game
+
+    private(set) var requests: [RendererRequest] = [.clearScreen, .flush]
+
+    private static let rendererRequestCallback: MMHEROES_RendererRequestCallback =
+        { context, request in
+            Unmanaged<GameUI>.fromOpaque(context!).takeUnretainedValue()
+                .requests
+                .append(RendererRequest(request))
+        }
 
     init(game: Game, highScores: [HighScore]? = nil) {
         self.game = game
         if let highScores = highScores {
             handle = convertHighScoresToFFIFriendlyPointer(highScores) { buffer in
-                mmheroes_game_ui_create(game.handle,
-                                        buffer.baseAddress,
-                                        nil,
-                                        allocator)
+                mmheroes_game_ui_create(
+                    game.handle,
+                    buffer.baseAddress,
+                    nil,
+                    allocator,
+                    Unmanaged.passUnretained(self).toOpaque(),
+                    GameUI.rendererRequestCallback
+                )
             }
         } else {
-            handle = mmheroes_game_ui_create(game.handle, nil, nil, allocator)
+            handle = mmheroes_game_ui_create(
+                game.handle,
+                nil,
+                nil,
+                allocator,
+                Unmanaged.passUnretained(self).toOpaque(),
+                GameUI.rendererRequestCallback
+            )
         }
     }
 
@@ -128,16 +148,9 @@ final class GameUI {
     }
 
     func continueGame(input: MMHEROES_Input) -> Bool {
-        withExtendedLifetime(self) {
+        requests.removeAll()
+        return withExtendedLifetime(self) {
             mmheroes_continue(handle, input)
-        }
-    }
-
-    func requests() -> RendererRequestIterator {
-        withExtendedLifetime(self) {
-            var iterator = MMHEROES_RendererRequestIterator()
-            mmheroes_renderer_request_iterator_begin(&iterator, handle)
-            return RendererRequestIterator(underlying: iterator)
         }
     }
 }
@@ -173,22 +186,6 @@ extension RendererRequest {
         default:
             fatalError("unreachable")
         }
-    }
-}
-
-struct RendererRequestIterator {
-    fileprivate var underlying: MMHEROES_RendererRequestIterator
-}
-
-extension RendererRequestIterator: Sequence, IteratorProtocol {
-    typealias Element = RendererRequest
-
-    mutating func next() -> RendererRequest? {
-        var request = MMHEROES_RendererRequest()
-        if mmheroes_renderer_request_iterator_next(&underlying, &request) {
-            return RendererRequest(request)
-        }
-        return nil
     }
 }
 

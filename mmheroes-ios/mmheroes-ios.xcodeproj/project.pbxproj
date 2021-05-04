@@ -8,10 +8,10 @@
 
 /* Begin PBXBuildFile section */
 		873C33F5245B755000754F00 /* Caret.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873C33F4245B755000754F00 /* Caret.swift */; };
-		873C33F8245BA0F300754F00 /* libmmheroes_core_ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 873C33F7245BA0F300754F00 /* libmmheroes_core_ios.a */; platformFilter = ios; };
 		873C33FB245C71E700754F00 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B132459E47D00E4BF6B /* AppDelegate.swift */; };
 		873C33FD245C8E8400754F00 /* HelpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873C33FC245C8E8400754F00 /* HelpViewController.swift */; };
 		873C33FF245C9C5B00754F00 /* help.html in Resources */ = {isa = PBXBuildFile; fileRef = 873C33FE245C9C5B00754F00 /* help.html */; };
+		8741D5F42641EC42008DFF7D /* libmmheroes_core_ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 873C33F7245BA0F300754F00 /* libmmheroes_core_ios.a */; };
 		8754BDE02465571000DC466E /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8754BDDF2465571000DC466E /* Game.swift */; };
 		875B3B182459E47D00E4BF6B /* MainSceneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */; };
 		875B3B1D2459E47E00E4BF6B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 875B3B1C2459E47E00E4BF6B /* Assets.xcassets */; };
@@ -57,7 +57,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				873C33F8245BA0F300754F00 /* libmmheroes_core_ios.a in Frameworks */,
+				8741D5F42641EC42008DFF7D /* libmmheroes_core_ios.a in Frameworks */,
 				875B3B3A245B315B00E4BF6B /* Version in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -156,7 +156,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1140;
-				LastUpgradeCheck = 1140;
+				LastUpgradeCheck = 1250;
 				ORGANIZATIONNAME = "Sergej Jaskiewicz";
 				TargetAttributes = {
 					875B3B0F2459E47D00E4BF6B = {
@@ -280,6 +280,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -304,14 +305,14 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
-				VALID_ARCHS = "arm64 arm64e";
+				VALID_ARCHS = "arm64 arm64e x86_64";
 			};
 			name = Debug;
 		};
@@ -341,6 +342,7 @@
 				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
 				CLANG_WARN_STRICT_PROTOTYPES = YES;
 				CLANG_WARN_SUSPICIOUS_MOVE = YES;
@@ -359,14 +361,14 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				VALIDATE_PRODUCT = YES;
-				VALID_ARCHS = "arm64 arm64e";
+				VALID_ARCHS = "arm64 arm64e x86_64";
 			};
 			name = Release;
 		};

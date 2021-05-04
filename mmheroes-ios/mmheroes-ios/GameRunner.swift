@@ -79,7 +79,7 @@ final class GameRunner {
     }
 
     func render(completion: @escaping (GameStatus) -> Void) {
-        var requests = gameUI.requests()
+        var requests = gameUI.requests.makeIterator()
 
         // По очереди выполняем все запросы. Запрос 'sleep' — особый случай.
         // Он асинхронный. Если встречаем его, то прерываем цикл и продолжаем его
