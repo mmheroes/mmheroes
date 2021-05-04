@@ -31,7 +31,7 @@ pub struct FfiRendererRequestConsumer {
 }
 
 impl RendererRequestConsumer for FfiRendererRequestConsumer {
-    fn consume_request(&self, request: RendererRequest) {
+    fn consume_request(&mut self, request: RendererRequest) {
         (self.callback)(self.context, request.into())
     }
 }

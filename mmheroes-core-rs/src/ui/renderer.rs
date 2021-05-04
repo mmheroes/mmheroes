@@ -23,7 +23,7 @@ pub type Line = u8;
 pub type Column = u8;
 
 pub trait RendererRequestConsumer {
-    fn consume_request(&self, request: RendererRequest);
+    fn consume_request(&mut self, request: RendererRequest);
 }
 
 pub(in crate::ui) struct Renderer<C: RendererRequestConsumer> {
