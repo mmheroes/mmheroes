@@ -1,6 +1,6 @@
 use mmheroes_core::{
     logic::{Game, GameMode},
-    ui::{self, recording, renderer::RendererRequest, *},
+    ui::{self, recording, renderer::{RendererRequestConsumer, RendererRequest}, *},
 };
 use pancurses::*;
 use std::cell::RefCell;
@@ -119,6 +119,35 @@ fn resize_terminal(height: i32, width: i32) {
     resize_term(height, width);
 }
 
+struct RendererRequestEvaluator<'a, 'b> {
+    window: &'a ScreenRAII,
+    color_pairs_map: &'b HashMap::<(Color, Color), i16>,
+}
+
+impl RendererRequestConsumer for RendererRequestEvaluator<'_, '_> {
+    fn consume_request(&mut self, request: RendererRequest<'_>) {
+        match request {
+            RendererRequest::ClearScreen => self.window.clear(),
+            RendererRequest::Flush => self.window.refresh(),
+            RendererRequest::WriteStr(s) => self.window.addnstr(s, s.len()),
+            RendererRequest::MoveCursor { line, column } => {
+                self.window.mv(line as i32, column as i32)
+            }
+            RendererRequest::SetColor {
+                foreground,
+                background,
+            } => self.window.color_set(
+                *self.color_pairs_map
+                    .get(&(foreground, background))
+                    .unwrap_or_else(|| {
+                        panic!("Unknown color pair: ({:?}, {:?})", foreground, background)
+                    }),
+            ),
+            RendererRequest::Sleep(ms) => napms(ms.0),
+        };
+    }
+}
+
 fn main() {
     let window = ScreenRAII::new();
     start_color();
@@ -190,7 +219,12 @@ fn main() {
 
     let mut game = Game::new(mode, seed);
 
-    let mut game_ui = GameUI::new(&mut game, high_scores::load());
+    let renderer_request_evaluator = RendererRequestEvaluator {
+        window: &window,
+        color_pairs_map: &color_pairs_map,
+    };
+
+    let mut game_ui = GameUI::new(&mut game, high_scores::load(), renderer_request_evaluator);
 
     let default_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panic_info| {
@@ -209,28 +243,6 @@ fn main() {
 
     let mut input = ui::Input::Enter;
     while game_ui.continue_game(input) {
-        for request in game_ui.requests() {
-            match request {
-                RendererRequest::ClearScreen => window.clear(),
-                RendererRequest::Flush => window.refresh(),
-                RendererRequest::WriteStr(s) => window.addnstr(s, s.len()),
-                RendererRequest::MoveCursor { line, column } => {
-                    window.mv(line as i32, column as i32)
-                }
-                RendererRequest::SetColor {
-                    foreground,
-                    background,
-                } => window.color_set(
-                    *color_pairs_map
-                        .get(&(foreground, background))
-                        .unwrap_or_else(|| {
-                            panic!("Unknown color pair: ({:?}, {:?})", foreground, background)
-                        }),
-                ),
-                RendererRequest::Sleep(ms) => napms(ms.0),
-            };
-        }
-
         input = getch(&window, logger);
     }
 
