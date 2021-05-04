@@ -3,7 +3,7 @@ use crate::ui::renderer::{Column, Line, Renderer};
 use crate::ui::*;
 
 fn output_remaining_problems(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     timetable: &timetable::Timetable,
     subject_status: &SubjectStatus,
 ) {
@@ -38,7 +38,7 @@ fn output_remaining_problems(
     }
 }
 
-fn output_remaining_exams(r: &mut Renderer, number_of_exams: usize) {
+fn output_remaining_exams(r: &mut Renderer<impl RendererRequestConsumer>, number_of_exams: usize) {
     assert!(number_of_exams as usize <= NUM_SUBJECTS);
 
     let mut output = |a, b| {
@@ -69,7 +69,7 @@ const TIMETABLE_ROW_HEIGHT: Line = 3;
 const TIMETABLE_REMAINING_PROBLEMS_X: Column = 70;
 
 fn display_timetable_cell(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     day: &Day,
     today: bool,
     passed: bool,
@@ -101,7 +101,7 @@ fn display_timetable_cell(
 }
 
 pub(in crate::ui) fn display_timetable(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
 ) -> WaitingState {
     r.clear_screen();

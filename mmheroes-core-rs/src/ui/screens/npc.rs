@@ -2,8 +2,27 @@ use crate::logic::npc::{GrishaInteraction, KolyaInteraction, PashaInteraction};
 use crate::logic::*;
 use crate::ui::{renderer::Renderer, screens::scene_router, *};
 
+fn solved_algebra_problems(r: &mut Renderer<impl RendererRequestConsumer>) {
+    writeln_colored!(
+            WhiteBright,
+            r,
+            "\"У тебя остались нерешенные задачи по Всемирнову? Давай сюда!\""
+        );
+    write_colored!(White, r, "Коля решил тебе еще ");
+    write_colored!(WhiteBright, r, "{}", 2);
+    writeln_colored!(White, r, " задачи по алгебре!");
+}
+
+fn brake_fluid(r: &mut Renderer<impl RendererRequestConsumer>) {
+    writeln_colored!(
+        MagentaBright,
+        r,
+        "Коля достает тормозную жидкость, и вы распиваете еще по стакану."
+    );
+}
+
 pub(in crate::ui) fn display_kolya_interaction(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
     available_actions: &[Action],
     interaction: npc::KolyaInteraction,
@@ -24,17 +43,6 @@ pub(in crate::ui) fn display_kolya_interaction(
         _ => (),
     }
 
-    let solved_algebra_problems = |r: &mut Renderer| {
-        writeln_colored!(
-            WhiteBright,
-            r,
-            "\"У тебя остались нерешенные задачи по Всемирнову? Давай сюда!\""
-        );
-        write_colored!(White, r, "Коля решил тебе еще ");
-        write_colored!(WhiteBright, r, "{}", 2);
-        writeln_colored!(White, r, " задачи по алгебре!");
-    };
-
     match interaction {
         SolvedAlgebraProblemsForFree => {
             solved_algebra_problems(r);
@@ -49,14 +57,6 @@ pub(in crate::ui) fn display_kolya_interaction(
         }
         _ => {}
     }
-
-    let brake_fluid = |r: &mut Renderer| {
-        writeln_colored!(
-            MagentaBright,
-            r,
-            "Коля достает тормозную жидкость, и вы распиваете еще по стакану."
-        );
-    };
 
     match interaction {
         SolvedAlgebraProblemsForFree => unreachable!(),
@@ -99,7 +99,7 @@ pub(in crate::ui) fn display_kolya_interaction(
 }
 
 pub(in crate::ui) fn display_pasha_interaction(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
     interaction: npc::PashaInteraction,
 ) -> WaitingState {
@@ -121,7 +121,7 @@ pub(in crate::ui) fn display_pasha_interaction(
 }
 
 pub(in crate::ui) fn display_grisha_interaction(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
     available_actions: &[Action],
     interaction: npc::GrishaInteraction,
@@ -303,7 +303,7 @@ pub(in crate::ui) fn display_grisha_interaction(
 }
 
 pub(in crate::ui) fn display_kuzmenko_interaction(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
     interaction: npc::KuzmenkoInteraction,
 ) -> WaitingState {

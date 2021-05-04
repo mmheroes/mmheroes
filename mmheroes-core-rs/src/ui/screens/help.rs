@@ -2,7 +2,7 @@ use crate::logic::Action;
 use crate::ui::{renderer::Renderer, *};
 
 pub(in crate::ui) fn display_what_to_do(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
 ) -> WaitingState {
     r.clear_screen();
@@ -57,7 +57,7 @@ pub(in crate::ui) fn display_what_to_do(
 }
 
 pub(in crate::ui) fn display_about_screen(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
 ) -> WaitingState {
     r.clear_screen();
@@ -121,7 +121,7 @@ pub(in crate::ui) fn display_about_screen(
 }
 
 pub(in crate::ui) fn display_where_to_go_and_why(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
 ) -> WaitingState {
     r.clear_screen();
@@ -175,7 +175,7 @@ pub(in crate::ui) fn display_where_to_go_and_why(
 }
 
 pub(in crate::ui) fn display_about_professors(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
 ) -> WaitingState {
     r.clear_screen();
@@ -201,7 +201,7 @@ pub(in crate::ui) fn display_about_professors(
 }
 
 pub(in crate::ui) fn display_about_characters(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
 ) -> WaitingState {
     r.clear_screen();
@@ -281,7 +281,7 @@ pub(in crate::ui) fn display_about_characters(
 }
 
 pub(in crate::ui) fn display_about_this_program(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
 ) -> WaitingState {
     r.clear_screen();
@@ -326,7 +326,7 @@ pub(in crate::ui) fn display_about_this_program(
     help_dialog(r, available_actions)
 }
 
-fn help_dialog(r: &mut Renderer, available_actions: &[Action]) -> WaitingState {
+fn help_dialog(r: &mut Renderer<impl RendererRequestConsumer>, available_actions: &[Action]) -> WaitingState {
     r.move_cursor_to(13, 0);
     writeln_colored!(White, r, "Что тебя интересует?");
     dialog(r, available_actions)

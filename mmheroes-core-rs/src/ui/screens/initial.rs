@@ -1,7 +1,7 @@
 use crate::logic::*;
 use crate::ui::{renderer::Renderer, *};
 
-pub(in crate::ui) fn display_intro(r: &mut Renderer) -> WaitingState {
+pub(in crate::ui) fn display_intro(r: &mut Renderer<impl RendererRequestConsumer>) -> WaitingState {
     r.clear_screen();
     r.set_color(Color::Gray, Color::Black);
     writeln!(
@@ -55,7 +55,7 @@ pub(in crate::ui) fn display_intro(r: &mut Renderer) -> WaitingState {
 }
 
 pub(in crate::ui) fn display_initial_parameters(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
     mode: GameMode,
 ) -> WaitingState {
@@ -68,7 +68,7 @@ pub(in crate::ui) fn display_initial_parameters(
     dialog(r, available_actions)
 }
 
-pub(in crate::ui) fn display_ding(r: &mut Renderer) -> WaitingState {
+pub(in crate::ui) fn display_ding(r: &mut Renderer<impl RendererRequestConsumer>) -> WaitingState {
     r.clear_screen();
     r.set_color(Color::Green, Color::Black);
     writeln!(r, "ДЗИНЬ!");

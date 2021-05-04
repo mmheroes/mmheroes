@@ -107,20 +107,21 @@ enum WaitingState {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Milliseconds(pub i32);
 
-pub struct GameUI<'game> {
-    renderer: Renderer,
+pub struct GameUI<'game, C: RendererRequestConsumer> {
+    renderer: Renderer<C>,
     game: &'game mut Game,
     pub high_scores: [HighScore; high_scores::SCORE_COUNT],
 }
 
-impl GameUI<'_> {
+impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
     pub fn new(
-        game: &mut Game,
+        game: &'game mut Game,
         high_scores: Option<[HighScore; high_scores::SCORE_COUNT]>,
-    ) -> GameUI {
+        renderer_request_consumer: C,
+    ) -> Self {
         let default_high_scores = high_scores::default_high_scores();
         GameUI {
-            renderer: Renderer::new(),
+            renderer: Renderer::new(renderer_request_consumer),
             game,
             high_scores: high_scores.unwrap_or(default_high_scores),
         }
@@ -128,8 +129,6 @@ impl GameUI<'_> {
 
     pub fn continue_game(&mut self, input: Input) -> bool {
         use GameScreen::*;
-
-        self.renderer.clear();
 
         if let Some(ref waiting_state) = self.renderer.waiting_state {
             let waiting_state = waiting_state.clone();
@@ -300,16 +299,12 @@ impl GameUI<'_> {
         self.renderer.waiting_state = Some(new_waiting_state);
         true
     }
-
-    pub fn requests(&self) -> RendererRequestIter<'_> {
-        self.renderer.requests()
-    }
 }
 
 type DialogOption = (&'static str, Color, Action);
 
 fn display_dialog(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     start: (Line, Column),
     current_choice: Option<u8>,
     options: &[DialogOption],
@@ -327,7 +322,7 @@ fn display_dialog(
     r.flush();
 }
 
-fn dialog(r: &mut Renderer, available_actions: &[Action]) -> WaitingState {
+fn dialog(r: &mut Renderer<impl RendererRequestConsumer>, available_actions: &[Action]) -> WaitingState {
     let options = dialog_options_for_actions(available_actions);
     let start = r.get_cursor_position();
     let current_choice = 0;
@@ -339,12 +334,12 @@ fn dialog(r: &mut Renderer, available_actions: &[Action]) -> WaitingState {
     }
 }
 
-fn sleep(r: &mut Renderer, ms: Milliseconds) {
+fn sleep(r: &mut Renderer<impl RendererRequestConsumer>, ms: Milliseconds) {
     r.flush();
     r.sleep_ms(ms)
 }
 
-fn wait_for_any_key(r: &mut Renderer) -> WaitingState {
+fn wait_for_any_key(r: &mut Renderer<impl RendererRequestConsumer>) -> WaitingState {
     r.move_cursor_to(23, 0);
     r.set_color(Color::YellowBright, Color::Black);
     write!(r, "Нажми любую клавишу ...");

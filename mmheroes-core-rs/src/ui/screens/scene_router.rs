@@ -3,7 +3,7 @@ use crate::ui::renderer::{Line, Renderer};
 use crate::ui::*;
 
 pub(in crate::ui) fn display_scene_router(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
     state: &GameState,
 ) -> WaitingState {
@@ -33,12 +33,12 @@ pub(in crate::ui) fn display_scene_router(
     dialog(r, available_actions)
 }
 
-pub(in crate::ui::screens) fn display_header_stats(r: &mut Renderer, state: &GameState) {
+pub(in crate::ui::screens) fn display_header_stats(r: &mut Renderer<impl RendererRequestConsumer>, state: &GameState) {
     display_character_stats(r, state.current_day(), state.current_time(), state.player());
     display_knowledge(r, state.player());
 }
 
-fn display_character_stats(r: &mut Renderer, today: &Day, now: Time, player: &Player) {
+fn display_character_stats(r: &mut Renderer<impl RendererRequestConsumer>, today: &Day, now: Time, player: &Player) {
     write_colored!(White, r, "Сегодня ");
     // Первый день недели — 22-е мая.
     write_colored!(WhiteBright, r, "{}", today.index() + 22);
@@ -156,7 +156,7 @@ fn color_for_assessment(assessment: KnowledgeAssessment) -> Color {
     }
 }
 
-fn display_knowledge(r: &mut Renderer, player: &Player) {
+fn display_knowledge(r: &mut Renderer<impl RendererRequestConsumer>, player: &Player) {
     for (i, (subject, _)) in SUBJECTS.iter().enumerate() {
         let line = i as Line;
         r.move_cursor_to(line, 44);
@@ -184,8 +184,8 @@ fn display_knowledge(r: &mut Renderer, player: &Player) {
     }
 }
 
-pub(in crate::ui::screens) fn display_short_today_timetable(
-    r: &mut Renderer,
+pub(in crate::ui::screens) fn display_short_today_timetable<C: RendererRequestConsumer>(
+    r: &mut Renderer<C>,
     start_line: Line,
     today: &Day,
     player: &Player,
@@ -194,7 +194,7 @@ pub(in crate::ui::screens) fn display_short_today_timetable(
         let line = (i as Line) + start_line;
         r.move_cursor_to(line, 49);
         let passed = player.status_for_subject(*subject).passed();
-        let set_color_if_passed = |r: &mut Renderer, if_passed, if_not_passed| {
+        let set_color_if_passed = |r: &mut Renderer<C>, if_passed, if_not_passed| {
             r.set_color(if passed { if_passed } else { if_not_passed }, Color::Black)
         };
         set_color_if_passed(r, Color::Blue, Color::CyanBright);
@@ -227,7 +227,7 @@ pub(in crate::ui::screens) fn display_short_today_timetable(
 }
 
 pub(in crate::ui) fn display_sleeping(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
 ) -> WaitingState {
     // TODO: Реализовать что-то кроме неудавшегося сна.
@@ -238,7 +238,7 @@ pub(in crate::ui) fn display_sleeping(
 }
 
 pub(in crate::ui) fn display_surfing_internet(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
     found_program: bool,
 ) -> WaitingState {
@@ -255,7 +255,7 @@ pub(in crate::ui) fn display_surfing_internet(
 }
 
 pub(in crate::ui) fn display_available_professors(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
     available_actions: &[Action],
 ) -> WaitingState {

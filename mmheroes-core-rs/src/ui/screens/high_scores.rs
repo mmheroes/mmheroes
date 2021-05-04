@@ -1,7 +1,7 @@
 use crate::ui::{high_scores::HighScore, renderer::Renderer, *};
 
 pub(in crate::ui) fn display_high_scores(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     high_scores: &[HighScore],
 ) -> WaitingState {
     r.clear_screen();

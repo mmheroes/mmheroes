@@ -9,10 +9,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#define MMHEROES_BUFFER_SIZE (MMHEROES_SCORE_COUNT * MMHEROES_RECORD_SIZE)
-
-#define MMHEROES_MAX_NAME_LENGTH 32
-
 /**
  * Максимальное число возможных вариантов на главном экране.
  */
@@ -22,11 +18,15 @@
 
 #define MMHEROES_NUM_SUBJECTS 6
 
-#define MMHEROES_RECORD_SIZE 35
-
 #define MMHEROES_SCORE_COUNT 5
 
-typedef enum {
+#define MMHEROES_RECORD_SIZE 35
+
+#define MMHEROES_BUFFER_SIZE (MMHEROES_SCORE_COUNT * MMHEROES_RECORD_SIZE)
+
+#define MMHEROES_MAX_NAME_LENGTH 32
+
+typedef enum MMHEROES_Color {
   MMHEROES_Color_Black = 0,
   MMHEROES_Color_Red = 1,
   MMHEROES_Color_Yellow = 3,
@@ -47,7 +47,7 @@ typedef enum {
 /**
  * The game mode selector.
  */
-typedef enum {
+typedef enum MMHEROES_GameMode {
   /**
    * Normal game mode, the character has average characteristics.
    * This is the default.
@@ -70,7 +70,7 @@ typedef enum {
   MMHEROES_GameMode_God,
 } MMHEROES_GameMode;
 
-typedef enum {
+typedef enum MMHEROES_Input {
   MMHEROES_Input_KeyUp,
   MMHEROES_Input_KeyDown,
   MMHEROES_Input_Enter,
@@ -79,7 +79,7 @@ typedef enum {
 
 typedef struct MMHEROES_Game MMHEROES_Game;
 
-typedef struct MMHEROES_GameUI MMHEROES_GameUI;
+typedef struct MMHEROES_GameUI_FfiRendererRequestConsumer MMHEROES_GameUI_FfiRendererRequestConsumer;
 
 typedef struct MMHEROES_InputRecorder_InputRecorderSink MMHEROES_InputRecorder_InputRecorderSink;
 
@@ -108,25 +108,15 @@ typedef uint8_t MMHEROES_Time;
 
 typedef int16_t MMHEROES_Money;
 
-typedef struct {
+typedef struct MMHEROES_HighScore {
   const uint8_t *name;
   uintptr_t name_len;
   MMHEROES_Money score;
 } MMHEROES_HighScore;
 
-typedef struct {
-  void *context;
-  bool (*sink)(void*, const uint8_t*, uintptr_t);
-} MMHEROES_InputRecorderSink;
-
-typedef struct {
-  const uint8_t *buf;
-  uintptr_t len;
-} MMHEROES_RendererRequestIterator;
-
 typedef int32_t MMHEROES_Milliseconds;
 
-typedef enum {
+typedef enum MMHEROES_RendererRequest_Tag {
   MMHEROES_RendererRequest_ClearScreen,
   MMHEROES_RendererRequest_Flush,
   MMHEROES_RendererRequest_WriteStr,
@@ -135,26 +125,26 @@ typedef enum {
   MMHEROES_RendererRequest_Sleep,
 } MMHEROES_RendererRequest_Tag;
 
-typedef struct {
+typedef struct MMHEROES_RendererRequest_MMHEROES_WriteStr_Body {
   const uint8_t *buf;
   uintptr_t length;
 } MMHEROES_RendererRequest_MMHEROES_WriteStr_Body;
 
-typedef struct {
+typedef struct MMHEROES_RendererRequest_MMHEROES_MoveCursor_Body {
   uint8_t line;
   uint8_t column;
 } MMHEROES_RendererRequest_MMHEROES_MoveCursor_Body;
 
-typedef struct {
-  MMHEROES_Color foreground;
-  MMHEROES_Color background;
+typedef struct MMHEROES_RendererRequest_MMHEROES_SetColor_Body {
+  enum MMHEROES_Color foreground;
+  enum MMHEROES_Color background;
 } MMHEROES_RendererRequest_MMHEROES_SetColor_Body;
 
-typedef struct {
+typedef struct MMHEROES_RendererRequest_MMHEROES_Sleep_Body {
   MMHEROES_Milliseconds milliseconds;
 } MMHEROES_RendererRequest_MMHEROES_Sleep_Body;
 
-typedef struct {
+typedef struct MMHEROES_RendererRequest {
   MMHEROES_RendererRequest_Tag tag;
   union {
     MMHEROES_RendererRequest_MMHEROES_WriteStr_Body write_str;
@@ -164,17 +154,16 @@ typedef struct {
   };
 } MMHEROES_RendererRequest;
 
+typedef void (*MMHEROES_RendererRequestCallback)(void*, struct MMHEROES_RendererRequest);
+
+typedef struct MMHEROES_InputRecorderSink {
+  void *context;
+  bool (*sink)(void*, const uint8_t*, uintptr_t);
+} MMHEROES_InputRecorderSink;
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
-
-/**
- * Продолжает игру до следующего запроса на нажатие клавиши.
- *
- * При первом вызове этой функции неважно, что передаётся в параметре `input`.
- */
-bool mmheroes_continue(MMHEROES_GameUI *game_ui,
-                       MMHEROES_Input input);
 
 /**
  * Выделяет память для объекта, используя переданный аллокатор,
@@ -185,12 +174,12 @@ bool mmheroes_continue(MMHEROES_GameUI *game_ui,
  *
  * Размер и выравнивание передаются в качестве аргументов аллокатору.
  */
-MMHEROES_Game *mmheroes_game_create(MMHEROES_GameMode mode,
-                                    uint64_t seed,
-                                    MMHEROES_AllocatorContext allocator_context,
-                                    MMHEROES_Allocator allocator);
+struct MMHEROES_Game *mmheroes_game_create(enum MMHEROES_GameMode mode,
+                                           uint64_t seed,
+                                           MMHEROES_AllocatorContext allocator_context,
+                                           MMHEROES_Allocator allocator);
 
-void mmheroes_game_destroy(MMHEROES_Game *game,
+void mmheroes_game_destroy(struct MMHEROES_Game *game,
                            MMHEROES_AllocatorContext deallocator_context,
                            MMHEROES_Deallocator deallocator);
 
@@ -201,7 +190,7 @@ void mmheroes_game_destroy(MMHEROES_Game *game,
  *
  * Игровой день и время могут быть недоступны, например, если игра ещё не началась.
  */
-bool mmheroes_game_get_current_time(MMHEROES_Game *game,
+bool mmheroes_game_get_current_time(struct MMHEROES_Game *game,
                                     uint8_t *out_day,
                                     MMHEROES_Time *out_time);
 
@@ -217,12 +206,14 @@ bool mmheroes_game_get_current_time(MMHEROES_Game *game,
  * Параметр `high_scores` — указатель (возможно нулевой) на массив из
  * `MMHEROES_SCORE_COUNT` элементов.
  */
-MMHEROES_GameUI *mmheroes_game_ui_create(MMHEROES_Game *game,
-                                         const MMHEROES_HighScore *high_scores,
-                                         MMHEROES_AllocatorContext allocator_context,
-                                         MMHEROES_Allocator allocator);
+struct MMHEROES_GameUI_FfiRendererRequestConsumer *mmheroes_game_ui_create(struct MMHEROES_Game *game,
+                                                                           const struct MMHEROES_HighScore *high_scores,
+                                                                           MMHEROES_AllocatorContext allocator_context,
+                                                                           MMHEROES_Allocator allocator,
+                                                                           void *renderer_request_callback_context,
+                                                                           MMHEROES_RendererRequestCallback renderer_request_callback);
 
-void mmheroes_game_ui_destroy(MMHEROES_GameUI *game_ui,
+void mmheroes_game_ui_destroy(struct MMHEROES_GameUI_FfiRendererRequestConsumer *game_ui,
                               MMHEROES_AllocatorContext deallocator_context,
                               MMHEROES_Deallocator deallocator);
 
@@ -232,14 +223,32 @@ void mmheroes_game_ui_destroy(MMHEROES_GameUI *game_ui,
  * Результат, записанный в `out`, не должен жить дольше, чем экземпляр
  * соответствующего `GameUI`.
  */
-void mmheroes_game_ui_get_high_scores(const MMHEROES_GameUI *game_ui,
-                                      MMHEROES_HighScore *out);
+void mmheroes_game_ui_get_high_scores(const struct MMHEROES_GameUI_FfiRendererRequestConsumer *game_ui,
+                                      struct MMHEROES_HighScore *out);
 
 /**
  * `new_high_scores` — ненулевой указатель на массив из `MMHEROES_SCORE_COUNT` элементов.
  */
-void mmheroes_game_ui_set_high_scores(MMHEROES_GameUI *game_ui,
-                                      const MMHEROES_HighScore *new_high_scores);
+void mmheroes_game_ui_set_high_scores(struct MMHEROES_GameUI_FfiRendererRequestConsumer *game_ui,
+                                      const struct MMHEROES_HighScore *new_high_scores);
+
+/**
+ * Воспроизводит игру с помощью входных данных, записанных ранее с помощью
+ * `InputRecorder`.
+ *
+ * В случае ошибки возвращает `false`, иначе — `true`.
+ */
+bool mmheroes_replay(struct MMHEROES_GameUI_FfiRendererRequestConsumer *game_ui,
+                     const uint8_t *recorded_input,
+                     uintptr_t recorded_input_len);
+
+/**
+ * Продолжает игру до следующего запроса на нажатие клавиши.
+ *
+ * При первом вызове этой функции неважно, что передаётся в параметре `input`.
+ */
+bool mmheroes_continue(struct MMHEROES_GameUI_FfiRendererRequestConsumer *game_ui,
+                       enum MMHEROES_Input input);
 
 /**
  * Выделяет память для объекта, используя переданный аллокатор,
@@ -250,45 +259,18 @@ void mmheroes_game_ui_set_high_scores(MMHEROES_GameUI *game_ui,
  *
  * Размер и выравнивание передаются в качестве аргументов аллокатору.
  */
-MMHEROES_InputRecorder_InputRecorderSink *mmheroes_input_recorder_create(MMHEROES_InputRecorderSink *sink,
-                                                                         MMHEROES_AllocatorContext allocator_context,
-                                                                         MMHEROES_Allocator allocator);
+struct MMHEROES_InputRecorder_InputRecorderSink *mmheroes_input_recorder_create(struct MMHEROES_InputRecorderSink *sink,
+                                                                                MMHEROES_AllocatorContext allocator_context,
+                                                                                MMHEROES_Allocator allocator);
 
-void mmheroes_input_recorder_destroy(MMHEROES_InputRecorder_InputRecorderSink *recorder,
+void mmheroes_input_recorder_destroy(struct MMHEROES_InputRecorder_InputRecorderSink *recorder,
                                      MMHEROES_AllocatorContext deallocator_context,
                                      MMHEROES_Deallocator deallocator);
 
-bool mmheroes_input_recorder_flush(MMHEROES_InputRecorder_InputRecorderSink *recorder);
+bool mmheroes_input_recorder_record(struct MMHEROES_InputRecorder_InputRecorderSink *recorder,
+                                    enum MMHEROES_Input input);
 
-bool mmheroes_input_recorder_record(MMHEROES_InputRecorder_InputRecorderSink *recorder,
-                                    MMHEROES_Input input);
-
-/**
- * Инициализирует итератор по запросам на рендеринг.
- * `game_ui` должен быть валидный ненулевой указатель.
- */
-void mmheroes_renderer_request_iterator_begin(MMHEROES_RendererRequestIterator *iterator,
-                                              const MMHEROES_GameUI *game_ui);
-
-/**
- * Продвигает итератор по запросам на рендеринг.
- *
- * Возвращает `true` и записывает в параметр `out` следующий запрос, если он есть.
- *
- * Возвращает `false`, если запросов больше нет.
- */
-bool mmheroes_renderer_request_iterator_next(MMHEROES_RendererRequestIterator *iterator,
-                                             MMHEROES_RendererRequest *out);
-
-/**
- * Воспроизводит игру с помощью входных данных, записанных ранее с помощью
- * `InputRecorder`.
- *
- * В случае ошибки возвращает `false`, иначе — `true`.
- */
-bool mmheroes_replay(MMHEROES_GameUI *game_ui,
-                     const uint8_t *recorded_input,
-                     uintptr_t recorded_input_len);
+bool mmheroes_input_recorder_flush(struct MMHEROES_InputRecorder_InputRecorderSink *recorder);
 
 #ifdef __cplusplus
 } // extern "C"

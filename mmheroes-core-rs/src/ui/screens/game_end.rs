@@ -2,7 +2,7 @@ use crate::logic::{Action, CauseOfDeath, GameState};
 use crate::ui::{renderer::Renderer, *};
 
 pub(in crate::ui) fn display_i_am_done(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
 ) -> WaitingState {
     r.clear_screen();
@@ -12,7 +12,7 @@ pub(in crate::ui) fn display_i_am_done(
     dialog(r, available_actions)
 }
 
-fn display_game_end_dead(r: &mut Renderer, cause: CauseOfDeath) -> WaitingState {
+fn display_game_end_dead(r: &mut Renderer<impl RendererRequestConsumer>, cause: CauseOfDeath) -> WaitingState {
     use CauseOfDeath::*;
     r.set_color(Color::RedBright, Color::Black);
     writeln!(r, "Легче лбом колоть орехи,");
@@ -54,7 +54,7 @@ fn display_game_end_dead(r: &mut Renderer, cause: CauseOfDeath) -> WaitingState 
     wait_for_any_key(r)
 }
 
-fn display_game_end_alive(r: &mut Renderer) -> WaitingState {
+fn display_game_end_alive(r: &mut Renderer<impl RendererRequestConsumer>) -> WaitingState {
     // TODO: Display proper text based on the final state
     // (cause of expelling, or congratulation)
     writeln_colored!(MagentaBright, r, "Уффффф! Во всяком случае, ты еще живой.");
@@ -73,7 +73,7 @@ fn display_game_end_alive(r: &mut Renderer) -> WaitingState {
 }
 
 pub(in crate::ui) fn display_game_end(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
 ) -> WaitingState {
     r.clear_screen();
@@ -85,7 +85,7 @@ pub(in crate::ui) fn display_game_end(
 }
 
 pub(in crate::ui) fn display_wanna_try_again(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
 ) -> WaitingState {
     r.clear_screen();
@@ -96,7 +96,7 @@ pub(in crate::ui) fn display_wanna_try_again(
     dialog(r, available_actions)
 }
 
-pub(in crate::ui) fn display_disclaimer(r: &mut Renderer) -> WaitingState {
+pub(in crate::ui) fn display_disclaimer(r: &mut Renderer<impl RendererRequestConsumer>) -> WaitingState {
     r.clear_screen();
     writeln_colored!(Green, r, "DISCLAIMER");
     writeln!(r);

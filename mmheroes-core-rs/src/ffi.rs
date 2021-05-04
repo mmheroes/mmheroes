@@ -7,8 +7,9 @@ use crate::logic::{Game, GameMode, Money, Time};
 
 use crate::ui::high_scores::SCORE_COUNT;
 use crate::util::TinyString;
+use crate::ui::renderer::RendererRequestConsumer;
 use core::ffi::c_void;
-use core::mem::{align_of, size_of};
+use core::mem::{align_of, size_of, size_of_val, align_of_val};
 
 pub type AllocatorContext = *mut c_void;
 
@@ -21,6 +22,19 @@ pub type Allocator = unsafe extern "C" fn(AllocatorContext, usize, usize) -> *mu
 /// в качестве второго — указатель на освобождаемый блок памяти,
 /// а в качестве третьего — размер освобождаемого блока.
 pub type Deallocator = unsafe extern "C" fn(AllocatorContext, *mut c_void, usize);
+
+pub type RendererRequestCallback = extern "C" fn(*mut c_void, FfiRendererRequest);
+
+pub struct FfiRendererRequestConsumer {
+    context: *mut c_void,
+    callback: RendererRequestCallback,
+}
+
+impl RendererRequestConsumer for FfiRendererRequestConsumer {
+    fn consume_request(&self, request: RendererRequest) {
+        (self.callback)(self.context, request.into())
+    }
+}
 
 // Unwinding through FFI boundaries is undefined behavior, so we stop any
 // unwinding and abort.
@@ -89,7 +103,7 @@ macro_rules! ffi_destructor {
                 return;
             }
             ffi_safely_run(|| $arg.drop_in_place());
-            deallocator(deallocator_context, $arg as *mut c_void, size_of::<$ty>())
+            deallocator(deallocator_context, $arg as *mut c_void, size_of_val(&*$arg))
         }
     };
 }
@@ -142,14 +156,10 @@ pub unsafe extern "C" fn mmheroes_game_ui_create(
     high_scores: *const FfiHighScore,
     allocator_context: AllocatorContext,
     allocator: Allocator,
-) -> *mut GameUI {
+    renderer_request_callback_context: *mut c_void,
+    renderer_request_callback: RendererRequestCallback,
+) -> *mut GameUI<FfiRendererRequestConsumer> {
     use core::ptr::{null_mut, write};
-
-    let memory = allocator(allocator_context, size_of::<GameUI>(), align_of::<GameUI>())
-        as *mut GameUI;
-    if memory.is_null() {
-        return null_mut();
-    }
 
     ffi_safely_run(move || {
         let scores = if high_scores.is_null() {
@@ -168,13 +178,26 @@ pub unsafe extern "C" fn mmheroes_game_ui_create(
             Some(scores)
         };
 
-        write(memory, <GameUI>::new(game, scores));
-    });
+        let renderer_request_consumer = FfiRendererRequestConsumer {
+            context: renderer_request_callback_context,
+            callback: renderer_request_callback,
+        };
 
-    memory
+        let game = GameUI::new(game, scores, renderer_request_consumer);
+
+        let memory: *mut GameUI<_> = allocator(allocator_context, size_of_val(&game), align_of_val(&game))
+            as *mut _;
+        if memory.is_null() {
+            return null_mut();
+        }
+
+        write(memory, game);
+
+        memory
+    })
 }
 
-ffi_destructor!(mmheroes_game_ui_destroy, (game_ui: GameUI));
+ffi_destructor!(mmheroes_game_ui_destroy, (game_ui: GameUI<FfiRendererRequestConsumer>));
 
 /// Записывает в аргумент `out` `MMHEROES_SCORE_COUNT` элементов.
 /// `out` не должен быть нулевым указателем.
@@ -182,7 +205,7 @@ ffi_destructor!(mmheroes_game_ui_destroy, (game_ui: GameUI));
 /// соответствующего `GameUI`.
 #[no_mangle]
 pub unsafe extern "C" fn mmheroes_game_ui_get_high_scores(
-    game_ui: &GameUI,
+    game_ui: &GameUI<FfiRendererRequestConsumer>,
     out: *mut FfiHighScore,
 ) {
     ffi_safely_run(|| {
@@ -200,7 +223,7 @@ pub unsafe extern "C" fn mmheroes_game_ui_get_high_scores(
 /// `new_high_scores` — ненулевой указатель на массив из `MMHEROES_SCORE_COUNT` элементов.
 #[no_mangle]
 pub unsafe extern "C" fn mmheroes_game_ui_set_high_scores(
-    game_ui: &mut GameUI,
+    game_ui: &mut GameUI<FfiRendererRequestConsumer>,
     new_high_scores: *const FfiHighScore,
 ) {
     ffi_safely_run(|| {
@@ -240,78 +263,20 @@ pub enum FfiRendererRequest {
     },
 }
 
-#[repr(C)]
-pub struct FfiRendererRequestIterator {
-    buf: *const u8,
-    len: usize,
-}
-
-/// Инициализирует итератор по запросам на рендеринг.
-/// `game_ui` должен быть валидный ненулевой указатель.
-#[no_mangle]
-pub extern "C" fn mmheroes_renderer_request_iterator_begin(
-    iterator: &mut FfiRendererRequestIterator,
-    game_ui: &GameUI,
-) {
-    ffi_safely_run(|| {
-        let rust_iterator = game_ui.requests();
-        iterator.buf = rust_iterator.encoded.as_ptr();
-        iterator.len = rust_iterator.encoded.len();
-    })
-}
-
-/// Продвигает итератор по запросам на рендеринг.
-///
-/// Возвращает `true` и записывает в параметр `out` следующий запрос, если он есть.
-///
-/// Возвращает `false`, если запросов больше нет.
-#[no_mangle]
-pub unsafe extern "C" fn mmheroes_renderer_request_iterator_next(
-    iterator: &mut FfiRendererRequestIterator,
-    out: &mut FfiRendererRequest,
-) -> bool {
-    ffi_safely_run(move || {
-        let mut rust_iterator = crate::ui::renderer::RendererRequestIter {
-            encoded: core::slice::from_raw_parts(iterator.buf, iterator.len),
-        };
-
-        let next = rust_iterator.next();
-
-        *iterator = FfiRendererRequestIterator {
-            buf: rust_iterator.encoded.as_ptr(),
-            len: rust_iterator.encoded.len(),
-        };
-
-        match next {
-            None => {
-                return false;
-            }
-            Some(RendererRequest::ClearScreen) => *out = FfiRendererRequest::ClearScreen,
-            Some(RendererRequest::Flush) => *out = FfiRendererRequest::Flush,
-            Some(RendererRequest::WriteStr(s)) => {
-                *out = FfiRendererRequest::WriteStr {
-                    buf: s.as_ptr(),
-                    length: s.len(),
-                }
-            }
-            Some(RendererRequest::MoveCursor { line, column }) => {
-                *out = FfiRendererRequest::MoveCursor { line, column }
-            }
-            Some(RendererRequest::SetColor {
-                foreground,
-                background,
-            }) => {
-                *out = FfiRendererRequest::SetColor {
-                    foreground,
-                    background,
-                }
-            }
-            Some(RendererRequest::Sleep(ms)) => {
-                *out = FfiRendererRequest::Sleep { milliseconds: ms }
-            }
-        };
-        true
-    })
+impl<'a> From<RendererRequest<'a>> for FfiRendererRequest {
+    fn from(request: RendererRequest<'a>) -> Self {
+        match request {
+            RendererRequest::ClearScreen => FfiRendererRequest::ClearScreen,
+            RendererRequest::Flush => FfiRendererRequest::Flush,
+            RendererRequest::WriteStr(s) => FfiRendererRequest::WriteStr {
+                buf: s.as_ptr(),
+                length: s.len(),
+            },
+            RendererRequest::MoveCursor { line, column } => FfiRendererRequest::MoveCursor { line, column },
+            RendererRequest::SetColor { foreground, background } => FfiRendererRequest::SetColor { foreground, background },
+            RendererRequest::Sleep(milliseconds) => FfiRendererRequest::Sleep { milliseconds }
+        }
+    }
 }
 
 /// Воспроизводит игру с помощью входных данных, записанных ранее с помощью
@@ -320,7 +285,7 @@ pub unsafe extern "C" fn mmheroes_renderer_request_iterator_next(
 /// В случае ошибки возвращает `false`, иначе — `true`.
 #[no_mangle]
 pub unsafe extern "C" fn mmheroes_replay(
-    game_ui: &mut GameUI,
+    game_ui: &mut GameUI<FfiRendererRequestConsumer>,
     recorded_input: *const u8,
     recorded_input_len: usize,
 ) -> bool {
@@ -342,7 +307,7 @@ pub unsafe extern "C" fn mmheroes_replay(
 ///
 /// При первом вызове этой функции неважно, что передаётся в параметре `input`.
 #[no_mangle]
-pub extern "C" fn mmheroes_continue(game_ui: &mut GameUI, input: Input) -> bool {
+pub extern "C" fn mmheroes_continue(game_ui: &mut GameUI<FfiRendererRequestConsumer>, input: Input) -> bool {
     ffi_safely_run(|| game_ui.continue_game(input))
 }
 
@@ -391,7 +356,7 @@ pub unsafe extern "C" fn mmheroes_input_recorder_flush(
 mod tests {
     use super::*;
     use std::alloc::Layout;
-    use std::ptr::{null, null_mut};
+    use std::ptr::null_mut;
 
     unsafe extern "C" fn allocator(
         _context: AllocatorContext,
@@ -432,11 +397,19 @@ mod tests {
 
             let scores = high_scores();
 
+            let mut requests = <Vec<FfiRendererRequest>>::new();
+
+            extern "C" fn renderer_request_callback(context: *mut c_void, renderer_request: FfiRendererRequest) {
+                unsafe { (&mut *(context as *mut Vec<_>)).push(renderer_request) }
+            }
+
             let game_ui = mmheroes_game_ui_create(
                 &mut *game,
                 scores.as_ptr(),
                 null_mut(),
                 allocator,
+                &mut requests as *mut _ as *mut c_void,
+                renderer_request_callback,
             );
 
             let scores = &(&*game_ui).high_scores;
@@ -447,21 +420,6 @@ mod tests {
             assert_eq!(scores[4].0, "Рита");
 
             mmheroes_continue(&mut *game_ui, Input::Enter);
-
-            let mut iterator = FfiRendererRequestIterator {
-                buf: null(),
-                len: 0,
-            };
-            mmheroes_renderer_request_iterator_begin(&mut iterator, &mut *game_ui);
-
-            assert!(!iterator.buf.is_null());
-            assert!(!iterator.len > 0);
-
-            let mut requests = Vec::new();
-            let mut request = FfiRendererRequest::ClearScreen;
-            while mmheroes_renderer_request_iterator_next(&mut iterator, &mut request) {
-                requests.push(request);
-            }
 
             assert_eq!(requests.len(), 29);
 

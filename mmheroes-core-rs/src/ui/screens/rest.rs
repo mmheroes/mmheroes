@@ -2,7 +2,7 @@ use crate::logic::*;
 use crate::ui::{renderer::Renderer, screens::scene_router, *};
 
 pub(in crate::ui) fn display_rest_in_mausoleum(
-    r: &mut Renderer,
+    r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
     state: &GameState,
 ) -> WaitingState {
