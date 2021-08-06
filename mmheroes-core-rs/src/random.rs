@@ -28,7 +28,7 @@ impl Rng {
             .try_into()
             .unwrap_or_else(|_| panic!("upper bound should be convertible to u64"));
         assert!(upper_bound > 0, "upper bound cannot be zero.");
-        let tmp = (u64::max_value() % upper_bound) + 1;
+        let tmp = (u64::MAX % upper_bound) + 1;
         let range = if tmp == upper_bound { 0u64 } else { tmp };
         let mut random;
         loop {
@@ -60,7 +60,7 @@ impl Rng {
                 let end = end.try_into().unwrap_or_else(|_| {
                     panic!("upper bound should be convertible to u64")
                 });
-                if end == u64::max_value() && start == 0 {
+                if end == u64::MAX && start == 0 {
                     return self.next().try_into().unwrap_or_else(|_| panic!());
                 } else {
                     end - start + 1
@@ -73,7 +73,7 @@ impl Rng {
             }
             Bound::Unbounded => {
                 if start > 0 {
-                    u64::max_value() - start + 1
+                    u64::MAX - start + 1
                 } else {
                     return self.next().try_into().unwrap_or_else(|_| panic!());
                 }
@@ -119,7 +119,7 @@ mod tests {
         assert_eq!(rng2.next(), 701532786141963250);
         assert_eq!(rng2.next(), 16015981125662989062);
 
-        let mut rng3 = Rng::new(u64::max_value());
+        let mut rng3 = Rng::new(u64::MAX);
         assert_eq!(rng3.next(), 16490336266968443936);
         assert_eq!(rng3.next(), 16834447057089888969);
         assert_eq!(rng3.next(), 4048727598324417001);
@@ -224,24 +224,24 @@ mod tests {
 
         // Corner cases
         assert_eq!(
-            rng.random_in_range(0..u64::max_value()),
+            rng.random_in_range(0..u64::MAX),
             5031045625461185416
         );
         assert_eq!(
-            rng.random_in_range(0..=u64::max_value()),
+            rng.random_in_range(0..=u64::MAX),
             3257556776996564209
         );
 
         assert_eq!(
-            rng.random_in_range((u64::max_value() - 1)..=u64::max_value()),
+            rng.random_in_range((u64::MAX - 1)..=u64::MAX),
             18446744073709551615
         );
         assert_eq!(
-            rng.random_in_range((u64::max_value() - 1)..=u64::max_value()),
+            rng.random_in_range((u64::MAX - 1)..=u64::MAX),
             18446744073709551614
         );
         assert_eq!(
-            rng.random_in_range((u64::max_value() - 1)..=u64::max_value()),
+            rng.random_in_range((u64::MAX - 1)..=u64::MAX),
             18446744073709551614
         );
     }
