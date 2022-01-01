@@ -5,13 +5,24 @@ pub mod characteristics;
 pub use characteristics::*;
 
 pub mod game_state;
+
 pub use game_state::*;
 
 pub mod subjects;
+
 pub use subjects::*;
 
 pub mod npc;
+
 pub use npc::*;
+
+pub mod player;
+
+pub use player::Player;
+
+pub mod subject_status;
+
+pub use subject_status::SubjectStatus;
 
 use npc::Classmate::*;
 
@@ -527,9 +538,9 @@ impl Game {
                 }
                 for classmate_info in state.classmates.filter_by_location(location) {
                     available_actions
-                        .push(Action::InteractWithClassmate(classmate_info.classmate()));
+                      .push(Action::InteractWithClassmate(classmate_info.classmate()));
                 }
-                if state.player.is_employed_at_terkom {
+                if state.player.is_employed_at_terkom() {
                     available_actions.push(Action::GoToWork);
                 }
                 available_actions.push(Action::IAmDone);
@@ -576,15 +587,15 @@ impl Game {
                 available_actions.push(Action::LeaveComputerClass);
                 available_actions.push(Action::GoToPDMI);
                 available_actions.push(Action::GoToMausoleum);
-                if state.player.has_internet {
+                if state.player.has_internet() {
                     available_actions.push(Action::SurfInternet);
                 }
-                if state.player.has_mmheroes_floppy {
+                if state.player.has_mmheroes_floppy() {
                     available_actions.push(Action::PlayMMHEROES);
                 }
                 for classmate_info in state.classmates.filter_by_location(location) {
                     available_actions
-                        .push(Action::InteractWithClassmate(classmate_info.classmate()));
+                      .push(Action::InteractWithClassmate(classmate_info.classmate()));
                 }
                 available_actions.push(Action::IAmDone);
                 available_actions
@@ -661,7 +672,7 @@ impl Game {
 
     fn interact_with_pasha(&mut self, state: GameState) -> TinyVec<Action, 16> {
         assert_eq!(state.location, Location::PUNK);
-        let interaction = if state.player.got_stipend {
+        let interaction = if state.player.got_stipend() {
             npc::PashaInteraction::Inspiration
         } else {
             npc::PashaInteraction::Stipend
@@ -682,8 +693,8 @@ impl Game {
         let player = &mut state.player;
         match interaction {
             npc::PashaInteraction::Stipend => {
-                assert!(!player.got_stipend);
-                player.got_stipend = true;
+                assert!(!player.got_stipend());
+                player.set_got_stipend();
                 player.money += Money::stipend();
             }
             npc::PashaInteraction::Inspiration => {
@@ -778,7 +789,7 @@ impl Game {
                 todo!()
             }
             Action::GoToWork => {
-                assert!(state.player.is_employed_at_terkom);
+                assert!(state.player.is_employed_at_terkom());
                 todo!()
             }
             Action::IAmDone => self.i_am_done(state),
@@ -789,12 +800,12 @@ impl Game {
     fn surf_internet(&mut self, state: GameState) -> TinyVec<Action, 16> {
         let player = &state.player;
         let cs_problems_done = player
-            .status_for_subject(Subject::ComputerScience)
-            .problems_done;
+          .status_for_subject(Subject::ComputerScience)
+          .problems_done();
         let cs_problems_required = SUBJECTS[Subject::ComputerScience].1.required_problems;
-        let found_program = player.god_mode
-            || (self.rng.random(player.brain) > BrainLevel(6)
-                && cs_problems_done < cs_problems_required);
+        let found_program = player.is_god_mode()
+          || (self.rng.random(player.brain) > BrainLevel(6)
+          && cs_problems_done < cs_problems_required);
         self.screen = GameScreen::SurfInternet(state, found_program);
         wait_for_any_key()
     }
@@ -808,9 +819,9 @@ impl Game {
         assert_eq!(action, Action::AnyKey);
         if found_program {
             state
-                .player
-                .status_for_subject_mut(Subject::ComputerScience)
-                .problems_done += 1;
+              .player
+              .status_for_subject_mut(Subject::ComputerScience)
+              .more_problems_solved(1);
         } else if state.player.brain < BrainLevel(5) && self.rng.roll_dice(3) {
             state.player.brain += 1;
         }
@@ -934,7 +945,7 @@ impl Game {
         use Subject::AlgebraAndNumberTheory;
         let has_enough_charisma = player.charisma > self.rng.random(CharismaLevel(10));
         let algebra = player.status_for_subject(AlgebraAndNumberTheory);
-        let problems_done = algebra.problems_done;
+        let problems_done = algebra.problems_done();
         let required_problems = SUBJECTS[AlgebraAndNumberTheory].1.required_problems;
         let has_at_least_2_remaining_problems = problems_done + 2 <= required_problems;
         if has_enough_charisma && has_at_least_2_remaining_problems {
@@ -984,12 +995,12 @@ impl Game {
                     player.status_for_subject_mut(Subject::AlgebraAndNumberTheory);
                 match interaction {
                     npc::KolyaInteraction::SolvedAlgebraProblemsForFree => {
-                        algebra_status.problems_done += 2;
+                        algebra_status.more_problems_solved(2);
                         return self.hour_pass(state);
                     }
                     npc::KolyaInteraction::PromptOatTincture => unreachable!(),
                     npc::KolyaInteraction::SolvedAlgebraProblemsForOatTincture => {
-                        algebra_status.problems_done += 2;
+                        algebra_status.more_problems_solved(2);
                         player.money -= Money::oat_tincture_cost();
                         return self.hour_pass(state);
                     }
@@ -1050,14 +1061,14 @@ impl Game {
         assert_eq!(state.location, Location::Mausoleum);
         let player = &state.player;
         let has_enough_charisma = player.charisma > self.rng.random(CharismaLevel(20));
-        let (actions, interaction) = if !player.is_employed_at_terkom
-            && has_enough_charisma
+        let (actions, interaction) = if !player.is_employed_at_terkom()
+          && has_enough_charisma
         {
             (
                 tiny_vec!(capacity: 16, [Action::AcceptEmploymentAtTerkom, Action::DeclineEmploymentAtTerkom]),
                 PromptEmploymentAtTerkom,
             )
-        } else if !player.has_internet && has_enough_charisma {
+        } else if !player.has_internet() && has_enough_charisma {
             (wait_for_any_key(), ProxyAddress)
         } else {
             let drink_beer = self.rng.random(3) > 0;
@@ -1146,8 +1157,8 @@ impl Game {
                     self.scene_router(state)
                 }
                 ProxyAddress => {
-                    assert!(!player.has_internet);
-                    player.has_internet = true;
+                    assert!(!player.has_internet());
+                    player.set_has_internet();
                     self.scene_router(state)
                 }
                 WantFreebie {
@@ -1228,8 +1239,8 @@ impl Game {
             },
             Action::AcceptEmploymentAtTerkom => {
                 assert_eq!(interaction, PromptEmploymentAtTerkom);
-                assert!(!player.is_employed_at_terkom);
-                player.is_employed_at_terkom = true;
+                assert!(!player.is_employed_at_terkom());
+                player.set_employed_at_terkom();
                 self.screen = GameScreen::GrishaInteraction(
                     state,
                     CongratulationsYouAreNowEmployed,
@@ -1238,9 +1249,9 @@ impl Game {
             }
             Action::DeclineEmploymentAtTerkom => {
                 assert_eq!(interaction, PromptEmploymentAtTerkom);
-                assert!(!player.is_employed_at_terkom);
+                assert!(!player.is_employed_at_terkom());
                 self.screen =
-                    GameScreen::GrishaInteraction(state, AsYouWantButDontOverstudy);
+                  GameScreen::GrishaInteraction(state, AsYouWantButDontOverstudy);
                 wait_for_any_key()
             }
             _ => illegal_action!(action),
@@ -1503,4 +1514,12 @@ impl Game {
             Action::ThanksButNothing,
         ])
     }
+}
+
+#[test]
+fn memory() {
+    use core::mem::size_of;
+
+    assert_eq!(size_of::<Game>(), 360);
+    assert_eq!(size_of::<Player>(), 40);
 }

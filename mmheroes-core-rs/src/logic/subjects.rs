@@ -1,4 +1,5 @@
 use super::*;
+use core::convert::TryFrom;
 
 #[derive(Debug)]
 #[allow(non_snake_case)] // TODO: Remove this
@@ -26,12 +27,30 @@ impl SubjectInfo {
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub enum Subject {
-    AlgebraAndNumberTheory,
-    Calculus,
-    GeometryAndTopology,
-    ComputerScience,
-    English,
-    PhysicalEducation,
+    AlgebraAndNumberTheory = 0,
+    Calculus = 1,
+    GeometryAndTopology = 2,
+    ComputerScience = 3,
+    English = 4,
+    PhysicalEducation = 5,
+}
+
+impl TryFrom<u8> for Subject {
+    type Error = ();
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        let variant = match value {
+            0 => Subject::AlgebraAndNumberTheory,
+            1 => Subject::Calculus,
+            2 => Subject::GeometryAndTopology,
+            3 => Subject::ComputerScience,
+            4 => Subject::English,
+            5 => Subject::PhysicalEducation,
+            _ => return Err(())
+        };
+        assert_eq!(variant as u8, value);
+        Ok(variant)
+    }
 }
 
 pub const NUM_SUBJECTS: usize = 6;
