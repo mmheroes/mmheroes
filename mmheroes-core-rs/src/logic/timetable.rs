@@ -25,6 +25,7 @@ impl Time {
         self.0 >= 9 && self.0 <= 19
     }
 
+    /// Во сколько закрывается компьютерный класс.
     pub const fn computer_class_closing() -> Time {
         Time(20)
     }

@@ -157,7 +157,7 @@ pub const MAX_OPTIONS_IN_SCENE_ROUTER: usize = 12;
 
 #[derive(Debug)]
 pub enum GameScreen {
-    /// Самый первый экран, который видет пользователь.
+    /// Самый первый экран, который видит пользователь.
     Intro,
 
     /// Экран, который видит пользователь, если запускает игру с каким-то аргументом.
@@ -628,7 +628,7 @@ impl Game {
         mut state: GameState,
         action: Action,
     ) -> TinyVec<Action, 16> {
-        assert!(state.location == Location::Dorm);
+        assert_eq!(state.location, Location::Dorm);
         match action {
             Action::Study => todo!("Study"),
             Action::ViewTimetable => self.view_timetable(state),
