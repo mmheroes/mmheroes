@@ -180,10 +180,10 @@ impl Subjects {
 }
 
 impl core::ops::Index<Subject> for Subjects {
-    type Output = (Subject, SubjectInfo);
+    type Output = SubjectInfo;
 
     fn index(&self, index: Subject) -> &Self::Output {
-        &self.0[index as usize]
+        &self.0[index as usize].1
     }
 }
 

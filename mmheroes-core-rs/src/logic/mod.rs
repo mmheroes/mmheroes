@@ -802,7 +802,7 @@ impl Game {
         let cs_problems_done = player
           .status_for_subject(Subject::ComputerScience)
           .problems_done();
-        let cs_problems_required = SUBJECTS[Subject::ComputerScience].1.required_problems;
+        let cs_problems_required = SUBJECTS[Subject::ComputerScience].required_problems;
         let found_program = player.is_god_mode()
           || (self.rng.random(player.brain) > BrainLevel(6)
           && cs_problems_done < cs_problems_required);
@@ -946,7 +946,7 @@ impl Game {
         let has_enough_charisma = player.charisma > self.rng.random(CharismaLevel(10));
         let algebra = player.status_for_subject(AlgebraAndNumberTheory);
         let problems_done = algebra.problems_done();
-        let required_problems = SUBJECTS[AlgebraAndNumberTheory].1.required_problems;
+        let required_problems = SUBJECTS[AlgebraAndNumberTheory].required_problems;
         let has_at_least_2_remaining_problems = problems_done + 2 <= required_problems;
         if has_enough_charisma && has_at_least_2_remaining_problems {
             Some(wait_for_any_key())

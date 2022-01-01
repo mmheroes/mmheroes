@@ -9,7 +9,6 @@ fn output_remaining_problems(
 ) {
     let (line, column) = r.get_cursor_position();
     let problems_remaining = SUBJECTS[subject_status.subject()]
-        .1
         .required_problems()
         .saturating_sub(subject_status.problems_done());
     if let Some(passed_day) = subject_status.passed_exam_day(timetable) {
