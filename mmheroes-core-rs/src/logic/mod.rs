@@ -5,23 +5,18 @@ pub mod characteristics;
 pub use characteristics::*;
 
 pub mod game_state;
-
 pub use game_state::*;
 
 pub mod subjects;
-
 pub use subjects::*;
 
 pub mod npc;
-
 pub use npc::*;
 
 pub mod player;
-
 pub use player::Player;
 
 pub mod subject_status;
-
 pub use subject_status::SubjectStatus;
 
 use npc::Classmate::*;
@@ -84,14 +79,16 @@ pub enum Action {
     ThanksButNothing,
 }
 
+type ActionVec = TinyVec<Action, 16>;
+
 macro_rules! illegal_action {
     ($action:expr) => {
         panic!("Illegal action: {:?}", $action)
     };
 }
 
-fn wait_for_any_key() -> TinyVec<Action, 16> {
-    tiny_vec!(capacity: 16, [Action::AnyKey])
+fn wait_for_any_key() -> ActionVec {
+    ActionVec::from([Action::AnyKey])
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -279,7 +276,7 @@ pub struct Game {
     screen: GameScreen,
     rng: random::Rng,
     mode: GameMode,
-    available_actions: TinyVec<Action, 16>,
+    available_actions: ActionVec,
 }
 
 impl Game {
@@ -340,7 +337,7 @@ impl Game {
     }
 
     /// Accepts an action, returns the number of actions available in the updated state.
-    fn _perform_action(&mut self, action: Action) -> TinyVec<Action, 16> {
+    fn _perform_action(&mut self, action: Action) -> ActionVec {
         match &self.screen {
             Terminal => panic!("Attempted to perform an action in terminal state"),
             Intro => self.start_game(),
@@ -423,7 +420,7 @@ impl Game {
             WannaTryAgain => self.handle_wanna_try_again(action),
             Disclaimer => {
                 self.screen = Terminal;
-                tiny_vec!(capacity: 16, [])
+                ActionVec::new()
             }
             WhatToDo(state)
             | AboutScreen(state)
@@ -437,7 +434,7 @@ impl Game {
         }
     }
 
-    fn start_game(&mut self) -> TinyVec<Action, 16> {
+    fn start_game(&mut self) -> ActionVec {
         match self.mode {
             GameMode::SelectInitialParameters => {
                 self.screen = InitialParameters;
@@ -446,7 +443,7 @@ impl Game {
                 // - Шибко умный
                 // - Шибко наглый
                 // - Шибко общительный
-                tiny_vec!(capacity: 16, [
+                ActionVec::from([
                     Action::RandomStudent,
                     Action::CleverStudent,
                     Action::ImpudentStudent,
@@ -461,7 +458,7 @@ impl Game {
                 // - Шибко наглый
                 // - Шибко общительный
                 // - GOD-режим
-                tiny_vec!(capacity: 16, [
+                ActionVec::from([
                     Action::RandomStudent,
                     Action::CleverStudent,
                     Action::ImpudentStudent,
@@ -473,7 +470,7 @@ impl Game {
         }
     }
 
-    fn ding(&mut self, action: Action) -> TinyVec<Action, 16> {
+    fn ding(&mut self, action: Action) -> ActionVec {
         self.screen = Ding(self.initialize_player(action));
         wait_for_any_key()
     }
@@ -517,13 +514,13 @@ impl Game {
         })
     }
 
-    fn scene_router(&mut self, state: GameState) -> TinyVec<Action, 16> {
+    fn scene_router(&mut self, state: GameState) -> ActionVec {
         // TODO: assert that no exam is in progress
         let location = state.location;
         let available_actions = match location {
             Location::PDMI => todo!(),
             Location::PUNK => {
-                let mut available_actions = tiny_vec!(capacity: 16, [
+                let mut available_actions = ActionVec::from([
                     Action::GoToProfessor,
                     Action::LookAtBaobab,
                     Action::GoFromPunkToDorm,
@@ -547,7 +544,7 @@ impl Game {
                 available_actions
             }
             Location::Mausoleum => {
-                let mut available_actions = tiny_vec!(capacity: 16, [
+                let mut available_actions = ActionVec::from([
                     Action::GoFromMausoleumToPunk,
                     Action::GoToPDMI,
                     Action::GoFromMausoleumToDorm,
@@ -560,7 +557,7 @@ impl Game {
                 available_actions.push(Action::IAmDone);
                 available_actions
             }
-            Location::Dorm => tiny_vec!(capacity: 16, [
+            Location::Dorm => ActionVec::from([
                 Action::Study,
                 Action::ViewTimetable,
                 Action::Rest,
@@ -575,7 +572,7 @@ impl Game {
                 if state.current_time > Time::computer_class_closing() {
                     todo!("Класс закрывается. Пошли домой!")
                 }
-                let mut available_actions = tiny_vec!(capacity: 16);
+                let mut available_actions = ActionVec::new();
                 if location.is_exam_here_now(
                     Subject::ComputerScience,
                     state.current_day(),
@@ -609,7 +606,7 @@ impl Game {
         &mut self,
         state: GameState,
         action: Action,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         match state.location() {
             Location::PUNK => self.handle_punk_action(state, action),
             Location::PDMI => todo!(),
@@ -619,7 +616,7 @@ impl Game {
         }
     }
 
-    fn enter_exam(&mut self, state: GameState, subject: Subject) -> TinyVec<Action, 16> {
+    fn enter_exam(&mut self, state: GameState, subject: Subject) -> ActionVec {
         todo!()
     }
 
@@ -627,7 +624,7 @@ impl Game {
         &mut self,
         state: GameState,
         action: Action,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         // TODO: Реализовать что-то помимо неудавшегося сна
         assert_matches!(self.screen, GameScreen::Sleep(_));
         assert_eq!(action, Action::AnyKey);
@@ -638,7 +635,7 @@ impl Game {
         &mut self,
         mut state: GameState,
         action: Action,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         assert_eq!(state.location, Location::Dorm);
         match action {
             Action::Study => todo!("Study"),
@@ -686,7 +683,7 @@ impl Game {
         mut state: GameState,
         action: Action,
         interaction: npc::PashaInteraction,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         assert_eq!(action, Action::AnyKey);
         assert_eq!(state.location, Location::PUNK);
         assert_matches!(self.screen, GameScreen::PashaInteraction(_, _));
@@ -715,15 +712,15 @@ impl Game {
         &mut self,
         mut state: GameState,
         action: Action,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         assert_eq!(state.location, Location::PUNK);
         match action {
             Action::GoToProfessor => {
                 let mut available_actions = state
-                    .current_day()
-                    .current_exams(state.location, state.current_time)
-                    .map(|exam| Action::Exam(exam.subject()))
-                    .collect::<TinyVec<Action, 16>>();
+                  .current_day()
+                  .current_exams(state.location, state.current_time)
+                  .map(|exam| Action::Exam(exam.subject()))
+                  .collect::<ActionVec>();
                 available_actions.push(Action::DontGoToProfessor);
                 self.screen = GameScreen::GoToProfessor(state);
                 available_actions
@@ -797,7 +794,7 @@ impl Game {
         }
     }
 
-    fn surf_internet(&mut self, state: GameState) -> TinyVec<Action, 16> {
+    fn surf_internet(&mut self, state: GameState) -> ActionVec {
         let player = &state.player;
         let cs_problems_done = player
           .status_for_subject(Subject::ComputerScience)
@@ -815,7 +812,7 @@ impl Game {
         mut state: GameState,
         action: Action,
         found_program: bool,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         assert_eq!(action, Action::AnyKey);
         if found_program {
             state
@@ -828,7 +825,7 @@ impl Game {
         self.hour_pass(state)
     }
 
-    fn interact_with_kuzmenko(&mut self, mut state: GameState) -> TinyVec<Action, 16> {
+    fn interact_with_kuzmenko(&mut self, mut state: GameState) -> ActionVec {
         use npc::KuzmenkoInteraction::*;
         let tomorrow = state.current_day_index + 1;
         let saturday = 5;
@@ -900,7 +897,7 @@ impl Game {
         &mut self,
         mut state: GameState,
         action: Action,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         assert_eq!(state.location, Location::ComputerClass);
         match action {
             Action::Exam(Subject::ComputerScience) => todo!(),
@@ -941,7 +938,7 @@ impl Game {
     fn kolya_maybe_solve_algebra_problems(
         &mut self,
         player: &mut Player,
-    ) -> Option<TinyVec<Action, 16>> {
+    ) -> Option<ActionVec> {
         use Subject::AlgebraAndNumberTheory;
         let has_enough_charisma = player.charisma > self.rng.random(CharismaLevel(10));
         let algebra = player.status_for_subject(AlgebraAndNumberTheory);
@@ -955,7 +952,7 @@ impl Game {
         }
     }
 
-    fn interact_with_kolya(&mut self, mut state: GameState) -> TinyVec<Action, 16> {
+    fn interact_with_kolya(&mut self, mut state: GameState) -> ActionVec {
         assert_eq!(state.location, Location::Mausoleum);
         let player = &mut state.player;
         let (available_actions, interaction) = if let Some(available_actions) =
@@ -972,7 +969,7 @@ impl Game {
             // "Знаешь, пиво, конечно, хорошо, но настойка овса - лучше!"
             // "Заказать Коле настойку овса?"
             (
-                tiny_vec!(capacity: 16, [Action::Yes, Action::No]),
+                ActionVec::from([Action::Yes, Action::No]),
                 npc::KolyaInteraction::PromptOatTincture,
             )
         };
@@ -985,7 +982,7 @@ impl Game {
         mut state: GameState,
         action: Action,
         interaction: npc::KolyaInteraction,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         assert_eq!(state.location, Location::Mausoleum);
         assert_matches!(self.screen, GameScreen::KolyaInteraction(_, _));
         let player = &mut state.player;
@@ -1056,7 +1053,7 @@ impl Game {
         }
     }
 
-    fn interact_with_grisha(&mut self, state: GameState) -> TinyVec<Action, 16> {
+    fn interact_with_grisha(&mut self, state: GameState) -> ActionVec {
         use npc::GrishaInteraction::*;
         assert_eq!(state.location, Location::Mausoleum);
         let player = &state.player;
@@ -1065,7 +1062,7 @@ impl Game {
           && has_enough_charisma
         {
             (
-                tiny_vec!(capacity: 16, [Action::AcceptEmploymentAtTerkom, Action::DeclineEmploymentAtTerkom]),
+                ActionVec::from([Action::AcceptEmploymentAtTerkom, Action::DeclineEmploymentAtTerkom]),
                 PromptEmploymentAtTerkom,
             )
         } else if !player.has_internet() && has_enough_charisma {
@@ -1146,7 +1143,7 @@ impl Game {
         mut state: GameState,
         action: Action,
         interaction: npc::GrishaInteraction,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         use npc::GrishaInteraction::*;
         assert_matches!(self.screen, GameScreen::GrishaInteraction(_, _));
         let player = &mut state.player;
@@ -1262,7 +1259,7 @@ impl Game {
         &mut self,
         mut state: GameState,
         action: Action,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         let player = &mut state.player;
         match action {
             Action::OrderCola => {
@@ -1308,7 +1305,7 @@ impl Game {
         &mut self,
         mut state: GameState,
         action: Action,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         assert!(state.location == Location::Mausoleum);
         match action {
             Action::GoFromMausoleumToPunk => {
@@ -1328,7 +1325,7 @@ impl Game {
             Action::Rest => {
                 let money = state.player.money;
                 self.screen = GameScreen::RestInMausoleum(state);
-                let mut available_actions = tiny_vec!(capacity: 16);
+                let mut available_actions = ActionVec::new();
                 if money >= Money::cola_cost() {
                     available_actions.push(Action::OrderCola);
                 }
@@ -1368,18 +1365,18 @@ impl Game {
         }
     }
 
-    fn view_timetable(&mut self, state: GameState) -> TinyVec<Action, 16> {
+    fn view_timetable(&mut self, state: GameState) -> ActionVec {
         self.screen = Timetable(state);
         wait_for_any_key()
     }
 
-    fn decrease_health<F: FnOnce(&mut Game, GameState) -> TinyVec<Action, 16>>(
+    fn decrease_health<F: FnOnce(&mut Game, GameState) -> ActionVec>(
         &mut self,
         delta: HealthLevel,
         mut state: GameState,
         cause_of_death: CauseOfDeath,
         if_alive: F,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         if state.player.health <= delta {
             state.player.cause_of_death = Some(cause_of_death);
             self.game_end(state)
@@ -1389,7 +1386,7 @@ impl Game {
         }
     }
 
-    fn try_to_sleep(&mut self, state: GameState) -> TinyVec<Action, 16> {
+    fn try_to_sleep(&mut self, state: GameState) -> ActionVec {
         assert!(state.location == Location::Dorm);
         if state.current_time > Time(3) && state.current_time < Time(20) {
             self.screen = GameScreen::Sleep(state);
@@ -1399,11 +1396,11 @@ impl Game {
         }
     }
 
-    fn go_to_sleep(&mut self, _state: GameState) -> TinyVec<Action, 16> {
+    fn go_to_sleep(&mut self, _state: GameState) -> ActionVec {
         todo!()
     }
 
-    fn midnight(&mut self, state: GameState) -> TinyVec<Action, 16> {
+    fn midnight(&mut self, state: GameState) -> ActionVec {
         match state.location {
             Location::PUNK => todo!("sub_1E907"),
             Location::PDMI => todo!("sub_1E7F8"),
@@ -1425,7 +1422,7 @@ impl Game {
         }
     }
 
-    fn hour_pass(&mut self, mut state: GameState) -> TinyVec<Action, 16> {
+    fn hour_pass(&mut self, mut state: GameState) -> ActionVec {
         // TODO: Lot of stuff going on here
 
         // TODO: Поменять эти строки местами и не забыть отредактировать метод
@@ -1442,21 +1439,21 @@ impl Game {
         self.scene_router(state)
     }
 
-    fn rest_in_dorm(&mut self, mut state: GameState) -> TinyVec<Action, 16> {
+    fn rest_in_dorm(&mut self, mut state: GameState) -> ActionVec {
         state.player.health += self.rng.random_in_range(7..15);
         self.hour_pass(state)
     }
 
-    fn i_am_done(&mut self, state: GameState) -> TinyVec<Action, 16> {
+    fn i_am_done(&mut self, state: GameState) -> ActionVec {
         self.screen = IAmDone(state);
-        tiny_vec!(capacity: 16, [Action::NoIAmNotDone, Action::IAmCertainlyDone])
+        ActionVec::from([Action::NoIAmNotDone, Action::IAmCertainlyDone])
     }
 
     fn handle_i_am_done(
         &mut self,
         state: GameState,
         action: Action,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         match action {
             Action::NoIAmNotDone => self.scene_router(state),
             Action::IAmCertainlyDone => self.game_end(state),
@@ -1464,18 +1461,18 @@ impl Game {
         }
     }
 
-    fn game_end(&mut self, state: GameState) -> TinyVec<Action, 16> {
+    fn game_end(&mut self, state: GameState) -> ActionVec {
         self.screen = GameEnd(state);
         wait_for_any_key()
     }
 
-    fn wanna_try_again(&mut self) -> TinyVec<Action, 16> {
+    fn wanna_try_again(&mut self) -> ActionVec {
         self.screen = WannaTryAgain;
         // Хочешь попробовать снова? Да или нет.
-        tiny_vec!(capacity: 16, [Action::WantToTryAgain, Action::DontWantToTryAgain])
+        ActionVec::from([Action::WantToTryAgain, Action::DontWantToTryAgain])
     }
 
-    fn handle_wanna_try_again(&mut self, action: Action) -> TinyVec<Action, 16> {
+    fn handle_wanna_try_again(&mut self, action: Action) -> ActionVec {
         match action {
             Action::WantToTryAgain => self.start_game(),
             Action::DontWantToTryAgain => {
@@ -1490,7 +1487,7 @@ impl Game {
         &mut self,
         state: GameState,
         action: Action,
-    ) -> TinyVec<Action, 16> {
+    ) -> ActionVec {
         assert_eq!(state.location(), Location::Dorm);
         match action {
             Action::WhatToDoAtAll => self.screen = WhatToDo(state),
@@ -1504,7 +1501,7 @@ impl Game {
             }
             _ => illegal_action!(action),
         };
-        tiny_vec!(capacity: 16, [
+        ActionVec::from([
             Action::WhatToDoAtAll,
             Action::AboutScreen,
             Action::WhereToGoAndWhy,

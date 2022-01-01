@@ -59,12 +59,23 @@ impl<T, const CAPACITY: usize> DerefMut for TinyVec<T, CAPACITY> {
 }
 
 impl<T, Index: core::slice::SliceIndex<[T]>, const CAPACITY: usize>
-    core::ops::Index<Index> for TinyVec<T, CAPACITY>
+core::ops::Index<Index> for TinyVec<T, CAPACITY>
 {
     type Output = <Index as core::slice::SliceIndex<[T]>>::Output;
 
     fn index(&self, index: Index) -> &Self::Output {
         core::ops::Index::index(&**self, index)
+    }
+}
+
+impl<T, const N: usize, const CAPACITY: usize> From<[T; N]> for TinyVec<T, CAPACITY> {
+    fn from(arr: [T; N]) -> Self {
+        assert!(N <= CAPACITY); // Must be a static assert
+        let mut vec = Self::new();
+        for elem in arr {
+            vec.push(elem)
+        }
+        vec
     }
 }
 
