@@ -277,7 +277,7 @@ impl<'a> From<RendererRequest<'a>> for FfiRendererRequest {
             RendererRequest::ClearScreen => FfiRendererRequest::ClearScreen,
             RendererRequest::Flush => FfiRendererRequest::Flush,
             RendererRequest::WriteStr(s) => FfiRendererRequest::WriteStr {
-                buf: s.as_ptr(),
+                buf: s.as_ptr(), // FIXME: Lifetime!!!
                 length: s.len(),
             },
             RendererRequest::MoveCursor { line, column } => {

@@ -40,6 +40,13 @@ pub enum Action {
     SociableStudent,
     GodMode,
     Study,
+    DoStudy {
+        subject: Subject,
+        lecture_notes_available: bool,
+    },
+    DontStudy,
+    UseLectureNotes(Subject),
+    DontUseLectureNotes(Subject),
     ViewTimetable,
     Rest,
     GoToBed,
@@ -181,6 +188,12 @@ pub enum GameScreen {
     /// Главный экран.
     SceneRouter(GameState),
 
+    /// Выбор предмета для подготовки к зачёту.
+    Study(GameState),
+
+    /// "Воспользуюсь конспектом" или "Буду учиться как умею"
+    PromptUseLectureNotes(GameState),
+
     /// Экран с рекордами — баобаб в ПУНКе или доска объявлений в ПОМИ.
     HighScores(GameState),
 
@@ -305,6 +318,8 @@ impl Game {
         match &self.screen {
             Timetable(state)
             | SceneRouter(state)
+            | Study(state)
+            | PromptUseLectureNotes(state)
             | Sleep(state)
             | HighScores(state)
             | IAmDone(state)
@@ -357,6 +372,19 @@ impl Game {
             SceneRouter(state) => {
                 let state = state.clone();
                 self.handle_scene_router_action(state, action)
+            }
+            Study(state) => {
+                let state = state.clone();
+                self.choose_use_lecture_notes(state, action)
+            }
+            PromptUseLectureNotes(state) => {
+                let state = state.clone();
+                let (subject, use_lecture_notes) = match action {
+                    Action::UseLectureNotes(subject) => (subject, true),
+                    Action::DontUseLectureNotes(subject) => (subject, false),
+                    _ => illegal_action!(action),
+                };
+                self.study(state, subject, use_lecture_notes)
             }
             Sleep(state) => {
                 let state = state.clone();
@@ -535,7 +563,7 @@ impl Game {
                 }
                 for classmate_info in state.classmates.filter_by_location(location) {
                     available_actions
-                      .push(Action::InteractWithClassmate(classmate_info.classmate()));
+                        .push(Action::InteractWithClassmate(classmate_info.classmate()));
                 }
                 if state.player.is_employed_at_terkom() {
                     available_actions.push(Action::GoToWork);
@@ -592,7 +620,7 @@ impl Game {
                 }
                 for classmate_info in state.classmates.filter_by_location(location) {
                     available_actions
-                      .push(Action::InteractWithClassmate(classmate_info.classmate()));
+                        .push(Action::InteractWithClassmate(classmate_info.classmate()));
                 }
                 available_actions.push(Action::IAmDone);
                 available_actions
@@ -620,25 +648,17 @@ impl Game {
         todo!()
     }
 
-    fn handle_sleeping(
-        &mut self,
-        state: GameState,
-        action: Action,
-    ) -> ActionVec {
+    fn handle_sleeping(&mut self, state: GameState, action: Action) -> ActionVec {
         // TODO: Реализовать что-то помимо неудавшегося сна
         assert_matches!(self.screen, GameScreen::Sleep(_));
         assert_eq!(action, Action::AnyKey);
         self.scene_router(state)
     }
 
-    fn handle_dorm_action(
-        &mut self,
-        mut state: GameState,
-        action: Action,
-    ) -> ActionVec {
+    fn handle_dorm_action(&mut self, mut state: GameState, action: Action) -> ActionVec {
         assert_eq!(state.location, Location::Dorm);
         match action {
-            Action::Study => todo!("Study"),
+            Action::Study => self.choose_subject_to_study(state),
             Action::ViewTimetable => self.view_timetable(state),
             Action::Rest => self.rest_in_dorm(state),
             Action::GoToBed => self.try_to_sleep(state),
@@ -667,7 +687,119 @@ impl Game {
         }
     }
 
-    fn interact_with_pasha(&mut self, state: GameState) -> TinyVec<Action, 16> {
+    fn choose_subject_to_study(&mut self, state: GameState) -> ActionVec {
+        let mut available_actions = SUBJECTS
+            .iter()
+            .map(|(subject, _)| Action::DoStudy {
+                subject: *subject,
+                lecture_notes_available: state
+                    .player
+                    .status_for_subject(*subject)
+                    .has_lecture_notes(),
+            })
+            .collect::<ActionVec>();
+        available_actions.push(Action::DontStudy);
+        self.screen = GameScreen::Study(state);
+        available_actions
+    }
+
+    fn choose_use_lecture_notes(
+        &mut self,
+        state: GameState,
+        action: Action,
+    ) -> ActionVec {
+        match action {
+            Action::DoStudy {
+                subject,
+                lecture_notes_available,
+            } => {
+                assert_eq!(
+                    state.player.status_for_subject(subject).has_lecture_notes(),
+                    lecture_notes_available
+                );
+                if lecture_notes_available {
+                    self.screen = GameScreen::PromptUseLectureNotes(state);
+                    ActionVec::from([
+                        Action::UseLectureNotes(subject),
+                        Action::DontUseLectureNotes(subject),
+                    ])
+                } else {
+                    self.study(state, subject, false)
+                }
+            }
+            Action::DontStudy => self.scene_router(state),
+            _ => illegal_action!(action),
+        }
+    }
+
+    fn study(
+        &mut self,
+        mut state: GameState,
+        subject: Subject,
+        use_lecture_notes: bool,
+    ) -> ActionVec {
+        // Импликация "использовать конспект => у игрока есть конспект"
+        // должна быть истинной
+        assert!(
+            !use_lecture_notes
+                || state.player.status_for_subject(subject).has_lecture_notes(),
+            "Нельзя воспользоваться конспектом, так как его на самом деле нет"
+        );
+        let brain_or_stamina = if subject == Subject::PhysicalEducation {
+            state.player.stamina.0
+        } else {
+            state.player.brain.0
+        };
+        if brain_or_stamina <= 0 {
+            return self.scene_router(state)
+        }
+        let health = state.player.health;
+        let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
+        *knowledge += if state.current_time.is_optimal_study_time() {
+            brain_or_stamina
+        } else {
+            brain_or_stamina * 2 / 3
+        };
+        *knowledge -= self.rng.random(brain_or_stamina / 2);
+        *knowledge += self.rng.random(health.0 / 18);
+        if use_lecture_notes {
+            *knowledge += 10
+        }
+        assert!(*knowledge >= BrainLevel(0));
+        assert!(state.player.stamina >= StaminaLevel(0));
+        let mut health_penalty = 10 - self.rng.random(state.player.stamina.0);
+        if health_penalty < 0 || use_lecture_notes {
+            health_penalty = 0;
+        }
+        if state.current_time.is_suboptimal_study_time() {
+            health_penalty += 12;
+        }
+
+        self.decrease_health(
+            HealthLevel(health_penalty),
+            state,
+            CauseOfDeath::Overstudied,
+            |game, mut state| {
+                if state
+                    .player
+                    .status_for_subject(subject)
+                    .knowledge
+                    .is_lethal()
+                {
+                    game.decrease_health(
+                        HealthLevel(10),
+                        state,
+                        CauseOfDeath::StudiedTooWell,
+                        |game, state| game.hour_pass(state),
+                    )
+                } else {
+                    game.hour_pass(state)
+                }
+            },
+        )
+    }
+
+    fn interact_with_pasha(&mut self, state: GameState) -> ActionVec {
         assert_eq!(state.location, Location::PUNK);
         let interaction = if state.player.got_stipend() {
             npc::PashaInteraction::Inspiration
@@ -708,19 +840,15 @@ impl Game {
         self.scene_router(state)
     }
 
-    fn handle_punk_action(
-        &mut self,
-        mut state: GameState,
-        action: Action,
-    ) -> ActionVec {
+    fn handle_punk_action(&mut self, mut state: GameState, action: Action) -> ActionVec {
         assert_eq!(state.location, Location::PUNK);
         match action {
             Action::GoToProfessor => {
                 let mut available_actions = state
-                  .current_day()
-                  .current_exams(state.location, state.current_time)
-                  .map(|exam| Action::Exam(exam.subject()))
-                  .collect::<ActionVec>();
+                    .current_day()
+                    .current_exams(state.location, state.current_time)
+                    .map(|exam| Action::Exam(exam.subject()))
+                    .collect::<ActionVec>();
                 available_actions.push(Action::DontGoToProfessor);
                 self.screen = GameScreen::GoToProfessor(state);
                 available_actions
@@ -797,12 +925,12 @@ impl Game {
     fn surf_internet(&mut self, state: GameState) -> ActionVec {
         let player = &state.player;
         let cs_problems_done = player
-          .status_for_subject(Subject::ComputerScience)
-          .problems_done();
+            .status_for_subject(Subject::ComputerScience)
+            .problems_done();
         let cs_problems_required = SUBJECTS[Subject::ComputerScience].required_problems;
         let found_program = player.is_god_mode()
-          || (self.rng.random(player.brain) > BrainLevel(6)
-          && cs_problems_done < cs_problems_required);
+            || (self.rng.random(player.brain) > BrainLevel(6)
+            && cs_problems_done < cs_problems_required);
         self.screen = GameScreen::SurfInternet(state, found_program);
         wait_for_any_key()
     }
@@ -816,9 +944,9 @@ impl Game {
         assert_eq!(action, Action::AnyKey);
         if found_program {
             state
-              .player
-              .status_for_subject_mut(Subject::ComputerScience)
-              .more_problems_solved(1);
+                .player
+                .status_for_subject_mut(Subject::ComputerScience)
+                .more_problems_solved(1);
         } else if state.player.brain < BrainLevel(5) && self.rng.roll_dice(3) {
             state.player.brain += 1;
         }
@@ -1058,82 +1186,84 @@ impl Game {
         assert_eq!(state.location, Location::Mausoleum);
         let player = &state.player;
         let has_enough_charisma = player.charisma > self.rng.random(CharismaLevel(20));
-        let (actions, interaction) = if !player.is_employed_at_terkom()
-          && has_enough_charisma
-        {
-            (
-                ActionVec::from([Action::AcceptEmploymentAtTerkom, Action::DeclineEmploymentAtTerkom]),
-                PromptEmploymentAtTerkom,
-            )
-        } else if !player.has_internet() && has_enough_charisma {
-            (wait_for_any_key(), ProxyAddress)
-        } else {
-            let drink_beer = self.rng.random(3) > 0;
-            let hour_pass = self.rng.roll_dice(3);
-            let replies = [
-                WantFreebie {
-                    drink_beer,
-                    hour_pass,
-                },
-                FreebieComeToMe {
-                    drink_beer,
-                    hour_pass,
-                },
-                FreebieExists {
-                    drink_beer,
-                    hour_pass,
-                },
-                LetsOrganizeFreebieLoversClub {
-                    drink_beer,
-                    hour_pass,
-                },
-                NoNeedToStudyToGetDiploma {
-                    drink_beer,
-                    hour_pass,
-                },
-                YouStudiedDidItHelp {
-                    drink_beer,
-                    hour_pass,
-                },
-                ThirdYearStudentsDontAttendLectures {
-                    drink_beer,
-                    hour_pass,
-                },
-                TakeExampleFromKolya {
-                    drink_beer,
-                    hour_pass,
-                },
-                HateLevTolstoy {
-                    drink_beer,
-                    hour_pass,
-                },
-                DontGoToPDMI {
-                    drink_beer,
-                    hour_pass,
-                },
-                NamesOfFreebieLovers {
-                    drink_beer,
-                    hour_pass,
-                },
-                LetsHaveABreakHere {
-                    drink_beer,
-                    hour_pass,
-                },
-                NoNeedToTakeLectureNotes {
-                    drink_beer,
-                    hour_pass,
-                },
-                CantBeExpelledInFourthYear {
-                    drink_beer,
-                    hour_pass,
-                },
-                MechanicsHaveFreebie {
-                    drink_beer,
-                    hour_pass,
-                },
-            ];
-            (wait_for_any_key(), *self.rng.random_element(&replies[..]))
-        };
+        let (actions, interaction) =
+            if !player.is_employed_at_terkom() && has_enough_charisma {
+                (
+                    ActionVec::from([
+                        Action::AcceptEmploymentAtTerkom,
+                        Action::DeclineEmploymentAtTerkom,
+                    ]),
+                    PromptEmploymentAtTerkom,
+                )
+            } else if !player.has_internet() && has_enough_charisma {
+                (wait_for_any_key(), ProxyAddress)
+            } else {
+                let drink_beer = self.rng.random(3) > 0;
+                let hour_pass = self.rng.roll_dice(3);
+                let replies = [
+                    WantFreebie {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    FreebieComeToMe {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    FreebieExists {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    LetsOrganizeFreebieLoversClub {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    NoNeedToStudyToGetDiploma {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    YouStudiedDidItHelp {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    ThirdYearStudentsDontAttendLectures {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    TakeExampleFromKolya {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    HateLevTolstoy {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    DontGoToPDMI {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    NamesOfFreebieLovers {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    LetsHaveABreakHere {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    NoNeedToTakeLectureNotes {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    CantBeExpelledInFourthYear {
+                        drink_beer,
+                        hour_pass,
+                    },
+                    MechanicsHaveFreebie {
+                        drink_beer,
+                        hour_pass,
+                    },
+                ];
+                (wait_for_any_key(), *self.rng.random_element(&replies[..]))
+            };
         self.screen = GameScreen::GrishaInteraction(state, interaction);
         actions
     }
@@ -1248,7 +1378,7 @@ impl Game {
                 assert_eq!(interaction, PromptEmploymentAtTerkom);
                 assert!(!player.is_employed_at_terkom());
                 self.screen =
-                  GameScreen::GrishaInteraction(state, AsYouWantButDontOverstudy);
+                    GameScreen::GrishaInteraction(state, AsYouWantButDontOverstudy);
                 wait_for_any_key()
             }
             _ => illegal_action!(action),
@@ -1449,11 +1579,7 @@ impl Game {
         ActionVec::from([Action::NoIAmNotDone, Action::IAmCertainlyDone])
     }
 
-    fn handle_i_am_done(
-        &mut self,
-        state: GameState,
-        action: Action,
-    ) -> ActionVec {
+    fn handle_i_am_done(&mut self, state: GameState, action: Action) -> ActionVec {
         match action {
             Action::NoIAmNotDone => self.scene_router(state),
             Action::IAmCertainlyDone => self.game_end(state),
@@ -1483,11 +1609,7 @@ impl Game {
         }
     }
 
-    fn handle_what_to_do(
-        &mut self,
-        state: GameState,
-        action: Action,
-    ) -> ActionVec {
+    fn handle_what_to_do(&mut self, state: GameState, action: Action) -> ActionVec {
         assert_eq!(state.location(), Location::Dorm);
         match action {
             Action::WhatToDoAtAll => self.screen = WhatToDo(state),
@@ -1517,6 +1639,6 @@ impl Game {
 fn memory() {
     use core::mem::size_of;
 
-    assert_eq!(size_of::<Game>(), 360);
+    assert_eq!(size_of::<Game>(), 376);
     assert_eq!(size_of::<Player>(), 40);
 }

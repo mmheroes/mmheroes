@@ -27,7 +27,7 @@ impl Rng {
         let upper_bound = upper_bound
             .try_into()
             .unwrap_or_else(|_| panic!("upper bound should be convertible to u64"));
-        assert!(upper_bound > 0, "upper bound cannot be zero.");
+        if upper_bound == 0 { return 0.try_into().unwrap_or_else(|_| panic!()); }
         let tmp = (u64::MAX % upper_bound) + 1;
         let range = if tmp == upper_bound { 0u64 } else { tmp };
         let mut random;
@@ -190,7 +190,6 @@ mod tests {
     }
 
     #[test]
-    #[should_panic]
     fn test_random_number_with_zero_upper_bound() {
         let mut rng = Rng::new(123);
         assert_eq!(rng.random(0), 0);

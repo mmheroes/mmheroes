@@ -7,22 +7,25 @@ pub struct SubjectStatus {
     pub(in crate::logic) knowledge: BrainLevel,
 
     /// This is a packed representation of the `Subject`,
-    /// the number of solved problems, and the index of the day the exam was passed (if any).
-    /// Something like bitfields, just to save memory.
+    /// the number of solved problems, and the index of the day the exam was passed
+    /// (if any). Something like bitfields, just to save memory.
     ///
-    /// The lowest 3 bits is the subject, then 4 bits denote the number of solved problems,
-    /// then another 3 bits denote the index of the day the exam was passed. If the exam wasn't
-    /// passed, this 3 bits are all set to 1.
+    /// The lowest 3 bits is the subject, then 4 bits denote the number of solved
+    /// problems, then another 3 bits denote the index of the day the exam was passed.
+    /// If the exam wasn't passed, this 3 bits are all set to 1.
+    /// The 10th bit determines if the player has lecture notes.
     ///
-    ///      15                             0
-    ///       * * * * * * * * * * * * * * * *
-    ///                  │     │       │     │
-    ///                  └──┬──┴───┬───┴──┬──┘
-    ///                     │      │      │
-    ///     passed_exam_day_index  │     subject
-    ///                            │
-    ///                     problems_done
-    ///
+    /// ```plain
+    ///     15                             0
+    ///      * * * * * * * * * * * * * * * *
+    ///               │ │     │       │     │
+    ///               └┬┴──┬──┴───┬───┴──┬──┘
+    /// has_lecture_notes  │      │      │
+    ///                    │      │      │
+    ///    passed_exam_day_index  │     subject
+    ///                           │
+    ///                    problems_done
+    /// ```
     bits: u16,
 }
 
@@ -38,8 +41,12 @@ const NOT_PASSED: u16 = (1 << PASSED_EXAM_DAY_INDEX_NBITS) - 1;
 const PASSED_EXAM_DAY_INDEX_BITMASK: u16 =
     NOT_PASSED << (SUBJECT_NBITS + PROBLEMS_DONE_NBITS);
 
+const HAS_LECTURE_NOTES_BIT: u16 =
+    SUBJECT_NBITS + PROBLEMS_DONE_NBITS + PASSED_EXAM_DAY_INDEX_NBITS;
+
 fn bits(
     subject: Subject,
+    has_lecture_notes: bool,
     passed_exam_day_index: Option<usize>,
     problems_done: u8,
 ) -> u16 {
@@ -75,6 +82,10 @@ fn bits(
     );
     result |= subject_as_number;
 
+    if has_lecture_notes {
+        result |= 1 << HAS_LECTURE_NOTES_BIT
+    }
+
     result
 }
 
@@ -82,7 +93,7 @@ impl SubjectStatus {
     pub(in crate::logic) fn new(subject: Subject, knowledge: BrainLevel) -> Self {
         Self {
             knowledge,
-            bits: bits(subject, None, 0),
+            bits: bits(subject, false, None, 0),
         }
     }
 
@@ -112,7 +123,7 @@ impl SubjectStatus {
 
     fn passed_exam_day_index(&self) -> Option<usize> {
         let day_index_bits = (self.bits & PASSED_EXAM_DAY_INDEX_BITMASK)
-          >> (SUBJECT_NBITS + PROBLEMS_DONE_NBITS);
+            >> (SUBJECT_NBITS + PROBLEMS_DONE_NBITS);
         if day_index_bits == NOT_PASSED {
             None
         } else {
@@ -131,7 +142,7 @@ impl SubjectStatus {
     pub(in crate::logic) fn set_passed_exam_day_index(&mut self, day_index: usize) {
         assert!(day_index < NOT_PASSED as usize, "Too big day index");
         let prev_day_index = (self.bits & PASSED_EXAM_DAY_INDEX_BITMASK)
-          >> (SUBJECT_NBITS + PROBLEMS_DONE_NBITS);
+            >> (SUBJECT_NBITS + PROBLEMS_DONE_NBITS);
         assert_eq!(
             prev_day_index, NOT_PASSED,
             "Cannot pass an exam more than once"
@@ -145,16 +156,26 @@ impl SubjectStatus {
         // then set those bits to the desired number
         self.bits ^= day_index << (SUBJECT_NBITS + PROBLEMS_DONE_NBITS);
     }
+
+    pub fn has_lecture_notes(&self) -> bool {
+        (self.bits >> HAS_LECTURE_NOTES_BIT) & 1 != 0
+    }
+
+    pub(in crate::logic) fn set_has_lecture_notes(&mut self) {
+        assert!(!self.has_lecture_notes(), "Already has lecture notes");
+        self.bits |= 1 << HAS_LECTURE_NOTES_BIT
+    }
 }
 
 impl Debug for SubjectStatus {
     fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
         f.debug_struct("SubjectStatus")
-          .field("subject", &self.subject())
-          .field("knowledge", &self.knowledge())
-          .field("passed_exam_day_index", &self.passed_exam_day_index())
-          .field("problems_done", &self.problems_done())
-          .finish()
+            .field("subject", &self.subject())
+            .field("knowledge", &self.knowledge())
+            .field("passed_exam_day_index", &self.passed_exam_day_index())
+            .field("problems_done", &self.problems_done())
+            .field("has_lecture_notes", &self.has_lecture_notes())
+            .finish()
     }
 }
 
@@ -166,27 +187,27 @@ mod tests {
     fn test_new() {
         assert_eq!(
             SubjectStatus::new(Subject::AlgebraAndNumberTheory, BrainLevel(0)).bits,
-            0b111_0000_000
+            0b0_111_0000_000
         );
         assert_eq!(
             SubjectStatus::new(Subject::Calculus, BrainLevel(0)).bits,
-            0b111_0000_001
+            0b0_111_0000_001
         );
         assert_eq!(
             SubjectStatus::new(Subject::GeometryAndTopology, BrainLevel(0)).bits,
-            0b111_0000_010
+            0b0_111_0000_010
         );
         assert_eq!(
             SubjectStatus::new(Subject::ComputerScience, BrainLevel(0)).bits,
-            0b111_0000_011
+            0b0_111_0000_011
         );
         assert_eq!(
             SubjectStatus::new(Subject::English, BrainLevel(0)).bits,
-            0b111_0000_100
+            0b0_111_0000_100
         );
         assert_eq!(
             SubjectStatus::new(Subject::PhysicalEducation, BrainLevel(0)).bits,
-            0b111_0000_101
+            0b0_111_0000_101
         );
     }
 
@@ -225,19 +246,19 @@ mod tests {
 
         status.more_problems_solved(0);
         assert_eq!(status.problems_done(), 0);
-        assert_eq!(status.bits, 0b111_0000_001);
+        assert_eq!(status.bits, 0b0_111_0000_001);
 
         status.more_problems_solved(1);
         assert_eq!(status.problems_done(), 1);
-        assert_eq!(status.bits, 0b111_0001_001);
+        assert_eq!(status.bits, 0b0_111_0001_001);
 
         status.more_problems_solved(13);
         assert_eq!(status.problems_done(), 14);
-        assert_eq!(status.bits, 0b111_1110_001);
+        assert_eq!(status.bits, 0b0_111_1110_001);
 
         status.more_problems_solved(1);
         assert_eq!(status.problems_done(), 15);
-        assert_eq!(status.bits, 0b111_1111_001);
+        assert_eq!(status.bits, 0b0_111_1111_001);
     }
 
     #[test]
@@ -254,14 +275,14 @@ mod tests {
 
         status1.set_passed_exam_day_index(0);
         assert_eq!(status1.passed_exam_day_index(), Some(0));
-        assert_eq!(status1.bits, 0b000_0000_001);
+        assert_eq!(status1.bits, 0b0_000_0000_001);
 
         let mut status2 = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
         assert_eq!(status2.passed_exam_day_index(), None);
 
         status2.set_passed_exam_day_index(6);
         assert_eq!(status2.passed_exam_day_index(), Some(6));
-        assert_eq!(status2.bits, 0b110_0000_001);
+        assert_eq!(status2.bits, 0b0_110_0000_001);
     }
 
     #[test]
@@ -280,6 +301,24 @@ mod tests {
     }
 
     #[test]
+    fn test_has_lecture_notes() {
+        let mut status = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
+        assert!(!status.has_lecture_notes());
+
+        status.set_has_lecture_notes();
+        assert!(status.has_lecture_notes());
+        assert_eq!(status.bits, 0b1_111_0000_001);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_set_has_lecture_notes_twice() {
+        let mut status = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
+        status.set_has_lecture_notes();
+        status.set_has_lecture_notes();
+    }
+
+    #[test]
     fn test_debug() {
         use std::fmt::Write;
 
@@ -287,8 +326,9 @@ mod tests {
         let mut status = SubjectStatus::new(Subject::Calculus, BrainLevel(13));
         status.more_problems_solved(3);
         status.set_passed_exam_day_index(3);
+        status.set_has_lecture_notes();
         writeln!(result, "{:?}", status);
 
-        assert_eq!(result, "SubjectStatus { subject: Calculus, knowledge: BrainLevel(13), passed_exam_day_index: Some(3), problems_done: 3 }\n");
+        assert_eq!(result, "SubjectStatus { subject: Calculus, knowledge: BrainLevel(13), passed_exam_day_index: Some(3), problems_done: 3, has_lecture_notes: true }\n");
     }
 }

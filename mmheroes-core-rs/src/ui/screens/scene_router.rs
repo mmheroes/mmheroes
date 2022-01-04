@@ -33,6 +33,30 @@ pub(in crate::ui) fn display_scene_router(
     dialog(r, available_actions)
 }
 
+pub(in crate::ui) fn display_study_options(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    available_actions: &[Action],
+    state: &GameState,
+) -> WaitingState {
+    r.clear_screen();
+    display_header_stats(r, state);
+    display_short_today_timetable(r, 9, state.current_day(), state.player());
+    r.set_color(Color::White, Color::Black);
+    r.move_cursor_to(7, 0);
+    writeln!(r, "К чему готовиться?");
+    r.move_cursor_to(9, 0);
+    dialog(r, available_actions)
+}
+
+pub(in crate::ui) fn display_prompt_use_lecture_notes(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    available_actions: &[Action],
+) -> WaitingState {
+    let line = r.get_cursor_position().0;
+    r.move_cursor_to(line + 2, 0);
+    dialog(r, available_actions)
+}
+
 pub(in crate::ui::screens) fn display_header_stats(
     r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,

@@ -17,6 +17,7 @@ macro_rules! writeln_colored {
 mod screens;
 
 pub mod renderer;
+
 pub use renderer::RendererRequest;
 use renderer::*;
 
@@ -24,10 +25,14 @@ pub(crate) mod cp866_encoding;
 pub mod recording;
 
 pub mod high_scores;
+
+mod dialog;
+
+use dialog::*;
+
 use high_scores::HighScore;
 
 use crate::logic::*;
-use crate::util::TinyVec;
 
 use core::fmt::Display;
 
@@ -99,7 +104,6 @@ enum WaitingState {
     Dialog {
         current_choice: u8,
         start: (Line, Column),
-        options: TinyVec<DialogOption, 16>,
     },
 }
 
@@ -127,6 +131,10 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
         }
     }
 
+    pub fn game(&self) -> &Game {
+        self.game
+    }
+
     pub fn continue_game(&mut self, input: Input) -> bool {
         use GameScreen::*;
 
@@ -138,9 +146,9 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                 WaitingState::Dialog {
                     current_choice,
                     start,
-                    options,
                 } => {
-                    let option_count = options.len() as u8;
+                    let actions = self.game.available_actions();
+                    let option_count = actions.len() as u8;
                     match input {
                         Input::KeyUp => {
                             let current_choice =
@@ -149,12 +157,11 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                                 &mut self.renderer,
                                 start,
                                 Some(current_choice),
-                                &*options,
+                                actions,
                             );
                             self.renderer.waiting_state = Some(WaitingState::Dialog {
                                 current_choice,
                                 start,
-                                options,
                             });
                             return true;
                         }
@@ -165,18 +172,17 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                                 &mut self.renderer,
                                 start,
                                 Some(current_choice),
-                                &*options,
+                                actions,
                             );
                             self.renderer.waiting_state = Some(WaitingState::Dialog {
                                 current_choice,
                                 start,
-                                options,
                             });
                             return true;
                         }
                         Input::Enter => {
-                            display_dialog(&mut self.renderer, start, None, &*options);
-                            options[current_choice as usize].2
+                            display_dialog(&mut self.renderer, start, None, actions);
+                            actions[current_choice as usize]
                         }
                         Input::Other => return true, // Do nothing
                     }
@@ -202,6 +208,17 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                 self.game.available_actions(),
                 state,
             ),
+            Study(state) => screens::scene_router::display_study_options(
+                &mut self.renderer,
+                self.game.available_actions(),
+                state,
+            ),
+            PromptUseLectureNotes(state) => {
+                screens::scene_router::display_prompt_use_lecture_notes(
+                    &mut self.renderer,
+                    self.game.available_actions(),
+                )
+            }
             Sleep(state) => {
                 screens::scene_router::display_sleeping(&mut self.renderer, state)
             }
@@ -303,42 +320,6 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
     }
 }
 
-type DialogOption = (&'static str, Color, Action);
-
-fn display_dialog(
-    r: &mut Renderer<impl RendererRequestConsumer>,
-    start: (Line, Column),
-    current_choice: Option<u8>,
-    options: &[DialogOption],
-) {
-    for (i, &(name, color, _)) in options.iter().enumerate() {
-        r.move_cursor_to(start.0 + i as Line, start.1);
-        r.set_color(color, Color::Black);
-        write!(r, "{}", name);
-    }
-    if let Some(current_choice) = current_choice {
-        r.move_cursor_to(start.0 + current_choice, start.1);
-        r.set_color(Color::Black, Color::White);
-        write!(r, "{}", options[current_choice as usize].0);
-    }
-    r.flush();
-}
-
-fn dialog(
-    r: &mut Renderer<impl RendererRequestConsumer>,
-    available_actions: &[Action],
-) -> WaitingState {
-    let options = dialog_options_for_actions(available_actions);
-    let start = r.get_cursor_position();
-    let current_choice = 0;
-    display_dialog(r, start, Some(current_choice), &*options);
-    WaitingState::Dialog {
-        current_choice,
-        start,
-        options,
-    }
-}
-
 fn sleep(r: &mut Renderer<impl RendererRequestConsumer>, ms: Milliseconds) {
     r.flush();
     r.sleep_ms(ms)
@@ -435,79 +416,4 @@ pub fn classmate_name(classmate: Classmate) -> &'static str {
         Classmate::Andrew => "Эндрю",
         Classmate::Grisha => "Гриша",
     }
-}
-
-fn dialog_option_for_action(action: Action) -> DialogOption {
-    let option_name = match action {
-        Action::Yes => "Да",
-        Action::No => "Нет",
-        Action::InteractWithClassmate(classmate) => {
-            return (classmate_name(classmate), Color::YellowBright, action);
-        }
-        Action::Exam(subject) => {
-            if subject == Subject::ComputerScience {
-                return (professor_name(subject), Color::YellowBright, action);
-            } else {
-                professor_name(subject)
-            }
-        }
-        Action::DontGoToProfessor => "Ни к кому",
-        Action::RandomStudent => "Случайный студент",
-        Action::CleverStudent => "Шибко умный",
-        Action::ImpudentStudent => "Шибко наглый",
-        Action::SociableStudent => "Шибко общительный",
-        Action::GodMode => "GOD-режим",
-        Action::Study => "Готовиться",
-        Action::ViewTimetable => "Посмотреть расписание",
-        Action::Rest => "Отдыхать",
-        Action::GoToBed => "Лечь спать",
-        Action::GoFromPunkToDorm => "Пойти в общагу",
-        Action::GoFromDormToPunk => "Пойти на факультет",
-        Action::GoFromMausoleumToDorm => "Идти в общагу",
-        Action::RestByOurselvesInMausoleum => "Расслабляться будем своими силами.",
-        Action::NoRestIsNoGood => "Нет, отдыхать - это я зря сказал.",
-        Action::GoFromMausoleumToPunk => "Идти в ПУНК",
-        Action::GoToComputerClass => "Пойти в компьютерный класс",
-        Action::LeaveComputerClass => "Покинуть класс",
-        Action::GoToPDMI => "Поехать в ПОМИ",
-        Action::GoToMausoleum => "Пойти в мавзолей",
-        Action::GoToCafePUNK => "Сходить в кафе",
-        Action::SurfInternet => "Провести 1 час в Inet'е",
-        Action::PlayMMHEROES => "Поиграть в MMHEROES",
-        Action::GoToProfessor => "Идти к преподу",
-        Action::GoToWork => "Пойти в ТЕРКОМ, поработать",
-        Action::LookAtBaobab => "Посмотреть на баобаб",
-        Action::OrderCola => "Стакан колы за 4 р.",
-        Action::OrderSoup => "Суп, 6 р. все удовольствие",
-        Action::OrderBeer => "0,5 пива за 8 р.",
-        Action::AcceptEmploymentAtTerkom => "Да, мне бы не помешало.",
-        Action::DeclineEmploymentAtTerkom => "Нет, я лучше поучусь уще чуток.",
-        Action::IAmDone => {
-            return ("С меня хватит!", Color::BlueBright, action);
-        }
-        Action::NoIAmNotDone => "Нет, не хочу!",
-        Action::IAmCertainlyDone => "Я же сказал: с меня хватит!",
-        Action::WantToTryAgain => "ДА!!! ДА!!! ДА!!!",
-        Action::DontWantToTryAgain => "Нет... Нет... Не-э-эт...",
-        Action::WhatToDo => {
-            return ("ЧТО ДЕЛАТЬ ???", Color::BlueBright, action);
-        }
-        Action::WhatToDoAtAll => " А что вообще делать? ",
-        Action::AboutScreen => " Об экране            ",
-        Action::WhereToGoAndWhy => " Куда и зачем ходить? ",
-        Action::AboutProfessors => " О преподавателях     ",
-        Action::AboutCharacters => " О персонажах         ",
-        Action::AboutThisProgram => " Об этой программе    ",
-        Action::ThanksButNothing => " Спасибо, ничего      ",
-        Action::AnyKey => panic!("Action {:?} cannot be used in a dialog", action),
-    };
-    (option_name, Color::CyanBright, action)
-}
-
-fn dialog_options_for_actions(actions: &[Action]) -> TinyVec<DialogOption, 16> {
-    actions
-        .iter()
-        .cloned()
-        .map(dialog_option_for_action)
-        .collect()
 }

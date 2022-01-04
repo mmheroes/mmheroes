@@ -112,3 +112,38 @@ impl<C: RendererRequestConsumer> Renderer<C> {
         adapter.write_fmt(fmt).expect("Invalid format")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    struct RRC {
+        strings: Vec<String>,
+    }
+
+    impl RRC {
+        fn new() -> Self {
+            Self {
+                strings: Vec::new(),
+            }
+        }
+    }
+
+    impl RendererRequestConsumer for RRC {
+        fn consume_request(&mut self, request: RendererRequest) {
+            if let RendererRequest::WriteStr(s) = request {
+                self.strings.push(String::from(s))
+            }
+        }
+    }
+
+    #[test]
+    fn test_write() {
+        let mut r = Renderer::new(RRC::new());
+        write!(r, "Hello, world!\n{} {}", 123, "string");
+        assert_eq!(
+            r.request_consumer.strings,
+            ["Hello, world!\n", "123", " ", "string"]
+        );
+    }
+}

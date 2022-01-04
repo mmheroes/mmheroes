@@ -107,7 +107,7 @@ impl<'input> InputRecordingParser<'input> {
                 }
                 Some(start_position) => {
                     if !c.is_ascii_digit() {
-                        // Встрелили первый символ, не являющийся цифрой.
+                        // Встретили первый символ, не являющийся цифрой.
                         // Парсим число.
                         let parsed_number =
                             match self.input[start_position..i].parse::<usize>() {

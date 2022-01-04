@@ -212,6 +212,8 @@ impl BrainLevel {
             &KnowledgeAssessment::Excellent,
         )
     }
+
+    pub fn is_lethal(self) -> bool { self.0 > 45 }
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
