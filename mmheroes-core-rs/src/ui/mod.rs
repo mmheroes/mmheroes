@@ -254,6 +254,14 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                     *interaction,
                 )
             }
+            SashaInteraction(state, interaction) => {
+                screens::npc::display_sasha_interaction(
+                    &mut self.renderer,
+                    state,
+                    self.game.available_actions(),
+                    *interaction,
+                )
+            }
             KuzmenkoInteraction(state, interaction) => {
                 screens::npc::display_kuzmenko_interaction(
                     &mut self.renderer,

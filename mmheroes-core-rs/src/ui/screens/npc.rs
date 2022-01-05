@@ -302,6 +302,60 @@ pub(in crate::ui) fn display_grisha_interaction(
     wait_for_any_key(r)
 }
 
+pub(in crate::ui) fn display_sasha_interaction(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    state: &GameState,
+    available_actions: &[Action],
+    interaction: npc::SashaInteraction,
+) -> WaitingState {
+    match interaction {
+        SashaInteraction::ChooseSubject => {
+            r.clear_screen();
+            scene_router::display_header_stats(r, state);
+            r.move_cursor_to(7, 0);
+            r.set_color(Color::YellowBright, Color::Black);
+            write!(
+                r,
+                "Ты встретил Сашу! Говорят, у него классные конспекты ..."
+            );
+            r.move_cursor_to(8, 0);
+            write!(r, "Чего тебе надо от Саши?");
+            r.move_cursor_to(10, 0);
+            dialog(r, available_actions)
+        }
+        _ => {
+            r.move_cursor_to(14, 0);
+            match interaction {
+                SashaInteraction::SuitYourself => {
+                    write_colored!(White, r, "Как знаешь...");
+                }
+                _ => {
+                    write_colored!(White, r, "Саша:");
+                    match interaction {
+                        SashaInteraction::ChooseSubject
+                        | SashaInteraction::SuitYourself => unreachable!(),
+                        SashaInteraction::YesIHaveTheLectureNotes => {
+                            write_colored!(
+                                WhiteBright,
+                                r,
+                                "\"Да, у меня с собой этот конспект ...\""
+                            );
+                        }
+                        SashaInteraction::SorryGaveToSomeoneElse => {
+                            write_colored!(
+                                WhiteBright,
+                                r,
+                                "\"Ох, извини, кто-то другой уже позаимствовал ...\""
+                            );
+                        }
+                    }
+                }
+            }
+            wait_for_any_key(r)
+        }
+    }
+}
+
 pub(in crate::ui) fn display_kuzmenko_interaction(
     r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,

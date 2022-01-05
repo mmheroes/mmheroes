@@ -45,7 +45,7 @@ impl TryFrom<u8> for Subject {
             3 => Subject::ComputerScience,
             4 => Subject::English,
             5 => Subject::PhysicalEducation,
-            _ => return Err(())
+            _ => return Err(()),
         };
         assert_eq!(variant as u8, value);
         Ok(variant)
@@ -55,6 +55,12 @@ impl TryFrom<u8> for Subject {
 pub const NUM_SUBJECTS: usize = 6;
 
 pub struct Subjects([(Subject, SubjectInfo); NUM_SUBJECTS]);
+
+pub const SUBJECTS_WITH_LECTURE_NOTES: [Subject; 3] = [
+    Subject::AlgebraAndNumberTheory,
+    Subject::Calculus,
+    Subject::GeometryAndTopology,
+];
 
 impl Subjects {
     const fn new() -> Subjects {

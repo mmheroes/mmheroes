@@ -361,6 +361,21 @@ pub enum GrishaInteraction {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum SashaInteraction {
+    /// Выбор предмета, по которому попросить конспект у Саши
+    ChooseSubject,
+
+    /// "Как знаешь..."
+    SuitYourself,
+
+    /// "Да, у меня с собой этот конспект ..."
+    YesIHaveTheLectureNotes,
+
+    /// "Ох, извини, кто-то другой уже позаимствовал ..."
+    SorryGaveToSomeoneElse,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum KuzmenkoInteraction {
     /// "Вы знаете, Климова можно найти в компьютерном классе 24-го мая с 10 по 11ч.."
     AdditionalComputerScienceExam { day_index: usize },

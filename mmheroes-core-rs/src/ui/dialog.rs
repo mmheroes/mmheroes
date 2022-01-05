@@ -81,6 +81,8 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::DontStudy => "Ни к чему",
         Action::UseLectureNotes(_) => "Воспользуюсь конспектом",
         Action::DontUseLectureNotes(_) => "Буду учиться, как умею",
+        Action::RequestLectureNotesFromSasha(subject) => subject_name(subject),
+        Action::DontNeedAnythingFromSasha => "Ничего не надо",
         Action::ViewTimetable => "Посмотреть расписание",
         Action::Rest => "Отдыхать",
         Action::GoToBed => "Лечь спать",

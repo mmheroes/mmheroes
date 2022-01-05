@@ -47,6 +47,8 @@ pub enum Action {
     DontStudy,
     UseLectureNotes(Subject),
     DontUseLectureNotes(Subject),
+    RequestLectureNotesFromSasha(Subject),
+    DontNeedAnythingFromSasha,
     ViewTimetable,
     Rest,
     GoToBed,
@@ -209,6 +211,9 @@ pub enum GameScreen {
     /// Взаимодействие с Гришей.
     GrishaInteraction(GameState, npc::GrishaInteraction),
 
+    /// Взаимодействие с Сашей.
+    SashaInteraction(GameState, npc::SashaInteraction),
+
     /// Взаимодействие с Кузьменко.
     KuzmenkoInteraction(GameState, npc::KuzmenkoInteraction),
 
@@ -333,6 +338,7 @@ impl Game {
             | KolyaInteraction(state, _)
             | PashaInteraction(state, _)
             | GrishaInteraction(state, _)
+            | SashaInteraction(state, _)
             | KuzmenkoInteraction(state, _)
             | GoToProfessor(state)
             | Exam(state, _)
@@ -415,6 +421,11 @@ impl Game {
                 let state = state.clone();
                 let interaction = *interaction;
                 self.proceed_with_grisha(state, action, interaction)
+            }
+            SashaInteraction(state, interaction) => {
+                let state = state.clone();
+                let interaction = *interaction;
+                self.proceed_with_sasha(state, action, interaction)
             }
             KuzmenkoInteraction(state, _) => {
                 assert_eq!(action, Action::AnyKey);
@@ -751,7 +762,7 @@ impl Game {
             state.player.brain.0
         };
         if brain_or_stamina <= 0 {
-            return self.scene_router(state)
+            return self.scene_router(state);
         }
         let health = state.player.health;
         let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
@@ -840,6 +851,67 @@ impl Game {
         self.scene_router(state)
     }
 
+    fn interact_with_sasha(&mut self, state: GameState) -> ActionVec {
+        assert_eq!(state.location, Location::PUNK);
+        let mut available_actions = SUBJECTS_WITH_LECTURE_NOTES
+            .into_iter()
+            .filter(|subject| {
+                !state
+                    .player
+                    .status_for_subject(*subject)
+                    .has_lecture_notes()
+            })
+            .map(Action::RequestLectureNotesFromSasha)
+            .collect::<ActionVec>();
+        available_actions.push(Action::DontNeedAnythingFromSasha);
+        self.screen =
+            GameScreen::SashaInteraction(state, npc::SashaInteraction::ChooseSubject);
+        available_actions
+    }
+
+    fn proceed_with_sasha(
+        &mut self,
+        mut state: GameState,
+        action: Action,
+        interaction: npc::SashaInteraction,
+    ) -> ActionVec {
+        assert_eq!(state.location, Location::PUNK);
+        assert_matches!(self.screen, GameScreen::SashaInteraction(_, _));
+        match action {
+            Action::RequestLectureNotesFromSasha(subject) => {
+                assert_eq!(interaction, npc::SashaInteraction::ChooseSubject);
+                let new_interaction = if state.player.charisma
+                    > CharismaLevel(self.rng.random(18))
+                    && state.sasha_has_lecture_notes(subject)
+                {
+                    state
+                        .player
+                        .status_for_subject_mut(subject)
+                        .set_has_lecture_notes();
+                    npc::SashaInteraction::YesIHaveTheLectureNotes
+                } else {
+                    state.set_sasha_has_lecture_notes(subject, false);
+                    npc::SashaInteraction::SorryGaveToSomeoneElse
+                };
+                self.screen = GameScreen::SashaInteraction(state, new_interaction);
+                wait_for_any_key()
+            }
+            Action::DontNeedAnythingFromSasha => {
+                assert_eq!(interaction, npc::SashaInteraction::ChooseSubject);
+                self.screen = GameScreen::SashaInteraction(
+                    state,
+                    npc::SashaInteraction::SuitYourself,
+                );
+                wait_for_any_key()
+            }
+            Action::AnyKey => {
+                assert_ne!(interaction, npc::SashaInteraction::ChooseSubject);
+                self.scene_router(state)
+            }
+            _ => illegal_action!(action),
+        }
+    }
+
     fn handle_punk_action(&mut self, mut state: GameState, action: Action) -> ActionVec {
         assert_eq!(state.location, Location::PUNK);
         match action {
@@ -885,33 +957,12 @@ impl Game {
                 assert!(state.current_time.is_cafe_open());
                 todo!()
             }
-            Action::InteractWithClassmate(Pasha) => {
+            Action::InteractWithClassmate(classmate) => {
                 assert_matches!(
-                    state.classmates[Pasha].current_location(),
+                    state.classmates[classmate].current_location(),
                     ClassmateLocation::Location(Location::PUNK)
                 );
-                self.interact_with_pasha(state)
-            }
-            Action::InteractWithClassmate(Misha) => {
-                assert_matches!(
-                    state.classmates[Misha].current_location(),
-                    ClassmateLocation::Location(Location::PUNK)
-                );
-                todo!()
-            }
-            Action::InteractWithClassmate(Serj) => {
-                assert_matches!(
-                    state.classmates[Serj].current_location(),
-                    ClassmateLocation::Location(Location::PUNK)
-                );
-                todo!()
-            }
-            Action::InteractWithClassmate(Sasha) => {
-                assert_matches!(
-                    state.classmates[Sasha].current_location(),
-                    ClassmateLocation::Location(Location::PUNK)
-                );
-                todo!()
+                self.handle_classmate_interaction(state, classmate)
             }
             Action::GoToWork => {
                 assert!(state.player.is_employed_at_terkom());
@@ -919,6 +970,27 @@ impl Game {
             }
             Action::IAmDone => self.i_am_done(state),
             _ => illegal_action!(action),
+        }
+    }
+
+    fn handle_classmate_interaction(
+        &mut self,
+        state: GameState,
+        classmate: Classmate,
+    ) -> ActionVec {
+        match classmate {
+            Kolya => self.interact_with_kolya(state),
+            Pasha => self.interact_with_pasha(state),
+            Diamond => todo!(),
+            RAI => todo!(),
+            Misha => todo!(),
+            Serj => todo!(),
+            Sasha => self.interact_with_sasha(state),
+            NiL => todo!(),
+            Kuzmenko => self.interact_with_kuzmenko(state),
+            DJuG => todo!(),
+            Andrew => todo!(),
+            Grisha => self.interact_with_grisha(state),
         }
     }
 
@@ -982,23 +1054,23 @@ impl Game {
         }
 
         self.screen = match additional_exam_day_idx {
-            // Проверка на `state.additional_computer_science_exams < 2` должна быть
+            // Проверка на `state.additional_computer_science_exams() < 2` должна быть
             // раньше — до модификации расписания.
             // Иначе получается, что при достаточной харизме Кузьменко может
             // добавить экзамены по информатике на каждый день.
             // Баг в оригинальной реализации. Возможно, стоит исправить, но
             // пока не буду.
             Some(additional_exam_day_idx)
-                if state.additional_computer_science_exams < 2 =>
-            {
-                state.additional_computer_science_exams += 1;
-                GameScreen::KuzmenkoInteraction(
-                    state,
-                    AdditionalComputerScienceExam {
-                        day_index: additional_exam_day_idx,
-                    },
-                )
-            }
+            if state.additional_computer_science_exams() < 2 =>
+                {
+                    state.add_additional_computer_science_exam();
+                    GameScreen::KuzmenkoInteraction(
+                        state,
+                        AdditionalComputerScienceExam {
+                            day_index: additional_exam_day_idx,
+                        },
+                    )
+                }
             _ => {
                 let replies = [
                     FormatFloppy,
@@ -1053,16 +1125,21 @@ impl Game {
                 )
             }
             Action::SurfInternet => self.surf_internet(state),
-            Action::InteractWithClassmate(RAI) => todo!(),
-            Action::InteractWithClassmate(Kuzmenko) => self.interact_with_kuzmenko(state),
-            Action::InteractWithClassmate(Diamond) => todo!(),
+            Action::InteractWithClassmate(classmate) => {
+                assert_matches!(
+                    state.classmates[classmate].current_location(),
+                    ClassmateLocation::Location(Location::ComputerClass)
+                );
+                self.handle_classmate_interaction(state, classmate)
+            }
             Action::PlayMMHEROES => todo!(),
             Action::IAmDone => self.i_am_done(state),
             _ => illegal_action!(action),
         }
     }
 
-    /// Возвращает `Some`, если Коля помог решить задачи по алгебре, иначе — `None`.
+    /// Возвращает `Some`, если Коля может помочь решить задачи по алгебре,
+    /// иначе — `None`.
     fn kolya_maybe_solve_algebra_problems(
         &mut self,
         player: &mut Player,
@@ -1469,26 +1546,12 @@ impl Game {
                 available_actions.push(Action::NoRestIsNoGood);
                 available_actions
             }
-            Action::InteractWithClassmate(Kolya) => {
+            Action::InteractWithClassmate(classmate) => {
                 assert_matches!(
-                    state.classmates[Kolya].current_location(),
+                    state.classmates[classmate].current_location(),
                     ClassmateLocation::Location(Location::Mausoleum)
                 );
-                self.interact_with_kolya(state)
-            }
-            Action::InteractWithClassmate(Grisha) => {
-                assert_matches!(
-                    state.classmates[Grisha].current_location(),
-                    ClassmateLocation::Location(Location::Mausoleum)
-                );
-                self.interact_with_grisha(state)
-            }
-            Action::InteractWithClassmate(Serj) => {
-                assert_matches!(
-                    state.classmates[Serj].current_location(),
-                    ClassmateLocation::Location(Location::Mausoleum)
-                );
-                todo!()
+                self.handle_classmate_interaction(state, classmate)
             }
             Action::IAmDone => self.i_am_done(state),
             _ => illegal_action!(action),
@@ -1641,4 +1704,5 @@ fn memory() {
 
     assert_eq!(size_of::<Game>(), 376);
     assert_eq!(size_of::<Player>(), 40);
+    assert_eq!(size_of::<Action>(), 3);
 }
