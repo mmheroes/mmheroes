@@ -8,7 +8,7 @@
 name = "mmheroes-core"
 version = "0.1.0"
 authors = ["Sergej Jaskiewicz <jaskiewiczs@icloud.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 unicode-segmentation = "1.6.0"

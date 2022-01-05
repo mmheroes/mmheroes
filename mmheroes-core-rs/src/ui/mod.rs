@@ -56,7 +56,7 @@ pub enum Color {
     WhiteBright = 15,
 }
 
-impl core::convert::TryFrom<u8> for Color {
+impl TryFrom<u8> for Color {
     type Error = ();
 
     fn try_from(value: u8) -> Result<Self, Self::Error> {

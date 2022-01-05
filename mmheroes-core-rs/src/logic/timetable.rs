@@ -1,6 +1,5 @@
 pub use crate::logic::{Location, Subject, NUM_SUBJECTS, SUBJECTS};
 
-use core::convert::TryFrom;
 use core::fmt::{Display, Formatter};
 use core::ops::{Add, AddAssign, Sub};
 

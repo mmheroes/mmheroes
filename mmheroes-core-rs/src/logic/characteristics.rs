@@ -1,5 +1,4 @@
 use super::*;
-use core::convert::TryFrom;
 
 macro_rules! define_characteristic {
     ($name:ident) => {

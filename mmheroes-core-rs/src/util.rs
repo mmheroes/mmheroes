@@ -2,7 +2,7 @@
 
 use core::cmp::Ordering;
 use core::fmt::{Debug, Formatter, Result as FmtResult};
-use core::iter::{FromIterator, IntoIterator};
+use core::iter::IntoIterator;
 use core::mem::MaybeUninit;
 use core::ops::{Deref, DerefMut};
 

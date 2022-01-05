@@ -1,7 +1,6 @@
 use crate::logic::Money;
 use crate::ui::cp866_encoding;
 use crate::util::TinyString;
-use core::convert::TryInto;
 
 pub type HighScore = (TinyString<128>, Money);
 
