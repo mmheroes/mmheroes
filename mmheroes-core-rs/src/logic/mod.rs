@@ -73,6 +73,11 @@ pub enum Action {
     OrderCola,
     OrderSoup,
     OrderBeer,
+    OrderTea,
+    OrderCake,
+    OrderTeaWithCake,
+    RestInCafePUNK,
+    ShouldntHaveComeToCafePUNK,
     IAmDone,
     NoIAmNotDone,
     IAmCertainlyDone,
@@ -201,6 +206,9 @@ pub enum GameScreen {
 
     /// Отдых в мавзолее.
     RestInMausoleum(GameState),
+
+    /// Кафе в ПУНКе
+    CafePUNK(GameState),
 
     /// Взаимодействие с Колей.
     KolyaInteraction(GameState, npc::KolyaInteraction),
@@ -343,7 +351,8 @@ impl Game {
             | GoToProfessor(state)
             | Exam(state, _)
             | SurfInternet(state, _)
-            | RestInMausoleum(state) => Some(state),
+            | RestInMausoleum(state)
+            | CafePUNK(state) => Some(state),
             Intro | InitialParameters | Ding(_) | WannaTryAgain | Disclaimer
             | Terminal => None,
         }
@@ -406,6 +415,10 @@ impl Game {
             RestInMausoleum(state) => {
                 let state = state.clone();
                 self.handle_rest_in_mausoleum(state, action)
+            }
+            CafePUNK(state) => {
+                let state = state.clone();
+                self.handle_cafe_punk_action(state, action)
             }
             KolyaInteraction(state, interaction) => {
                 let state = state.clone();
@@ -955,7 +968,21 @@ impl Game {
             }
             Action::GoToCafePUNK => {
                 assert!(state.current_time.is_cafe_open());
-                todo!()
+                let mut available_actions = ActionVec::new();
+                let available_money = state.player.money;
+                if available_money >= Money::tea_cost() {
+                    available_actions.push(Action::OrderTea);
+                }
+                if available_money >= Money::cake_cost() {
+                    available_actions.push(Action::OrderCake);
+                }
+                if available_money >= Money::tea_with_cake_cost() {
+                    available_actions.push(Action::OrderTeaWithCake);
+                }
+                available_actions.push(Action::RestInCafePUNK);
+                available_actions.push(Action::ShouldntHaveComeToCafePUNK);
+                self.screen = GameScreen::CafePUNK(state);
+                available_actions
             }
             Action::InteractWithClassmate(classmate) => {
                 assert_matches!(
@@ -971,6 +998,42 @@ impl Game {
             Action::IAmDone => self.i_am_done(state),
             _ => illegal_action!(action),
         }
+    }
+
+    fn handle_cafe_punk_action(
+        &mut self,
+        mut state: GameState,
+        action: Action,
+    ) -> ActionVec {
+        assert_eq!(state.location, Location::PUNK);
+        assert!(state.current_time.is_cafe_open());
+        assert_matches!(self.screen, GameScreen::CafePUNK(_));
+        let money = &mut state.player.money;
+        let health = &mut state.player.health;
+        let charisma_dependent_health_gain =
+            HealthLevel(self.rng.random(state.player.charisma.0));
+        match action {
+            Action::OrderTea => {
+                *money -= Money::tea_cost();
+                *health += charisma_dependent_health_gain + 2;
+            }
+            Action::OrderCake => {
+                *money -= Money::cake_cost();
+                *health += charisma_dependent_health_gain + 4;
+            }
+            Action::OrderTeaWithCake => {
+                *money -= Money::tea_with_cake_cost();
+                *health += charisma_dependent_health_gain + 7;
+            }
+            Action::RestInCafePUNK => {
+                *health += charisma_dependent_health_gain;
+            }
+            Action::ShouldntHaveComeToCafePUNK => {
+                return self.scene_router(state);
+            }
+            _ => illegal_action!(action),
+        }
+        self.hour_pass(state)
     }
 
     fn handle_classmate_interaction(
@@ -1002,7 +1065,7 @@ impl Game {
         let cs_problems_required = SUBJECTS[Subject::ComputerScience].required_problems;
         let found_program = player.is_god_mode()
             || (self.rng.random(player.brain) > BrainLevel(6)
-            && cs_problems_done < cs_problems_required);
+                && cs_problems_done < cs_problems_required);
         self.screen = GameScreen::SurfInternet(state, found_program);
         wait_for_any_key()
     }
@@ -1061,16 +1124,16 @@ impl Game {
             // Баг в оригинальной реализации. Возможно, стоит исправить, но
             // пока не буду.
             Some(additional_exam_day_idx)
-            if state.additional_computer_science_exams() < 2 =>
-                {
-                    state.add_additional_computer_science_exam();
-                    GameScreen::KuzmenkoInteraction(
-                        state,
-                        AdditionalComputerScienceExam {
-                            day_index: additional_exam_day_idx,
-                        },
-                    )
-                }
+                if state.additional_computer_science_exams() < 2 =>
+            {
+                state.add_additional_computer_science_exam();
+                GameScreen::KuzmenkoInteraction(
+                    state,
+                    AdditionalComputerScienceExam {
+                        day_index: additional_exam_day_idx,
+                    },
+                )
+            }
             _ => {
                 let replies = [
                     FormatFloppy,

@@ -231,6 +231,11 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                 self.game.available_actions(),
                 state,
             ),
+            CafePUNK(state) => screens::rest::display_cafe(
+                &mut self.renderer,
+                self.game.available_actions(),
+                state,
+            ),
             KolyaInteraction(state, interaction) => {
                 screens::npc::display_kolya_interaction(
                     &mut self.renderer,

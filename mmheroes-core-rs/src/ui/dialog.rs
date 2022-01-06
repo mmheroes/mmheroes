@@ -102,9 +102,38 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::GoToProfessor => "Идти к преподу",
         Action::GoToWork => "Пойти в ТЕРКОМ, поработать",
         Action::LookAtBaobab => "Посмотреть на баобаб",
-        Action::OrderCola => "Стакан колы за 4 р.",
-        Action::OrderSoup => "Суп, 6 р. все удовольствие",
-        Action::OrderBeer => "0,5 пива за 8 р.",
+        Action::OrderCola => {
+            set_color(r, Color::CyanBright);
+            write!(r, "Стакан колы за {} р.", Money::cola_cost());
+            return;
+        }
+        Action::OrderSoup => {
+            set_color(r, Color::CyanBright);
+            write!(r, "Суп, {} р. все удовольствие", Money::soup_cost());
+            return;
+        }
+        Action::OrderBeer => {
+            set_color(r, Color::CyanBright);
+            write!(r, "0,5 пива за {} р.", Money::beer_cost());
+            return;
+        }
+        Action::OrderTea => {
+            set_color(r, Color::CyanBright);
+            write!(r, "Чай за {} р.", Money::tea_cost());
+            return;
+        }
+        Action::OrderCake => {
+            set_color(r, Color::CyanBright);
+            write!(r, "Кекс за {} р.", Money::cake_cost());
+            return;
+        }
+        Action::OrderTeaWithCake => {
+            set_color(r, Color::CyanBright);
+            write!(r, "Чай и выпечку, {} р.", Money::tea_with_cake_cost());
+            return;
+        }
+        Action::RestInCafePUNK => "Просто посижу с приятелями.",
+        Action::ShouldntHaveComeToCafePUNK => "Я вообще зря сюда зашел.",
         Action::AcceptEmploymentAtTerkom => "Да, мне бы не помешало.",
         Action::DeclineEmploymentAtTerkom => "Нет, я лучше поучусь уще чуток.",
         Action::IAmDone => {

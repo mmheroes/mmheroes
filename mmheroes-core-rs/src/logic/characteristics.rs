@@ -6,6 +6,20 @@ macro_rules! define_characteristic {
         #[derive(Clone, Copy, Eq, PartialEq, Ord, PartialOrd, Debug)]
         pub struct $name(pub i16);
 
+        impl core::ops::Add for $name {
+            type Output = Self;
+            fn add(self, rhs: Self) -> Self {
+                Self(self.0 + rhs.0)
+            }
+        }
+
+        impl core::ops::Add<i16> for $name {
+            type Output = Self;
+            fn add(self, rhs: i16) -> Self {
+                Self(self.0 + rhs)
+            }
+        }
+
         impl core::ops::AddAssign for $name {
             fn add_assign(&mut self, rhs: Self) {
                 self.0 += rhs.0
@@ -136,6 +150,21 @@ impl Money {
     pub const fn beer_cost() -> Money {
         Money(8)
     }
+
+    /// Стоимость чая в буфете ПУНКа/ПОМИ
+    pub const fn tea_cost() -> Money {
+        Money(2)
+    }
+
+    /// Стоимость кекса в буфете ПУНКа/ПОМИ
+    pub const fn cake_cost() -> Money {
+        Money(4)
+    }
+
+    /// Стоимость чая с выпечкой в буфете ПУНКа/ПОМИ
+    pub const fn tea_with_cake_cost() -> Money {
+        Money(6)
+    }
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
@@ -212,7 +241,9 @@ impl BrainLevel {
         )
     }
 
-    pub fn is_lethal(self) -> bool { self.0 > 45 }
+    pub fn is_lethal(self) -> bool {
+        self.0 > 45
+    }
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
