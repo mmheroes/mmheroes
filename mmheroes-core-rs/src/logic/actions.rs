@@ -79,3 +79,5 @@ macro_rules! illegal_action {
         panic!("Illegal action: {:?}", $action)
     };
 }
+
+pub(in crate::logic) use illegal_action;

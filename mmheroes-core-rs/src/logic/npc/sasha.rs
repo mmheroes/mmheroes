@@ -1,5 +1,22 @@
 use super::super::*;
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum SashaInteraction {
+    /// Выбор предмета, по которому попросить конспект у Саши
+    ChooseSubject,
+
+    /// "Как знаешь..."
+    SuitYourself,
+
+    /// "Да, у меня с собой этот конспект ..."
+    YesIHaveTheLectureNotes,
+
+    /// "Ох, извини, кто-то другой уже позаимствовал ..."
+    SorryGaveToSomeoneElse,
+}
+
+use SashaInteraction::*;
+
 pub(in crate::logic) fn interact(game: &mut Game, state: GameState) -> ActionVec {
     assert_eq!(state.location, Location::PUNK);
     let mut available_actions = SUBJECTS_WITH_LECTURE_NOTES
@@ -13,8 +30,7 @@ pub(in crate::logic) fn interact(game: &mut Game, state: GameState) -> ActionVec
         .map(Action::RequestLectureNotesFromSasha)
         .collect::<ActionVec>();
     available_actions.push(Action::DontNeedAnythingFromSasha);
-    game.screen =
-        GameScreen::SashaInteraction(state, npc::SashaInteraction::ChooseSubject);
+    game.screen = GameScreen::SashaInteraction(state, ChooseSubject);
     available_actions
 }
 
@@ -22,13 +38,13 @@ pub(in crate::logic) fn proceed(
     game: &mut Game,
     mut state: GameState,
     action: Action,
-    interaction: npc::SashaInteraction,
+    interaction: SashaInteraction,
 ) -> ActionVec {
     assert_eq!(state.location, Location::PUNK);
     assert_matches!(game.screen, GameScreen::SashaInteraction(_, _));
     match action {
         Action::RequestLectureNotesFromSasha(subject) => {
-            assert_eq!(interaction, npc::SashaInteraction::ChooseSubject);
+            assert_eq!(interaction, ChooseSubject);
             let new_interaction = if state.player.charisma
                 > CharismaLevel(game.rng.random(18))
                 && state.sasha_has_lecture_notes(subject)
@@ -37,24 +53,23 @@ pub(in crate::logic) fn proceed(
                     .player
                     .status_for_subject_mut(subject)
                     .set_has_lecture_notes();
-                npc::SashaInteraction::YesIHaveTheLectureNotes
+                YesIHaveTheLectureNotes
             } else {
                 state.set_sasha_has_lecture_notes(subject, false);
-                npc::SashaInteraction::SorryGaveToSomeoneElse
+                SorryGaveToSomeoneElse
             };
             game.screen = GameScreen::SashaInteraction(state, new_interaction);
             wait_for_any_key()
         }
         Action::DontNeedAnythingFromSasha => {
-            assert_eq!(interaction, npc::SashaInteraction::ChooseSubject);
-            game.screen =
-                GameScreen::SashaInteraction(state, npc::SashaInteraction::SuitYourself);
+            assert_eq!(interaction, ChooseSubject);
+            game.screen = GameScreen::SashaInteraction(state, SuitYourself);
             wait_for_any_key()
         }
         Action::AnyKey => {
-            assert_ne!(interaction, npc::SashaInteraction::ChooseSubject);
+            assert_ne!(interaction, ChooseSubject);
             game.scene_router(state)
         }
-        _ => illegal_action!(action),
+        _ => crate::logic::actions::illegal_action!(action),
     }
 }

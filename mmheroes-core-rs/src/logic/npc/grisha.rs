@@ -1,7 +1,69 @@
 use super::super::*;
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum GrishaInteraction {
+    /// "А ты не хочешь устроиться в ТЕРКОМ? Может, кое-чего подзаработаешь..."
+    /// (да или нет)
+    PromptEmploymentAtTerkom,
+
+    /// "Поздравляю, теперь ты можешь идти в "контору"!"
+    CongratulationsYouAreNowEmployed,
+
+    /// "Как хочешь. Только смотри, не заучись там ..."
+    AsYouWantButDontOverstudy,
+
+    /// "Кстати, я тут знаю один качественно работающий прокси-сервер..."
+    ProxyAddress,
+
+    /// "Хочу халявы!"
+    WantFreebie { drink_beer: bool, hour_pass: bool },
+
+    /// "Прийди же, о халява!"
+    FreebieComeToMe { drink_beer: bool, hour_pass: bool },
+
+    /// "Халява есть - ее не может не быть."
+    FreebieExists { drink_beer: bool, hour_pass: bool },
+
+    /// "Давай организуем клуб любетелей халявы!"
+    LetsOrganizeFreebieLoversClub { drink_beer: bool, hour_pass: bool },
+
+    /// "Чтобы получить диплом, учиться совершенно необязательно!"
+    NoNeedToStudyToGetDiploma { drink_beer: bool, hour_pass: bool },
+
+    /// "Ну вот, ты готовился... Помогло это тебе?"
+    YouStudiedDidItHelp { drink_beer: bool, hour_pass: bool },
+
+    /// "На третьем курсе на лекции уже никто не ходит. Почти никто."
+    ThirdYearStudentsDontAttendLectures { drink_beer: bool, hour_pass: bool },
+
+    /// "Вот, бери пример с Коли."
+    TakeExampleFromKolya { drink_beer: bool, hour_pass: bool },
+
+    /// "Ненавижу Льва Толстого! Вчера "Войну и мир" <йк> ксерил..."
+    HateLevTolstoy { drink_beer: bool, hour_pass: bool },
+
+    /// "А в ПОМИ лучше вообще не ездить!"
+    DontGoToPDMI { drink_beer: bool, hour_pass: bool },
+
+    /// "Имена главных халявчиков и алкоголиков висят на баобабе."
+    NamesOfFreebieLovers { drink_beer: bool, hour_pass: bool },
+
+    /// "Правильно, лучше посидим здесь и оттянемся!"
+    LetsHaveABreakHere { drink_beer: bool, hour_pass: bool },
+
+    /// "Конспектировать ничего не надо. В мире есть ксероксы!"
+    NoNeedToTakeLectureNotes { drink_beer: bool, hour_pass: bool },
+
+    /// "А с четвертого курса вылететь уже почти невозможно."
+    CantBeExpelledInFourthYear { drink_beer: bool, hour_pass: bool },
+
+    /// "Вот у механиков - у них халява!"
+    MechanicsHaveFreebie { drink_beer: bool, hour_pass: bool },
+}
+
+use GrishaInteraction::*;
+
 pub(in crate::logic) fn interact(game: &mut Game, state: GameState) -> ActionVec {
-    use npc::GrishaInteraction::*;
     assert_eq!(state.location, Location::Mausoleum);
     let player = &state.player;
     let has_enough_charisma = player.charisma > game.rng.random(CharismaLevel(20));
@@ -91,9 +153,8 @@ pub(in crate::logic) fn proceed(
     game: &mut Game,
     mut state: GameState,
     action: Action,
-    interaction: npc::GrishaInteraction,
+    interaction: GrishaInteraction,
 ) -> ActionVec {
-    use npc::GrishaInteraction::*;
     assert_matches!(game.screen, GameScreen::GrishaInteraction(_, _));
     let player = &mut state.player;
     match action {

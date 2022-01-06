@@ -34,19 +34,19 @@ pub enum GameScreen {
     CafePUNK(GameState),
 
     /// Взаимодействие с Колей.
-    KolyaInteraction(GameState, npc::KolyaInteraction),
+    KolyaInteraction(GameState, npc::kolya::KolyaInteraction),
 
     /// Взаимодействие с Пашей.
-    PashaInteraction(GameState, npc::PashaInteraction),
+    PashaInteraction(GameState, npc::pasha::PashaInteraction),
 
     /// Взаимодействие с Гришей.
-    GrishaInteraction(GameState, npc::GrishaInteraction),
+    GrishaInteraction(GameState, npc::grisha::GrishaInteraction),
 
     /// Взаимодействие с Сашей.
-    SashaInteraction(GameState, npc::SashaInteraction),
+    SashaInteraction(GameState, npc::sasha::SashaInteraction),
 
     /// Взаимодействие с Кузьменко.
-    KuzmenkoInteraction(GameState, npc::KuzmenkoInteraction),
+    KuzmenkoInteraction(GameState, npc::kuzmenko::KuzmenkoInteraction),
 
     /// Экран "Идти к преподу"
     GoToProfessor(GameState),

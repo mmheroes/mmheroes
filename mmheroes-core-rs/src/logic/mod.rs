@@ -19,7 +19,6 @@ pub use player::Player;
 pub mod subject_status;
 pub use subject_status::SubjectStatus;
 
-#[macro_use]
 pub mod actions;
 pub use actions::*;
 
@@ -28,10 +27,6 @@ pub use cause_of_death::*;
 
 pub mod game_screen;
 pub use game_screen::*;
-
-mod interactions;
-
-use npc::Classmate::*;
 
 use crate::random;
 
@@ -62,8 +57,6 @@ pub enum GameMode {
     God,
 }
 
-use GameScreen::*;
-
 pub struct Game {
     screen: GameScreen,
     rng: random::Rng,
@@ -75,7 +68,7 @@ impl Game {
     pub fn new(mode: GameMode, seed: u64) -> Game {
         let rng = random::Rng::new(seed);
         Game {
-            screen: Intro,
+            screen: GameScreen::Intro,
             rng,
             mode,
             available_actions: wait_for_any_key(),
@@ -94,6 +87,7 @@ impl Game {
     /// Оно может быть недоступно, например, если игра ещё не началась
     /// или уже закончилась.
     pub fn game_state(&self) -> Option<&GameState> {
+        use GameScreen::*;
         match &self.screen {
             Timetable(state)
             | SceneRouter(state)
@@ -134,6 +128,7 @@ impl Game {
 
     /// Accepts an action, returns the number of actions available in the updated state.
     fn _perform_action(&mut self, action: Action) -> ActionVec {
+        use GameScreen::*;
         match &self.screen {
             Terminal => panic!("Attempted to perform an action in terminal state"),
             Intro => self.start_game(),
@@ -189,22 +184,22 @@ impl Game {
             KolyaInteraction(state, interaction) => {
                 let state = state.clone();
                 let interaction = *interaction;
-                interactions::kolya::proceed(self, state, action, interaction)
+                npc::kolya::proceed(self, state, action, interaction)
             }
             PashaInteraction(state, interaction) => {
                 let state = state.clone();
                 let interaction = *interaction;
-                interactions::pasha::proceed(self, state, action, interaction)
+                npc::pasha::proceed(self, state, action, interaction)
             }
             GrishaInteraction(state, interaction) => {
                 let state = state.clone();
                 let interaction = *interaction;
-                interactions::grisha::proceed(self, state, action, interaction)
+                npc::grisha::proceed(self, state, action, interaction)
             }
             SashaInteraction(state, interaction) => {
                 let state = state.clone();
                 let interaction = *interaction;
-                interactions::sasha::proceed(self, state, action, interaction)
+                npc::sasha::proceed(self, state, action, interaction)
             }
             KuzmenkoInteraction(state, _) => {
                 assert_eq!(action, Action::AnyKey);
@@ -255,7 +250,7 @@ impl Game {
     fn start_game(&mut self) -> ActionVec {
         match self.mode {
             GameMode::SelectInitialParameters => {
-                self.screen = InitialParameters;
+                self.screen = GameScreen::InitialParameters;
                 // Можно выбрать 4 стиля игры:
                 // - Случайный студент
                 // - Шибко умный
@@ -269,7 +264,7 @@ impl Game {
                 ])
             }
             GameMode::God => {
-                self.screen = InitialParameters;
+                self.screen = GameScreen::InitialParameters;
                 // Можно выбрать 5 стилей игры:
                 // - Случайный студент
                 // - Шибко умный
@@ -289,7 +284,7 @@ impl Game {
     }
 
     fn ding(&mut self, action: Action) -> ActionVec {
-        self.screen = Ding(self.initialize_player(action));
+        self.screen = GameScreen::Ding(self.initialize_player(action));
         wait_for_any_key()
     }
 
@@ -653,7 +648,7 @@ impl Game {
                     state.classmates[classmate].current_location(),
                     ClassmateLocation::Location(Location::PUNK)
                 );
-                self.handle_classmate_interaction(state, classmate)
+                npc::interact_with_classmate(self, state, classmate)
             }
             Action::GoToWork => {
                 assert!(state.player.is_employed_at_terkom());
@@ -698,27 +693,6 @@ impl Game {
             _ => illegal_action!(action),
         }
         self.hour_pass(state)
-    }
-
-    fn handle_classmate_interaction(
-        &mut self,
-        state: GameState,
-        classmate: Classmate,
-    ) -> ActionVec {
-        match classmate {
-            Kolya => interactions::kolya::interact(self, state),
-            Pasha => interactions::pasha::interact(self, state),
-            Diamond => todo!(),
-            RAI => todo!(),
-            Misha => todo!(),
-            Serj => todo!(),
-            Sasha => interactions::sasha::interact(self, state),
-            NiL => todo!(),
-            Kuzmenko => interactions::kuzmenko::interact(self, state),
-            DJuG => todo!(),
-            Andrew => todo!(),
-            Grisha => interactions::grisha::interact(self, state),
-        }
     }
 
     fn surf_internet(&mut self, state: GameState) -> ActionVec {
@@ -789,7 +763,7 @@ impl Game {
                     state.classmates[classmate].current_location(),
                     ClassmateLocation::Location(Location::ComputerClass)
                 );
-                self.handle_classmate_interaction(state, classmate)
+                npc::interact_with_classmate(self, state, classmate)
             }
             Action::PlayMMHEROES => todo!(),
             Action::IAmDone => self.i_am_done(state),
@@ -886,7 +860,7 @@ impl Game {
                     state.classmates[classmate].current_location(),
                     ClassmateLocation::Location(Location::Mausoleum)
                 );
-                self.handle_classmate_interaction(state, classmate)
+                npc::interact_with_classmate(self, state, classmate)
             }
             Action::IAmDone => self.i_am_done(state),
             _ => illegal_action!(action),
@@ -894,7 +868,7 @@ impl Game {
     }
 
     fn view_timetable(&mut self, state: GameState) -> ActionVec {
-        self.screen = Timetable(state);
+        self.screen = GameScreen::Timetable(state);
         wait_for_any_key()
     }
 
@@ -973,7 +947,7 @@ impl Game {
     }
 
     fn i_am_done(&mut self, state: GameState) -> ActionVec {
-        self.screen = IAmDone(state);
+        self.screen = GameScreen::IAmDone(state);
         ActionVec::from([Action::NoIAmNotDone, Action::IAmCertainlyDone])
     }
 
@@ -986,12 +960,12 @@ impl Game {
     }
 
     fn game_end(&mut self, state: GameState) -> ActionVec {
-        self.screen = GameEnd(state);
+        self.screen = GameScreen::GameEnd(state);
         wait_for_any_key()
     }
 
     fn wanna_try_again(&mut self) -> ActionVec {
-        self.screen = WannaTryAgain;
+        self.screen = GameScreen::WannaTryAgain;
         // Хочешь попробовать снова? Да или нет.
         ActionVec::from([Action::WantToTryAgain, Action::DontWantToTryAgain])
     }
@@ -1000,7 +974,7 @@ impl Game {
         match action {
             Action::WantToTryAgain => self.start_game(),
             Action::DontWantToTryAgain => {
-                self.screen = Disclaimer;
+                self.screen = GameScreen::Disclaimer;
                 wait_for_any_key()
             }
             _ => illegal_action!(action),
@@ -1008,6 +982,7 @@ impl Game {
     }
 
     fn handle_what_to_do(&mut self, state: GameState, action: Action) -> ActionVec {
+        use GameScreen::*;
         assert_eq!(state.location(), Location::Dorm);
         match action {
             Action::WhatToDoAtAll => self.screen = WhatToDo(state),

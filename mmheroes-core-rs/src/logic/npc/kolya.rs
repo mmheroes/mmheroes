@@ -1,6 +1,35 @@
 use super::super::*;
 use crate::random::Rng;
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum KolyaInteraction {
+    /// "Коля решил тебе ещё 2 задачи по алгебре!"
+    /// (не пришлось заказывать настойку овса)
+    SolvedAlgebraProblemsForFree,
+
+    /// "Заказать Коле настойку овса?"
+    /// (да или нет)
+    PromptOatTincture,
+
+    /// "Коля решил тебе ещё 2 задачи по алгебре!"
+    /// (пришлось заказать настойку овса для этого)
+    SolvedAlgebraProblemsForOatTincture,
+
+    /// "Коля достает тормозную жидкость, и вы распиваете еще по стакану."
+    /// (так как нет денег на настойку овса)
+    BrakeFluidNoMoney,
+
+    /// "Коля достает тормозную жидкость, и вы распиваете еще по стакану."
+    /// (отказался заказывать настойку овса)
+    BrakeFluidBecauseRefused,
+
+    /// "Твой альтруизм навсегда останется в памяти потомков."
+    /// (заказал Коле настойку овса, но решать задачи он не стал)
+    Altruism,
+}
+
+use KolyaInteraction::*;
+
 /// Возвращает `Some`, если Коля может помочь решить задачи по алгебре,
 /// иначе — `None`.
 fn kolya_maybe_solve_algebra_problems(
@@ -26,19 +55,16 @@ pub(in crate::logic) fn interact(game: &mut Game, mut state: GameState) -> Actio
     let (available_actions, interaction) = if let Some(available_actions) =
         kolya_maybe_solve_algebra_problems(&mut game.rng, player)
     {
-        (
-            available_actions,
-            npc::KolyaInteraction::SolvedAlgebraProblemsForFree,
-        )
+        (available_actions, SolvedAlgebraProblemsForFree)
     } else if player.money < Money::oat_tincture_cost() {
         // "Коля достает тормозную жидкость, и вы распиваете еще по стакану."
-        (wait_for_any_key(), npc::KolyaInteraction::BrakeFluidNoMoney)
+        (wait_for_any_key(), BrakeFluidNoMoney)
     } else {
         // "Знаешь, пиво, конечно, хорошо, но настойка овса - лучше!"
         // "Заказать Коле настойку овса?"
         (
             ActionVec::from([Action::Yes, Action::No]),
-            npc::KolyaInteraction::PromptOatTincture,
+            PromptOatTincture,
         )
     };
     game.screen = GameScreen::KolyaInteraction(state, interaction);
@@ -49,7 +75,7 @@ pub(in crate::logic) fn proceed(
     game: &mut Game,
     mut state: GameState,
     action: Action,
-    interaction: npc::KolyaInteraction,
+    interaction: KolyaInteraction,
 ) -> ActionVec {
     assert_eq!(state.location, Location::Mausoleum);
     assert_matches!(game.screen, GameScreen::KolyaInteraction(_, _));
@@ -59,17 +85,17 @@ pub(in crate::logic) fn proceed(
             let algebra_status =
                 player.status_for_subject_mut(Subject::AlgebraAndNumberTheory);
             match interaction {
-                npc::KolyaInteraction::SolvedAlgebraProblemsForFree => {
+                SolvedAlgebraProblemsForFree => {
                     algebra_status.more_problems_solved(2);
                     return game.hour_pass(state);
                 }
-                npc::KolyaInteraction::PromptOatTincture => unreachable!(),
-                npc::KolyaInteraction::SolvedAlgebraProblemsForOatTincture => {
+                PromptOatTincture => unreachable!(),
+                SolvedAlgebraProblemsForOatTincture => {
                     algebra_status.more_problems_solved(2);
                     player.money -= Money::oat_tincture_cost();
                     return game.hour_pass(state);
                 }
-                npc::KolyaInteraction::BrakeFluidNoMoney => {
+                BrakeFluidNoMoney => {
                     player.brain -= 1;
                     if player.brain <= BrainLevel(0) {
                         player.health = HealthLevel(0);
@@ -77,43 +103,39 @@ pub(in crate::logic) fn proceed(
                         return game.game_end(state);
                     }
                 }
-                npc::KolyaInteraction::BrakeFluidBecauseRefused => {
+                BrakeFluidBecauseRefused => {
                     state.player.brain -= 1;
                     // Забавно, что в этой ветке можно бесконечно пить тормозную
                     // жидкость и никогда не спиться. Баг в оригинальной реализации.
                 }
-                npc::KolyaInteraction::Altruism => {
+                Altruism => {
                     player.money -= Money::oat_tincture_cost();
                 }
             }
             game.scene_router(state)
         }
         Action::Yes => {
-            assert_eq!(interaction, npc::KolyaInteraction::PromptOatTincture);
+            assert_eq!(interaction, PromptOatTincture);
             if let Some(num_actions) =
                 kolya_maybe_solve_algebra_problems(&mut game.rng, player)
             {
                 // "Коля решил тебе ещё 2 задачи по алгебре!"
                 game.screen = GameScreen::KolyaInteraction(
                     state,
-                    npc::KolyaInteraction::SolvedAlgebraProblemsForOatTincture,
+                    SolvedAlgebraProblemsForOatTincture,
                 );
                 num_actions
             } else {
                 // "Твой альтруизм навсегда останется в памяти потомков."
-                game.screen =
-                    GameScreen::KolyaInteraction(state, npc::KolyaInteraction::Altruism);
+                game.screen = GameScreen::KolyaInteraction(state, Altruism);
                 wait_for_any_key()
             }
         }
         Action::No => {
-            assert_eq!(interaction, npc::KolyaInteraction::PromptOatTincture);
+            assert_eq!(interaction, PromptOatTincture);
             // "Зря, ой, зря ..."
             // "Коля достает тормозную жидкость, и вы распиваете еще по стакану."
-            game.screen = GameScreen::KolyaInteraction(
-                state,
-                npc::KolyaInteraction::BrakeFluidBecauseRefused,
-            );
+            game.screen = GameScreen::KolyaInteraction(state, BrakeFluidBecauseRefused);
             wait_for_any_key()
         }
         _ => illegal_action!(action),

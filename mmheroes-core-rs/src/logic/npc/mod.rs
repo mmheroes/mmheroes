@@ -1,4 +1,10 @@
-use crate::logic::{Day, HealthLevel, Location, Subject, Time};
+pub mod grisha;
+pub mod kolya;
+pub mod kuzmenko;
+pub mod pasha;
+pub mod sasha;
+
+use super::*;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Classmate {
@@ -263,156 +269,23 @@ impl core::ops::DerefMut for Classmates {
     }
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum KolyaInteraction {
-    /// "Коля решил тебе ещё 2 задачи по алгебре!"
-    /// (не пришлось заказывать настойку овса)
-    SolvedAlgebraProblemsForFree,
-
-    /// "Заказать Коле настойку овса?"
-    /// (да или нет)
-    PromptOatTincture,
-
-    /// "Коля решил тебе ещё 2 задачи по алгебре!"
-    /// (пришлось заказать настойку овса для этого)
-    SolvedAlgebraProblemsForOatTincture,
-
-    /// "Коля достает тормозную жидкость, и вы распиваете еще по стакану."
-    /// (так как нет денег на настойку овса)
-    BrakeFluidNoMoney,
-
-    /// "Коля достает тормозную жидкость, и вы распиваете еще по стакану."
-    /// (отказался заказывать настойку овса)
-    BrakeFluidBecauseRefused,
-
-    /// "Твой альтруизм навсегда останется в памяти потомков."
-    /// (заказал Коле настойку овса, но решать задачи он не стал)
-    Altruism,
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum PashaInteraction {
-    /// "Паша вручает тебе твою стипуху за май: 50 руб."
-    Stipend,
-
-    /// "Паша воодушевляет тебя на великие дела."
-    Inspiration,
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum GrishaInteraction {
-    /// "А ты не хочешь устроиться в ТЕРКОМ? Может, кое-чего подзаработаешь..."
-    /// (да или нет)
-    PromptEmploymentAtTerkom,
-
-    /// "Поздравляю, теперь ты можешь идти в "контору"!"
-    CongratulationsYouAreNowEmployed,
-
-    /// "Как хочешь. Только смотри, не заучись там ..."
-    AsYouWantButDontOverstudy,
-
-    /// "Кстати, я тут знаю один качественно работающий прокси-сервер..."
-    ProxyAddress,
-
-    /// "Хочу халявы!"
-    WantFreebie { drink_beer: bool, hour_pass: bool },
-
-    /// "Прийди же, о халява!"
-    FreebieComeToMe { drink_beer: bool, hour_pass: bool },
-
-    /// "Халява есть - ее не может не быть."
-    FreebieExists { drink_beer: bool, hour_pass: bool },
-
-    /// "Давай организуем клуб любетелей халявы!"
-    LetsOrganizeFreebieLoversClub { drink_beer: bool, hour_pass: bool },
-
-    /// "Чтобы получить диплом, учиться совершенно необязательно!"
-    NoNeedToStudyToGetDiploma { drink_beer: bool, hour_pass: bool },
-
-    /// "Ну вот, ты готовился... Помогло это тебе?"
-    YouStudiedDidItHelp { drink_beer: bool, hour_pass: bool },
-
-    /// "На третьем курсе на лекции уже никто не ходит. Почти никто."
-    ThirdYearStudentsDontAttendLectures { drink_beer: bool, hour_pass: bool },
-
-    /// "Вот, бери пример с Коли."
-    TakeExampleFromKolya { drink_beer: bool, hour_pass: bool },
-
-    /// "Ненавижу Льва Толстого! Вчера "Войну и мир" <йк> ксерил..."
-    HateLevTolstoy { drink_beer: bool, hour_pass: bool },
-
-    /// "А в ПОМИ лучше вообще не ездить!"
-    DontGoToPDMI { drink_beer: bool, hour_pass: bool },
-
-    /// "Имена главных халявчиков и алкоголиков висят на баобабе."
-    NamesOfFreebieLovers { drink_beer: bool, hour_pass: bool },
-
-    /// "Правильно, лучше посидим здесь и оттянемся!"
-    LetsHaveABreakHere { drink_beer: bool, hour_pass: bool },
-
-    /// "Конспектировать ничего не надо. В мире есть ксероксы!"
-    NoNeedToTakeLectureNotes { drink_beer: bool, hour_pass: bool },
-
-    /// "А с четвертого курса вылететь уже почти невозможно."
-    CantBeExpelledInFourthYear { drink_beer: bool, hour_pass: bool },
-
-    /// "Вот у механиков - у них халява!"
-    MechanicsHaveFreebie { drink_beer: bool, hour_pass: bool },
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum SashaInteraction {
-    /// Выбор предмета, по которому попросить конспект у Саши
-    ChooseSubject,
-
-    /// "Как знаешь..."
-    SuitYourself,
-
-    /// "Да, у меня с собой этот конспект ..."
-    YesIHaveTheLectureNotes,
-
-    /// "Ох, извини, кто-то другой уже позаимствовал ..."
-    SorryGaveToSomeoneElse,
-}
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum KuzmenkoInteraction {
-    /// "Вы знаете, Климова можно найти в компьютерном классе 24-го мая с 10 по 11ч.."
-    AdditionalComputerScienceExam { day_index: usize },
-
-    /// "... отформатировать дискету так, чтобы 1ый сектор был 5ым ..."
-    FormatFloppy,
-
-    /// "А Вы нигде не видели литературы по фильтрам в Windows?"
-    FiltersInWindows,
-
-    /// "... написать визуализацию байта на ассемблере за 11 байт ..."
-    ByteVisualization,
-
-    /// "У вас Олег Плисс ведет какие-нибудь занятия?"
-    OlegPliss,
-
-    /// "Bill Gates = must die = кабысдох (рус.)."
-    BillGatesMustDie,
-
-    /// "Вы читали журнал "Монитор"? Хотя вряд ли..."
-    MonitorJournal,
-
-    /// "Я слышал, что mmHeroes написана на BP 7.0."
-    MmheroesBP7,
-
-    /// "Записывайтесь на мой семинар по языку Си!"
-    CSeminar,
-
-    /// "На третьем курсе я буду вести у вас спецвычпрактикум."
-    ThirdYear,
-
-    /// "Интересно, когда они снова наладят STAR?"
-    STAR,
-
-    /// "Получите себе ящик rambler'e или на mail.ru !"
-    GetYourselvesAnEmail,
-
-    /// "А разве Терехов-старший ничего не рассказывает про IBM PC?"
-    TerekhovSenior,
+pub(in crate::logic) fn interact_with_classmate(
+    game: &mut Game,
+    state: GameState,
+    classmate: Classmate,
+) -> ActionVec {
+    match classmate {
+        Kolya => kolya::interact(game, state),
+        Pasha => pasha::interact(game, state),
+        Diamond => todo!(),
+        RAI => todo!(),
+        Misha => todo!(),
+        Serj => todo!(),
+        Sasha => sasha::interact(game, state),
+        NiL => todo!(),
+        Kuzmenko => kuzmenko::interact(game, state),
+        DJuG => todo!(),
+        Andrew => todo!(),
+        Grisha => grisha::interact(game, state),
+    }
 }

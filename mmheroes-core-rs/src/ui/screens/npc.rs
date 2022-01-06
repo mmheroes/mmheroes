@@ -1,4 +1,7 @@
-use crate::logic::npc::{GrishaInteraction, KolyaInteraction, PashaInteraction};
+use crate::logic::npc::{
+    grisha::GrishaInteraction, kolya::KolyaInteraction, kuzmenko::KuzmenkoInteraction,
+    pasha::PashaInteraction, sasha::SashaInteraction,
+};
 use crate::logic::*;
 use crate::ui::{renderer::Renderer, screens::scene_router, *};
 
@@ -25,7 +28,7 @@ pub(in crate::ui) fn display_kolya_interaction(
     r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
     available_actions: &[Action],
-    interaction: npc::KolyaInteraction,
+    interaction: KolyaInteraction,
 ) -> WaitingState {
     use KolyaInteraction::*;
 
@@ -101,7 +104,7 @@ pub(in crate::ui) fn display_kolya_interaction(
 pub(in crate::ui) fn display_pasha_interaction(
     r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
-    interaction: npc::PashaInteraction,
+    interaction: PashaInteraction,
 ) -> WaitingState {
     r.clear_screen();
     scene_router::display_header_stats(r, state);
@@ -124,7 +127,7 @@ pub(in crate::ui) fn display_grisha_interaction(
     r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
     available_actions: &[Action],
-    interaction: npc::GrishaInteraction,
+    interaction: GrishaInteraction,
 ) -> WaitingState {
     use GrishaInteraction::*;
 
@@ -306,7 +309,7 @@ pub(in crate::ui) fn display_sasha_interaction(
     r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
     available_actions: &[Action],
-    interaction: npc::SashaInteraction,
+    interaction: SashaInteraction,
 ) -> WaitingState {
     match interaction {
         SashaInteraction::ChooseSubject => {
@@ -359,9 +362,9 @@ pub(in crate::ui) fn display_sasha_interaction(
 pub(in crate::ui) fn display_kuzmenko_interaction(
     r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
-    interaction: npc::KuzmenkoInteraction,
+    interaction: KuzmenkoInteraction,
 ) -> WaitingState {
-    use crate::logic::npc::KuzmenkoInteraction::*;
+    use crate::logic::npc::kuzmenko::KuzmenkoInteraction::*;
     r.clear_screen();
     scene_router::display_header_stats(r, state);
     r.move_cursor_to(7, 0);
