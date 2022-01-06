@@ -58,12 +58,24 @@ impl Player {
         flags.set(PlayerFlags::GOD_MODE, god_mode);
         let player = Player {
             subjects: [
-                SubjectStatus::new(Subject::AlgebraAndNumberTheory, knowledge(Subject::AlgebraAndNumberTheory)),
+                SubjectStatus::new(
+                    Subject::AlgebraAndNumberTheory,
+                    knowledge(Subject::AlgebraAndNumberTheory),
+                ),
                 SubjectStatus::new(Subject::Calculus, knowledge(Subject::Calculus)),
-                SubjectStatus::new(Subject::GeometryAndTopology, knowledge(Subject::GeometryAndTopology)),
-                SubjectStatus::new(Subject::ComputerScience, knowledge(Subject::ComputerScience)),
+                SubjectStatus::new(
+                    Subject::GeometryAndTopology,
+                    knowledge(Subject::GeometryAndTopology),
+                ),
+                SubjectStatus::new(
+                    Subject::ComputerScience,
+                    knowledge(Subject::ComputerScience),
+                ),
                 SubjectStatus::new(Subject::English, knowledge(Subject::English)),
-                SubjectStatus::new(Subject::PhysicalEducation, knowledge(Subject::PhysicalEducation)),
+                SubjectStatus::new(
+                    Subject::PhysicalEducation,
+                    knowledge(Subject::PhysicalEducation),
+                ),
             ],
             flags,
             garlic: 0,
@@ -94,10 +106,7 @@ impl Player {
     }
 
     pub fn exams_left(&self) -> usize {
-        self.subjects
-          .iter()
-          .filter(|s| !s.passed())
-          .count()
+        self.subjects.iter().filter(|s| !s.passed()).count()
     }
 
     pub fn is_god_mode(&self) -> bool {

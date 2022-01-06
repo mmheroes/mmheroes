@@ -158,7 +158,8 @@ mod tests {
             CharismaLevel(13),
             |subject| BrainLevel(subject as i16),
         );
-        let mut state = GameState::new(player, Timetable::random(&mut rng), Location::Dorm);
+        let mut state =
+            GameState::new(player, Timetable::random(&mut rng), Location::Dorm);
         assert_eq!(state.bits, 0b111_00000);
         assert!(state.sasha_has_lecture_notes(Subject::AlgebraAndNumberTheory));
         assert!(state.sasha_has_lecture_notes(Subject::Calculus));

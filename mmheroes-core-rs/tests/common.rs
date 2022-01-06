@@ -1,7 +1,7 @@
 use mmheroes_core::logic::Game;
-use mmheroes_core::ui::*;
 use mmheroes_core::ui::recording::{InputRecordingParser, InputRecordingParserError};
 use mmheroes_core::ui::renderer::RendererRequestConsumer;
+use mmheroes_core::ui::*;
 
 enum OwningRendererRequest {
     ClearScreen,
@@ -24,7 +24,9 @@ pub struct TestRendererRequestConsumer {
 
 impl TestRendererRequestConsumer {
     pub fn new() -> Self {
-        Self { requests: Vec::new() }
+        Self {
+            requests: Vec::new(),
+        }
     }
 
     fn requests(&self) -> &[OwningRendererRequest] {
@@ -37,9 +39,19 @@ impl RendererRequestConsumer for TestRendererRequestConsumer {
         let owning_request = match request {
             RendererRequest::ClearScreen => OwningRendererRequest::ClearScreen,
             RendererRequest::Flush => OwningRendererRequest::Flush,
-            RendererRequest::WriteStr(s) => OwningRendererRequest::WriteString(String::from(s)),
-            RendererRequest::MoveCursor { line, column } => OwningRendererRequest::MoveCursor { line, column },
-            RendererRequest::SetColor { foreground, background } => OwningRendererRequest::SetColor { foreground, background },
+            RendererRequest::WriteStr(s) => {
+                OwningRendererRequest::WriteString(String::from(s))
+            }
+            RendererRequest::MoveCursor { line, column } => {
+                OwningRendererRequest::MoveCursor { line, column }
+            }
+            RendererRequest::SetColor {
+                foreground,
+                background,
+            } => OwningRendererRequest::SetColor {
+                foreground,
+                background,
+            },
             RendererRequest::Sleep(ms) => OwningRendererRequest::Sleep(ms),
         };
         self.requests.push(owning_request)
@@ -53,6 +65,6 @@ pub fn replay_game(game_ui: &mut TestGameUI, steps: &str) {
     match parser.parse_all(|input| game_ui.continue_game(input)) {
         Ok(()) => {}
         Err(InputRecordingParserError::Interrupted) => {}
-        Err(error) => panic!("{:?}", error)
+        Err(error) => panic!("{:?}", error),
     }
 }

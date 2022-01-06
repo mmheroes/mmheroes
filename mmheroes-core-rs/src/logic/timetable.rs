@@ -24,9 +24,13 @@ impl Time {
         self.0 >= 9 && self.0 <= 19
     }
 
-    pub fn is_optimal_study_time(self) -> bool { self.0 < 19 }
+    pub fn is_optimal_study_time(self) -> bool {
+        self.0 < 19
+    }
 
-    pub fn is_suboptimal_study_time(self) -> bool { self.0 > 21 || self.0 < 4 }
+    pub fn is_suboptimal_study_time(self) -> bool {
+        self.0 > 21 || self.0 < 4
+    }
 
     /// Во сколько закрывается компьютерный класс.
     pub const fn computer_class_closing() -> Time {

@@ -26,7 +26,9 @@ impl Rng {
         let upper_bound = upper_bound
             .try_into()
             .unwrap_or_else(|_| panic!("upper bound should be convertible to u64"));
-        if upper_bound == 0 { return 0.try_into().unwrap_or_else(|_| panic!()); }
+        if upper_bound == 0 {
+            return 0.try_into().unwrap_or_else(|_| panic!());
+        }
         let tmp = (u64::MAX % upper_bound) + 1;
         let range = if tmp == upper_bound { 0u64 } else { tmp };
         let mut random;
@@ -221,14 +223,8 @@ mod tests {
         assert_eq!(rng.random_in_range(100000..100002), 100001);
 
         // Corner cases
-        assert_eq!(
-            rng.random_in_range(0..u64::MAX),
-            5031045625461185416
-        );
-        assert_eq!(
-            rng.random_in_range(0..=u64::MAX),
-            3257556776996564209
-        );
+        assert_eq!(rng.random_in_range(0..u64::MAX), 5031045625461185416);
+        assert_eq!(rng.random_in_range(0..=u64::MAX), 3257556776996564209);
 
         assert_eq!(
             rng.random_in_range((u64::MAX - 1)..=u64::MAX),

@@ -59,7 +59,7 @@ impl<T, const CAPACITY: usize> DerefMut for TinyVec<T, CAPACITY> {
 }
 
 impl<T, Index: core::slice::SliceIndex<[T]>, const CAPACITY: usize>
-core::ops::Index<Index> for TinyVec<T, CAPACITY>
+    core::ops::Index<Index> for TinyVec<T, CAPACITY>
 {
     type Output = <Index as core::slice::SliceIndex<[T]>>::Output;
 
