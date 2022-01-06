@@ -194,7 +194,7 @@ impl Game {
             PashaInteraction(state, interaction) => {
                 let state = state.clone();
                 let interaction = *interaction;
-                self.proceed_with_pasha(state, action, interaction)
+                interactions::pasha::proceed(self, state, action, interaction)
             }
             GrishaInteraction(state, interaction) => {
                 let state = state.clone();
@@ -589,47 +589,6 @@ impl Game {
         )
     }
 
-    fn interact_with_pasha(&mut self, state: GameState) -> ActionVec {
-        assert_eq!(state.location, Location::PUNK);
-        let interaction = if state.player.got_stipend() {
-            npc::PashaInteraction::Inspiration
-        } else {
-            npc::PashaInteraction::Stipend
-        };
-        self.screen = GameScreen::PashaInteraction(state, interaction);
-        wait_for_any_key()
-    }
-
-    fn proceed_with_pasha(
-        &mut self,
-        mut state: GameState,
-        action: Action,
-        interaction: npc::PashaInteraction,
-    ) -> ActionVec {
-        assert_eq!(action, Action::AnyKey);
-        assert_eq!(state.location, Location::PUNK);
-        assert_matches!(self.screen, GameScreen::PashaInteraction(_, _));
-        let player = &mut state.player;
-        match interaction {
-            npc::PashaInteraction::Stipend => {
-                assert!(!player.got_stipend());
-                player.set_got_stipend();
-                player.money += Money::stipend();
-            }
-            npc::PashaInteraction::Inspiration => {
-                player.stamina += 1;
-                for (subject, _) in SUBJECTS.iter() {
-                    let knowledge =
-                        &mut player.status_for_subject_mut(*subject).knowledge;
-                    if *knowledge > BrainLevel(3) {
-                        *knowledge -= self.rng.random(3);
-                    }
-                }
-            }
-        }
-        self.scene_router(state)
-    }
-
     fn interact_with_sasha(&mut self, state: GameState) -> ActionVec {
         assert_eq!(state.location, Location::PUNK);
         let mut available_actions = SUBJECTS_WITH_LECTURE_NOTES
@@ -809,7 +768,7 @@ impl Game {
     ) -> ActionVec {
         match classmate {
             Kolya => interactions::kolya::interact(self, state),
-            Pasha => self.interact_with_pasha(state),
+            Pasha => interactions::pasha::interact(self, state),
             Diamond => todo!(),
             RAI => todo!(),
             Misha => todo!(),
