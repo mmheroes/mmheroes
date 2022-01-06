@@ -33,6 +33,8 @@ pub enum GameScreen {
     /// Кафе в ПУНКе
     CafePUNK(GameState),
 
+    TrainToPDMI(GameState, scene_router::train::TrainToPDMI),
+
     /// Взаимодействие с Колей.
     KolyaInteraction(GameState, npc::kolya::KolyaInteraction),
 
@@ -95,4 +97,42 @@ pub enum GameScreen {
     /// Терминальное состояние. Ему тоже соответствует никакой экран.
     /// Игра завершена безвозвратно.
     Terminal,
+}
+
+impl GameScreen {
+    /// Возвращает текущее состояние игры, если оно доступно.
+    /// Оно может быть недоступно, например, если игра ещё не началась
+    /// или уже закончилась.
+    pub fn state(&self) -> Option<&GameState> {
+        use GameScreen::*;
+        match self {
+            Timetable(state)
+            | SceneRouter(state)
+            | Study(state)
+            | PromptUseLectureNotes(state)
+            | Sleep(state)
+            | HighScores(state)
+            | IAmDone(state)
+            | GameEnd(state)
+            | WhatToDo(state)
+            | AboutScreen(state)
+            | WhereToGoAndWhy(state)
+            | AboutProfessors(state)
+            | AboutCharacters(state)
+            | AboutThisProgram(state)
+            | KolyaInteraction(state, _)
+            | PashaInteraction(state, _)
+            | GrishaInteraction(state, _)
+            | SashaInteraction(state, _)
+            | KuzmenkoInteraction(state, _)
+            | GoToProfessor(state)
+            | Exam(state, _)
+            | SurfInternet(state, _)
+            | RestInMausoleum(state)
+            | CafePUNK(state)
+            | TrainToPDMI(state, _) => Some(state),
+            Intro | InitialParameters | Ding(_) | WannaTryAgain | Disclaimer
+            | Terminal => None,
+        }
+    }
 }

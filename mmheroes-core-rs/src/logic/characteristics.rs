@@ -165,6 +165,11 @@ impl Money {
     pub const fn tea_with_cake_cost() -> Money {
         Money(6)
     }
+
+    /// Стоимость билета на электричку в ПОМИ
+    pub const fn roundtrip_train_ticket_cost() -> Money {
+        Money(10)
+    }
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]

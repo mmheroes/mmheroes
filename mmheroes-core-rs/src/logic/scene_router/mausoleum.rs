@@ -16,7 +16,7 @@ pub(super) fn handle_action(
                 run,
             )
         }
-        Action::GoToPDMI => todo!(),
+        Action::GoToPDMI => train::go_to_pdmi(game, state),
         Action::GoFromMausoleumToDorm => {
             state.location = Location::Dorm;
             run(game, state)

@@ -38,6 +38,8 @@ pub enum Action {
     GoToComputerClass,
     LeaveComputerClass,
     GoToPDMI,
+    BuyRoundtripTrainTicket,
+    GatecrashTrain,
     GoToMausoleum,
     GoToCafePUNK,
     SurfInternet,

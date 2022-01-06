@@ -28,7 +28,7 @@ pub use cause_of_death::*;
 pub mod game_screen;
 pub use game_screen::*;
 
-mod scene_router;
+pub mod scene_router;
 
 use crate::random;
 
@@ -83,41 +83,6 @@ impl Game {
 
     pub fn mode(&self) -> GameMode {
         self.mode
-    }
-
-    /// Возвращает текущее состояние игры, если оно доступно.
-    /// Оно может быть недоступно, например, если игра ещё не началась
-    /// или уже закончилась.
-    pub fn game_state(&self) -> Option<&GameState> {
-        use GameScreen::*;
-        match &self.screen {
-            Timetable(state)
-            | SceneRouter(state)
-            | Study(state)
-            | PromptUseLectureNotes(state)
-            | Sleep(state)
-            | HighScores(state)
-            | IAmDone(state)
-            | GameEnd(state)
-            | WhatToDo(state)
-            | AboutScreen(state)
-            | WhereToGoAndWhy(state)
-            | AboutProfessors(state)
-            | AboutCharacters(state)
-            | AboutThisProgram(state)
-            | KolyaInteraction(state, _)
-            | PashaInteraction(state, _)
-            | GrishaInteraction(state, _)
-            | SashaInteraction(state, _)
-            | KuzmenkoInteraction(state, _)
-            | GoToProfessor(state)
-            | Exam(state, _)
-            | SurfInternet(state, _)
-            | RestInMausoleum(state)
-            | CafePUNK(state) => Some(state),
-            Intro | InitialParameters | Ding(_) | WannaTryAgain | Disclaimer
-            | Terminal => None,
-        }
     }
 
     pub fn available_actions(&self) -> &[Action] {
@@ -182,6 +147,11 @@ impl Game {
             CafePUNK(state) => {
                 let state = state.clone();
                 scene_router::punk::handle_cafe_punk_action(self, state, action)
+            }
+            TrainToPDMI(state, interaction) => {
+                let state = state.clone();
+                let interaction = *interaction;
+                scene_router::train::proceed_with_train(self, state, action, interaction)
             }
             KolyaInteraction(state, interaction) => {
                 let state = state.clone();
@@ -388,6 +358,10 @@ impl Game {
         // Time::is_between_9_and_19()!
         self.run_classmate_routines(&mut state);
         state.current_time += Duration(1);
+
+        if state.player.charisma <= CharismaLevel(0) {
+            state.player.health = HealthLevel(0);
+        }
 
         if state.current_time.is_midnight() {
             state.current_day_index += 1;

@@ -95,6 +95,15 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::GoToComputerClass => "Пойти в компьютерный класс",
         Action::LeaveComputerClass => "Покинуть класс",
         Action::GoToPDMI => "Поехать в ПОМИ",
+        Action::GatecrashTrain => "Ехать зайцем",
+        Action::BuyRoundtripTrainTicket => {
+            set_color(r, Color::CyanBright);
+            return write!(
+                r,
+                "Честно заплатить {} руб. за билет в оба конца",
+                Money::roundtrip_train_ticket_cost()
+            );
+        }
         Action::GoToMausoleum => "Пойти в мавзолей",
         Action::GoToCafePUNK => "Сходить в кафе",
         Action::SurfInternet => "Провести 1 час в Inet'е",

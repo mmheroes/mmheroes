@@ -236,6 +236,12 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                 self.game.available_actions(),
                 state,
             ),
+            TrainToPDMI(state, interaction) => screens::train::display_train_to_pdmi(
+                &mut self.renderer,
+                self.game.available_actions(),
+                state,
+                *interaction,
+            ),
             KolyaInteraction(state, interaction) => {
                 screens::npc::display_kolya_interaction(
                     &mut self.renderer,

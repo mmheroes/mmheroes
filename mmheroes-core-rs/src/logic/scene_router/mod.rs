@@ -2,6 +2,7 @@ pub(in crate::logic) mod computer_class;
 pub(in crate::logic) mod dorm;
 pub(in crate::logic) mod mausoleum;
 pub(in crate::logic) mod punk;
+pub mod train;
 
 use super::*;
 

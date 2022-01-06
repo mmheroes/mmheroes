@@ -20,7 +20,7 @@ pub(super) fn handle_action(
                 run,
             )
         }
-        Action::GoToPDMI => todo!("Go to PDMI"),
+        Action::GoToPDMI => train::go_to_pdmi(game, state),
         Action::GoToMausoleum => {
             state.location = Location::Mausoleum;
             game.decrease_health(

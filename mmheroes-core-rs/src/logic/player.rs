@@ -19,7 +19,7 @@ bitflags! {
 
         const GOT_STIPEND = 1 << 5;
 
-        const HAS_TICKET = 1 << 6;
+        const HAS_ROUNDTRIP_TRAIN_TICKET = 1 << 6;
 
         const KNOWS_DJUG = 1 << 7;
 
@@ -148,6 +148,14 @@ impl Player {
 
     pub(in crate::logic) fn set_got_stipend(&mut self) {
         self.flags.insert(PlayerFlags::GOT_STIPEND);
+    }
+
+    pub fn has_roundtrip_train_ticket(&self) -> bool {
+        self.flags.contains(PlayerFlags::HAS_ROUNDTRIP_TRAIN_TICKET)
+    }
+
+    pub(in crate::logic) fn set_has_roundtrip_train_ticket(&mut self) {
+        self.flags.insert(PlayerFlags::HAS_ROUNDTRIP_TRAIN_TICKET)
     }
 
     pub fn brain(&self) -> BrainLevel {

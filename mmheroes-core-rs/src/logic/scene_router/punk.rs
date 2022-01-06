@@ -25,7 +25,7 @@ pub(super) fn handle_action(
             state.location = Location::Dorm;
             run(game, state)
         }
-        Action::GoToPDMI => todo!(),
+        Action::GoToPDMI => train::go_to_pdmi(game, state),
         Action::GoToMausoleum => {
             state.location = Location::Mausoleum;
             game.decrease_health(

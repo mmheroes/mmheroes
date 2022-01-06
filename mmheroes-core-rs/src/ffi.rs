@@ -127,7 +127,7 @@ pub extern "C" fn mmheroes_game_get_current_time(
     out_time: &mut Time,
 ) -> bool {
     ffi_safely_run(|| {
-        if let Some(state) = game.game_state() {
+        if let Some(state) = game.screen().state() {
             *out_day = state.current_day().index() as u8;
             *out_time = state.current_time();
             true
