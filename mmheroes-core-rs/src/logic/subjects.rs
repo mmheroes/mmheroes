@@ -9,9 +9,14 @@ pub struct SubjectInfo {
     pub(in crate::logic) exam_max_duration: Duration,
     pub(in crate::logic) exam_places: [Location; 3],
 
-    // TODO: Rename
+    // TODO: Rename these fields
+    #[allow(dead_code)]
     pub(in crate::logic) member0xFA: i16,
+
+    #[allow(dead_code)]
     pub(in crate::logic) member0xFC: i16, // Минимальный уровень познания?
+
+    #[allow(dead_code)]
     pub(in crate::logic) member0x100: i16,
 
     /// Какой уровень знаний соответствует какой оценке по шкале этого препода.

@@ -138,6 +138,7 @@ impl SubjectStatus {
         self.passed_exam_day_index().map(|i| &timetable.days()[i])
     }
 
+    #[allow(dead_code)]
     pub(in crate::logic) fn set_passed_exam_day_index(&mut self, day_index: usize) {
         assert!(day_index < NOT_PASSED as usize, "Too big day index");
         let prev_day_index = (self.bits & PASSED_EXAM_DAY_INDEX_BITMASK)
@@ -326,7 +327,7 @@ mod tests {
         status.more_problems_solved(3);
         status.set_passed_exam_day_index(3);
         status.set_has_lecture_notes();
-        writeln!(result, "{:?}", status);
+        writeln!(result, "{:?}", status).unwrap();
 
         assert_eq!(result, "SubjectStatus { subject: Calculus, knowledge: BrainLevel(13), passed_exam_day_index: Some(3), problems_done: 3, has_lecture_notes: true }\n");
     }

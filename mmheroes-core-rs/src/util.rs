@@ -12,6 +12,7 @@ pub(crate) struct TinyVec<T, const CAPACITY: usize> {
 }
 
 impl<T, const CAPACITY: usize> TinyVec<T, CAPACITY> {
+    #[allow(dead_code)]
     pub(crate) fn len(&self) -> usize {
         self.count
     }
@@ -147,6 +148,7 @@ macro_rules! __tiny_vec_push_elements {
     };
 }
 
+#[allow(unused_macros)]
 macro_rules! tiny_vec {
     (capacity: $capacity:literal) => (
         <crate::util::TinyVec<_, $capacity>>::new()

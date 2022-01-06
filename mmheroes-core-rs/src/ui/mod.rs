@@ -213,7 +213,7 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                 self.game.available_actions(),
                 state,
             ),
-            PromptUseLectureNotes(state) => {
+            PromptUseLectureNotes(_state) => {
                 screens::scene_router::display_prompt_use_lecture_notes(
                     &mut self.renderer,
                     self.game.available_actions(),
@@ -279,7 +279,7 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                 state,
                 self.game.available_actions(),
             ),
-            Exam(state, subject) => todo!(),
+            Exam(_state, _subject) => todo!(),
             SurfInternet(state, found_program) => {
                 screens::scene_router::display_surfing_internet(
                     &mut self.renderer,

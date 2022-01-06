@@ -34,6 +34,7 @@ pub struct Player {
     flags: PlayerFlags,
 
     /// Запах чеснока изо рта
+    #[allow(dead_code)]
     pub(in crate::logic) garlic: i16,
 
     pub(in crate::logic) health: HealthLevel,

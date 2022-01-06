@@ -219,7 +219,7 @@ impl Game {
                 }
                 _ => illegal_action!(action),
             },
-            Exam(state, subject) => {
+            Exam(_state, _subject) => {
                 todo!()
             }
             SurfInternet(state, found_program) => {
@@ -334,7 +334,7 @@ impl Game {
         })
     }
 
-    fn enter_exam(&mut self, state: GameState, subject: Subject) -> ActionVec {
+    fn enter_exam(&mut self, _state: GameState, _subject: Subject) -> ActionVec {
         todo!()
     }
 

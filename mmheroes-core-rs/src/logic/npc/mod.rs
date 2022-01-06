@@ -23,6 +23,7 @@ pub enum Classmate {
 }
 
 impl Classmate {
+    #[allow(dead_code)]
     pub(in crate::logic) fn health_penalty(self) -> HealthLevel {
         match self {
             Kolya | Pasha | Diamond | Kuzmenko | DJuG | Andrew | Grisha | Misha
@@ -31,6 +32,7 @@ impl Classmate {
         }
     }
 
+    #[allow(dead_code)]
     pub(in crate::logic) fn annoyance(self) -> i16 {
         match self {
             Kolya | Pasha | Diamond | Serj | Sasha | Kuzmenko | DJuG | Andrew

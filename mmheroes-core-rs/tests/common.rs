@@ -1,8 +1,8 @@
-use mmheroes_core::logic::Game;
 use mmheroes_core::ui::recording::{InputRecordingParser, InputRecordingParserError};
 use mmheroes_core::ui::renderer::RendererRequestConsumer;
 use mmheroes_core::ui::*;
 
+#[allow(dead_code)]
 enum OwningRendererRequest {
     ClearScreen,
     Flush,
@@ -29,6 +29,7 @@ impl TestRendererRequestConsumer {
         }
     }
 
+    #[allow(dead_code)]
     fn requests(&self) -> &[OwningRendererRequest] {
         &*self.requests
     }
