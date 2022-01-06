@@ -204,7 +204,7 @@ impl Game {
             SashaInteraction(state, interaction) => {
                 let state = state.clone();
                 let interaction = *interaction;
-                self.proceed_with_sasha(state, action, interaction)
+                interactions::sasha::proceed(self, state, action, interaction)
             }
             KuzmenkoInteraction(state, _) => {
                 assert_eq!(action, Action::AnyKey);
@@ -589,67 +589,6 @@ impl Game {
         )
     }
 
-    fn interact_with_sasha(&mut self, state: GameState) -> ActionVec {
-        assert_eq!(state.location, Location::PUNK);
-        let mut available_actions = SUBJECTS_WITH_LECTURE_NOTES
-            .into_iter()
-            .filter(|subject| {
-                !state
-                    .player
-                    .status_for_subject(*subject)
-                    .has_lecture_notes()
-            })
-            .map(Action::RequestLectureNotesFromSasha)
-            .collect::<ActionVec>();
-        available_actions.push(Action::DontNeedAnythingFromSasha);
-        self.screen =
-            GameScreen::SashaInteraction(state, npc::SashaInteraction::ChooseSubject);
-        available_actions
-    }
-
-    fn proceed_with_sasha(
-        &mut self,
-        mut state: GameState,
-        action: Action,
-        interaction: npc::SashaInteraction,
-    ) -> ActionVec {
-        assert_eq!(state.location, Location::PUNK);
-        assert_matches!(self.screen, GameScreen::SashaInteraction(_, _));
-        match action {
-            Action::RequestLectureNotesFromSasha(subject) => {
-                assert_eq!(interaction, npc::SashaInteraction::ChooseSubject);
-                let new_interaction = if state.player.charisma
-                    > CharismaLevel(self.rng.random(18))
-                    && state.sasha_has_lecture_notes(subject)
-                {
-                    state
-                        .player
-                        .status_for_subject_mut(subject)
-                        .set_has_lecture_notes();
-                    npc::SashaInteraction::YesIHaveTheLectureNotes
-                } else {
-                    state.set_sasha_has_lecture_notes(subject, false);
-                    npc::SashaInteraction::SorryGaveToSomeoneElse
-                };
-                self.screen = GameScreen::SashaInteraction(state, new_interaction);
-                wait_for_any_key()
-            }
-            Action::DontNeedAnythingFromSasha => {
-                assert_eq!(interaction, npc::SashaInteraction::ChooseSubject);
-                self.screen = GameScreen::SashaInteraction(
-                    state,
-                    npc::SashaInteraction::SuitYourself,
-                );
-                wait_for_any_key()
-            }
-            Action::AnyKey => {
-                assert_ne!(interaction, npc::SashaInteraction::ChooseSubject);
-                self.scene_router(state)
-            }
-            _ => illegal_action!(action),
-        }
-    }
-
     fn handle_punk_action(&mut self, mut state: GameState, action: Action) -> ActionVec {
         assert_eq!(state.location, Location::PUNK);
         match action {
@@ -773,7 +712,7 @@ impl Game {
             RAI => todo!(),
             Misha => todo!(),
             Serj => todo!(),
-            Sasha => self.interact_with_sasha(state),
+            Sasha => interactions::sasha::interact(self, state),
             NiL => todo!(),
             Kuzmenko => self.interact_with_kuzmenko(state),
             DJuG => todo!(),
