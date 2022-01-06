@@ -161,12 +161,12 @@ pub(in crate::logic) fn proceed(
         Action::AnyKey => match interaction {
             PromptEmploymentAtTerkom => unreachable!(),
             CongratulationsYouAreNowEmployed | AsYouWantButDontOverstudy => {
-                game.scene_router(state)
+                scene_router::run(game, state)
             }
             ProxyAddress => {
                 assert!(!player.has_internet());
                 player.set_has_internet();
-                game.scene_router(state)
+                scene_router::run(game, state)
             }
             WantFreebie {
                 drink_beer,
@@ -233,7 +233,7 @@ pub(in crate::logic) fn proceed(
                     if player.brain <= BrainLevel(0) {
                         player.health = HealthLevel(0);
                         player.cause_of_death = Some(CauseOfDeath::DrankTooMuchBeer);
-                        return game.game_end(state);
+                        return scene_router::game_end(game, state);
                     }
                     player.charisma += game.rng.random(2);
                 }
@@ -241,7 +241,7 @@ pub(in crate::logic) fn proceed(
                     return game.hour_pass(state);
                 }
 
-                game.scene_router(state)
+                scene_router::run(game, state)
             }
         },
         Action::AcceptEmploymentAtTerkom => {

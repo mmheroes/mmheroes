@@ -28,6 +28,8 @@ pub use cause_of_death::*;
 pub mod game_screen;
 pub use game_screen::*;
 
+mod scene_router;
+
 use crate::random;
 
 use assert_matches::*;
@@ -143,15 +145,15 @@ impl Game {
             }
             Timetable(state) => {
                 let state = state.clone();
-                self.scene_router(state)
+                scene_router::run(self, state)
             }
             SceneRouter(state) => {
                 let state = state.clone();
-                self.handle_scene_router_action(state, action)
+                scene_router::handle_action(self, state, action)
             }
             Study(state) => {
                 let state = state.clone();
-                self.choose_use_lecture_notes(state, action)
+                scene_router::dorm::choose_use_lecture_notes(self, state, action)
             }
             PromptUseLectureNotes(state) => {
                 let state = state.clone();
@@ -160,26 +162,26 @@ impl Game {
                     Action::DontUseLectureNotes(subject) => (subject, false),
                     _ => illegal_action!(action),
                 };
-                self.study(state, subject, use_lecture_notes)
+                scene_router::dorm::study(self, state, subject, use_lecture_notes)
             }
             Sleep(state) => {
                 let state = state.clone();
-                self.handle_sleeping(state, action)
+                scene_router::dorm::handle_sleeping(self, state, action)
             }
             HighScores(state) => match action {
                 Action::AnyKey => {
                     let state = state.clone();
-                    self.scene_router(state)
+                    scene_router::run(self, state)
                 }
                 _ => illegal_action!(action),
             },
             RestInMausoleum(state) => {
                 let state = state.clone();
-                self.handle_rest_in_mausoleum(state, action)
+                scene_router::mausoleum::handle_rest(self, state, action)
             }
             CafePUNK(state) => {
                 let state = state.clone();
-                self.handle_cafe_punk_action(state, action)
+                scene_router::punk::handle_cafe_punk_action(self, state, action)
             }
             KolyaInteraction(state, interaction) => {
                 let state = state.clone();
@@ -204,7 +206,7 @@ impl Game {
             KuzmenkoInteraction(state, _) => {
                 assert_eq!(action, Action::AnyKey);
                 let state = state.clone();
-                self.scene_router(state)
+                scene_router::run(self, state)
             }
             GoToProfessor(state) => match action {
                 Action::Exam(subject) => {
@@ -213,7 +215,7 @@ impl Game {
                 }
                 Action::DontGoToProfessor => {
                     let state = state.clone();
-                    self.scene_router(state)
+                    scene_router::run(self, state)
                 }
                 _ => illegal_action!(action),
             },
@@ -223,14 +225,19 @@ impl Game {
             SurfInternet(state, found_program) => {
                 let state = state.clone();
                 let found_program = *found_program;
-                self.proceed_with_internet(state, action, found_program)
+                scene_router::computer_class::proceed_with_internet(
+                    self,
+                    state,
+                    action,
+                    found_program,
+                )
             }
             IAmDone(state) => {
                 let state = state.clone();
-                self.handle_i_am_done(state, action)
+                scene_router::handle_i_am_done(self, state, action)
             }
-            GameEnd(_) => self.wanna_try_again(),
-            WannaTryAgain => self.handle_wanna_try_again(action),
+            GameEnd(_) => scene_router::wanna_try_again(self),
+            WannaTryAgain => scene_router::handle_wanna_try_again(self, action),
             Disclaimer => {
                 self.screen = Terminal;
                 ActionVec::new()
@@ -242,7 +249,7 @@ impl Game {
             | AboutCharacters(state)
             | AboutThisProgram(state) => {
                 let state = state.clone();
-                self.handle_what_to_do(state, action)
+                scene_router::dorm::handle_what_to_do(self, state, action)
             }
         }
     }
@@ -327,544 +334,8 @@ impl Game {
         })
     }
 
-    fn scene_router(&mut self, state: GameState) -> ActionVec {
-        // TODO: assert that no exam is in progress
-        let location = state.location;
-        let available_actions = match location {
-            Location::PDMI => todo!(),
-            Location::PUNK => {
-                let mut available_actions = ActionVec::from([
-                    Action::GoToProfessor,
-                    Action::LookAtBaobab,
-                    Action::GoFromPunkToDorm,
-                    Action::GoToPDMI,
-                    Action::GoToMausoleum,
-                ]);
-                if state.current_time < Time::computer_class_closing() {
-                    available_actions.push(Action::GoToComputerClass);
-                }
-                if state.current_time.is_cafe_open() {
-                    available_actions.push(Action::GoToCafePUNK);
-                }
-                for classmate_info in state.classmates.filter_by_location(location) {
-                    available_actions
-                        .push(Action::InteractWithClassmate(classmate_info.classmate()));
-                }
-                if state.player.is_employed_at_terkom() {
-                    available_actions.push(Action::GoToWork);
-                }
-                available_actions.push(Action::IAmDone);
-                available_actions
-            }
-            Location::Mausoleum => {
-                let mut available_actions = ActionVec::from([
-                    Action::GoFromMausoleumToPunk,
-                    Action::GoToPDMI,
-                    Action::GoFromMausoleumToDorm,
-                    Action::Rest,
-                ]);
-                for classmate_info in state.classmates.filter_by_location(location) {
-                    available_actions
-                        .push(Action::InteractWithClassmate(classmate_info.classmate()));
-                }
-                available_actions.push(Action::IAmDone);
-                available_actions
-            }
-            Location::Dorm => ActionVec::from([
-                Action::Study,
-                Action::ViewTimetable,
-                Action::Rest,
-                Action::GoToBed,
-                Action::GoFromDormToPunk,
-                Action::GoToPDMI,
-                Action::GoToMausoleum,
-                Action::IAmDone,
-                Action::WhatToDo,
-            ]),
-            Location::ComputerClass => {
-                if state.current_time > Time::computer_class_closing() {
-                    todo!("Класс закрывается. Пошли домой!")
-                }
-                let mut available_actions = ActionVec::new();
-                if location.is_exam_here_now(
-                    Subject::ComputerScience,
-                    state.current_day(),
-                    state.current_time,
-                ) {
-                    available_actions.push(Action::Exam(Subject::ComputerScience));
-                }
-                available_actions.push(Action::GoFromPunkToDorm);
-                available_actions.push(Action::LeaveComputerClass);
-                available_actions.push(Action::GoToPDMI);
-                available_actions.push(Action::GoToMausoleum);
-                if state.player.has_internet() {
-                    available_actions.push(Action::SurfInternet);
-                }
-                if state.player.has_mmheroes_floppy() {
-                    available_actions.push(Action::PlayMMHEROES);
-                }
-                for classmate_info in state.classmates.filter_by_location(location) {
-                    available_actions
-                        .push(Action::InteractWithClassmate(classmate_info.classmate()));
-                }
-                available_actions.push(Action::IAmDone);
-                available_actions
-            }
-        };
-        self.screen = GameScreen::SceneRouter(state);
-        available_actions
-    }
-
-    fn handle_scene_router_action(
-        &mut self,
-        state: GameState,
-        action: Action,
-    ) -> ActionVec {
-        match state.location() {
-            Location::PUNK => self.handle_punk_action(state, action),
-            Location::PDMI => todo!(),
-            Location::ComputerClass => self.handle_computer_class_action(state, action),
-            Location::Dorm => self.handle_dorm_action(state, action),
-            Location::Mausoleum => self.handle_mausoleum_action(state, action),
-        }
-    }
-
     fn enter_exam(&mut self, state: GameState, subject: Subject) -> ActionVec {
         todo!()
-    }
-
-    fn handle_sleeping(&mut self, state: GameState, action: Action) -> ActionVec {
-        // TODO: Реализовать что-то помимо неудавшегося сна
-        assert_matches!(self.screen, GameScreen::Sleep(_));
-        assert_eq!(action, Action::AnyKey);
-        self.scene_router(state)
-    }
-
-    fn handle_dorm_action(&mut self, mut state: GameState, action: Action) -> ActionVec {
-        assert_eq!(state.location, Location::Dorm);
-        match action {
-            Action::Study => self.choose_subject_to_study(state),
-            Action::ViewTimetable => self.view_timetable(state),
-            Action::Rest => self.rest_in_dorm(state),
-            Action::GoToBed => self.try_to_sleep(state),
-            Action::GoFromDormToPunk => {
-                state.location = Location::PUNK;
-                self.decrease_health(
-                    HealthLevel::location_change_large_penalty(),
-                    state,
-                    CauseOfDeath::OnTheWayToPUNK,
-                    /*if_alive=*/ |game, state| game.scene_router(state),
-                )
-            }
-            Action::GoToPDMI => todo!("Go to PDMI"),
-            Action::GoToMausoleum => {
-                state.location = Location::Mausoleum;
-                self.decrease_health(
-                    HealthLevel::location_change_large_penalty(),
-                    state,
-                    CauseOfDeath::OnTheWayToMausoleum,
-                    /*if_alive=*/ |game, state| game.scene_router(state),
-                )
-            }
-            Action::IAmDone => self.i_am_done(state),
-            Action::WhatToDo => self.handle_what_to_do(state, Action::WhatToDoAtAll),
-            _ => illegal_action!(action),
-        }
-    }
-
-    fn choose_subject_to_study(&mut self, state: GameState) -> ActionVec {
-        let mut available_actions = SUBJECTS
-            .iter()
-            .map(|(subject, _)| Action::DoStudy {
-                subject: *subject,
-                lecture_notes_available: state
-                    .player
-                    .status_for_subject(*subject)
-                    .has_lecture_notes(),
-            })
-            .collect::<ActionVec>();
-        available_actions.push(Action::DontStudy);
-        self.screen = GameScreen::Study(state);
-        available_actions
-    }
-
-    fn choose_use_lecture_notes(
-        &mut self,
-        state: GameState,
-        action: Action,
-    ) -> ActionVec {
-        match action {
-            Action::DoStudy {
-                subject,
-                lecture_notes_available,
-            } => {
-                assert_eq!(
-                    state.player.status_for_subject(subject).has_lecture_notes(),
-                    lecture_notes_available
-                );
-                if lecture_notes_available {
-                    self.screen = GameScreen::PromptUseLectureNotes(state);
-                    ActionVec::from([
-                        Action::UseLectureNotes(subject),
-                        Action::DontUseLectureNotes(subject),
-                    ])
-                } else {
-                    self.study(state, subject, false)
-                }
-            }
-            Action::DontStudy => self.scene_router(state),
-            _ => illegal_action!(action),
-        }
-    }
-
-    fn study(
-        &mut self,
-        mut state: GameState,
-        subject: Subject,
-        use_lecture_notes: bool,
-    ) -> ActionVec {
-        // Импликация "использовать конспект => у игрока есть конспект"
-        // должна быть истинной
-        assert!(
-            !use_lecture_notes
-                || state.player.status_for_subject(subject).has_lecture_notes(),
-            "Нельзя воспользоваться конспектом, так как его на самом деле нет"
-        );
-        let brain_or_stamina = if subject == Subject::PhysicalEducation {
-            state.player.stamina.0
-        } else {
-            state.player.brain.0
-        };
-        if brain_or_stamina <= 0 {
-            return self.scene_router(state);
-        }
-        let health = state.player.health;
-        let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
-        *knowledge += if state.current_time.is_optimal_study_time() {
-            brain_or_stamina
-        } else {
-            brain_or_stamina * 2 / 3
-        };
-        *knowledge -= self.rng.random(brain_or_stamina / 2);
-        *knowledge += self.rng.random(health.0 / 18);
-        if use_lecture_notes {
-            *knowledge += 10
-        }
-        assert!(*knowledge >= BrainLevel(0));
-        assert!(state.player.stamina >= StaminaLevel(0));
-        let mut health_penalty = 10 - self.rng.random(state.player.stamina.0);
-        if health_penalty < 0 || use_lecture_notes {
-            health_penalty = 0;
-        }
-        if state.current_time.is_suboptimal_study_time() {
-            health_penalty += 12;
-        }
-
-        self.decrease_health(
-            HealthLevel(health_penalty),
-            state,
-            CauseOfDeath::Overstudied,
-            |game, state| {
-                if state
-                    .player
-                    .status_for_subject(subject)
-                    .knowledge
-                    .is_lethal()
-                {
-                    game.decrease_health(
-                        HealthLevel(10),
-                        state,
-                        CauseOfDeath::StudiedTooWell,
-                        |game, state| game.hour_pass(state),
-                    )
-                } else {
-                    game.hour_pass(state)
-                }
-            },
-        )
-    }
-
-    fn handle_punk_action(&mut self, mut state: GameState, action: Action) -> ActionVec {
-        assert_eq!(state.location, Location::PUNK);
-        match action {
-            Action::GoToProfessor => {
-                let mut available_actions = state
-                    .current_day()
-                    .current_exams(state.location, state.current_time)
-                    .map(|exam| Action::Exam(exam.subject()))
-                    .collect::<ActionVec>();
-                available_actions.push(Action::DontGoToProfessor);
-                self.screen = GameScreen::GoToProfessor(state);
-                available_actions
-            }
-            Action::LookAtBaobab => {
-                self.screen = GameScreen::HighScores(state);
-                wait_for_any_key()
-            }
-            Action::GoFromPunkToDorm => {
-                state.location = Location::Dorm;
-                self.scene_router(state)
-            }
-            Action::GoToPDMI => todo!(),
-            Action::GoToMausoleum => {
-                state.location = Location::Mausoleum;
-                self.decrease_health(
-                    HealthLevel::location_change_large_penalty(),
-                    state,
-                    CauseOfDeath::OnTheWayToMausoleum,
-                    /*if_alive=*/ |game, state| game.scene_router(state),
-                )
-            }
-            Action::GoToComputerClass => {
-                assert!(state.current_time < Time::computer_class_closing());
-                state.location = Location::ComputerClass;
-                self.decrease_health(
-                    HealthLevel::location_change_small_penalty(),
-                    state,
-                    CauseOfDeath::FellFromStairs,
-                    /*if_alive=*/ |game, state| game.scene_router(state),
-                )
-            }
-            Action::GoToCafePUNK => {
-                assert!(state.current_time.is_cafe_open());
-                let mut available_actions = ActionVec::new();
-                let available_money = state.player.money;
-                if available_money >= Money::tea_cost() {
-                    available_actions.push(Action::OrderTea);
-                }
-                if available_money >= Money::cake_cost() {
-                    available_actions.push(Action::OrderCake);
-                }
-                if available_money >= Money::tea_with_cake_cost() {
-                    available_actions.push(Action::OrderTeaWithCake);
-                }
-                available_actions.push(Action::RestInCafePUNK);
-                available_actions.push(Action::ShouldntHaveComeToCafePUNK);
-                self.screen = GameScreen::CafePUNK(state);
-                available_actions
-            }
-            Action::InteractWithClassmate(classmate) => {
-                assert_matches!(
-                    state.classmates[classmate].current_location(),
-                    ClassmateLocation::Location(Location::PUNK)
-                );
-                npc::interact_with_classmate(self, state, classmate)
-            }
-            Action::GoToWork => {
-                assert!(state.player.is_employed_at_terkom());
-                todo!()
-            }
-            Action::IAmDone => self.i_am_done(state),
-            _ => illegal_action!(action),
-        }
-    }
-
-    fn handle_cafe_punk_action(
-        &mut self,
-        mut state: GameState,
-        action: Action,
-    ) -> ActionVec {
-        assert_eq!(state.location, Location::PUNK);
-        assert!(state.current_time.is_cafe_open());
-        assert_matches!(self.screen, GameScreen::CafePUNK(_));
-        let money = &mut state.player.money;
-        let health = &mut state.player.health;
-        let charisma_dependent_health_gain =
-            HealthLevel(self.rng.random(state.player.charisma.0));
-        match action {
-            Action::OrderTea => {
-                *money -= Money::tea_cost();
-                *health += charisma_dependent_health_gain + 2;
-            }
-            Action::OrderCake => {
-                *money -= Money::cake_cost();
-                *health += charisma_dependent_health_gain + 4;
-            }
-            Action::OrderTeaWithCake => {
-                *money -= Money::tea_with_cake_cost();
-                *health += charisma_dependent_health_gain + 7;
-            }
-            Action::RestInCafePUNK => {
-                *health += charisma_dependent_health_gain;
-            }
-            Action::ShouldntHaveComeToCafePUNK => {
-                return self.scene_router(state);
-            }
-            _ => illegal_action!(action),
-        }
-        self.hour_pass(state)
-    }
-
-    fn surf_internet(&mut self, state: GameState) -> ActionVec {
-        let player = &state.player;
-        let cs_problems_done = player
-            .status_for_subject(Subject::ComputerScience)
-            .problems_done();
-        let cs_problems_required = SUBJECTS[Subject::ComputerScience].required_problems;
-        let found_program = player.is_god_mode()
-            || (self.rng.random(player.brain) > BrainLevel(6)
-                && cs_problems_done < cs_problems_required);
-        self.screen = GameScreen::SurfInternet(state, found_program);
-        wait_for_any_key()
-    }
-
-    fn proceed_with_internet(
-        &mut self,
-        mut state: GameState,
-        action: Action,
-        found_program: bool,
-    ) -> ActionVec {
-        assert_eq!(action, Action::AnyKey);
-        if found_program {
-            state
-                .player
-                .status_for_subject_mut(Subject::ComputerScience)
-                .more_problems_solved(1);
-        } else if state.player.brain < BrainLevel(5) && self.rng.roll_dice(3) {
-            state.player.brain += 1;
-        }
-        self.hour_pass(state)
-    }
-
-    fn handle_computer_class_action(
-        &mut self,
-        mut state: GameState,
-        action: Action,
-    ) -> ActionVec {
-        assert_eq!(state.location, Location::ComputerClass);
-        match action {
-            Action::Exam(Subject::ComputerScience) => todo!(),
-            Action::GoFromPunkToDorm => {
-                state.location = Location::Dorm;
-                self.scene_router(state)
-            }
-            Action::LeaveComputerClass => {
-                state.location = Location::PUNK;
-                self.decrease_health(
-                    HealthLevel::location_change_small_penalty(),
-                    state,
-                    CauseOfDeath::CouldntLeaveTheComputer,
-                    /*if_alive=*/ |game, state| game.scene_router(state),
-                )
-            }
-            Action::GoToPDMI => todo!(),
-            Action::GoToMausoleum => {
-                state.location = Location::Mausoleum;
-                self.decrease_health(
-                    HealthLevel::location_change_small_penalty(),
-                    state,
-                    CauseOfDeath::OnTheWayToMausoleum,
-                    /*if_alive=*/ |game, state| game.scene_router(state),
-                )
-            }
-            Action::SurfInternet => self.surf_internet(state),
-            Action::InteractWithClassmate(classmate) => {
-                assert_matches!(
-                    state.classmates[classmate].current_location(),
-                    ClassmateLocation::Location(Location::ComputerClass)
-                );
-                npc::interact_with_classmate(self, state, classmate)
-            }
-            Action::PlayMMHEROES => todo!(),
-            Action::IAmDone => self.i_am_done(state),
-            _ => illegal_action!(action),
-        }
-    }
-
-    fn handle_rest_in_mausoleum(
-        &mut self,
-        mut state: GameState,
-        action: Action,
-    ) -> ActionVec {
-        let player = &mut state.player;
-        match action {
-            Action::OrderCola => {
-                assert!(player.money >= Money::cola_cost());
-                player.money -= Money::cola_cost();
-                player.health += self.rng.random(player.charisma.0) + 3;
-            }
-            Action::OrderSoup => {
-                assert!(player.money >= Money::soup_cost());
-                player.money -= Money::soup_cost();
-                player.health += self.rng.random(player.charisma.0) + 5;
-            }
-            Action::OrderBeer => {
-                assert!(player.money >= Money::beer_cost());
-                player.money -= Money::beer_cost();
-                if self.rng.roll_dice(3) {
-                    player.brain -= 1;
-                }
-                if self.rng.roll_dice(3) {
-                    player.charisma += 1;
-                }
-                if self.rng.roll_dice(3) {
-                    player.stamina += 2;
-                }
-                player.health += self.rng.random(player.charisma.0);
-                if player.brain <= BrainLevel(0) {
-                    player.health = HealthLevel(0);
-                    player.cause_of_death = Some(CauseOfDeath::BeerAlcoholism);
-                    return self.game_end(state);
-                }
-            }
-            Action::RestByOurselvesInMausoleum => {
-                player.health += self.rng.random(player.charisma.0);
-            }
-            Action::NoRestIsNoGood => return self.scene_router(state),
-            _ => illegal_action!(action),
-        }
-
-        self.hour_pass(state)
-    }
-
-    fn handle_mausoleum_action(
-        &mut self,
-        mut state: GameState,
-        action: Action,
-    ) -> ActionVec {
-        assert!(state.location == Location::Mausoleum);
-        match action {
-            Action::GoFromMausoleumToPunk => {
-                state.location = Location::PUNK;
-                self.decrease_health(
-                    HealthLevel::location_change_large_penalty(),
-                    state,
-                    CauseOfDeath::OnTheWayToPUNK,
-                    /*if_alive=*/ |game, state| game.scene_router(state),
-                )
-            }
-            Action::GoToPDMI => todo!(),
-            Action::GoFromMausoleumToDorm => {
-                state.location = Location::Dorm;
-                self.scene_router(state)
-            }
-            Action::Rest => {
-                let money = state.player.money;
-                self.screen = GameScreen::RestInMausoleum(state);
-                let mut available_actions = ActionVec::new();
-                if money >= Money::cola_cost() {
-                    available_actions.push(Action::OrderCola);
-                }
-                if money >= Money::soup_cost() {
-                    available_actions.push(Action::OrderSoup);
-                }
-                if money >= Money::beer_cost() {
-                    available_actions.push(Action::OrderBeer);
-                }
-                available_actions.push(Action::RestByOurselvesInMausoleum);
-                available_actions.push(Action::NoRestIsNoGood);
-                available_actions
-            }
-            Action::InteractWithClassmate(classmate) => {
-                assert_matches!(
-                    state.classmates[classmate].current_location(),
-                    ClassmateLocation::Location(Location::Mausoleum)
-                );
-                npc::interact_with_classmate(self, state, classmate)
-            }
-            Action::IAmDone => self.i_am_done(state),
-            _ => illegal_action!(action),
-        }
     }
 
     fn view_timetable(&mut self, state: GameState) -> ActionVec {
@@ -881,25 +352,11 @@ impl Game {
     ) -> ActionVec {
         if state.player.health <= delta {
             state.player.cause_of_death = Some(cause_of_death);
-            self.game_end(state)
+            scene_router::game_end(self, state)
         } else {
             state.player.health -= delta;
             if_alive(self, state)
         }
-    }
-
-    fn try_to_sleep(&mut self, state: GameState) -> ActionVec {
-        assert!(state.location == Location::Dorm);
-        if state.current_time > Time(3) && state.current_time < Time(20) {
-            self.screen = GameScreen::Sleep(state);
-            wait_for_any_key()
-        } else {
-            self.go_to_sleep(state)
-        }
-    }
-
-    fn go_to_sleep(&mut self, _state: GameState) -> ActionVec {
-        todo!()
     }
 
     fn midnight(&mut self, state: GameState) -> ActionVec {
@@ -909,7 +366,7 @@ impl Game {
             Location::ComputerClass => {
                 unreachable!("Компьютерный класс уже должен быть закрыт в полночь!")
             }
-            Location::Dorm => self.go_to_sleep(state),
+            Location::Dorm => scene_router::dorm::go_to_sleep(self, state),
             Location::Mausoleum => todo!("sub_1E993"),
         }
     }
@@ -938,73 +395,7 @@ impl Game {
             return self.midnight(state);
         }
 
-        self.scene_router(state)
-    }
-
-    fn rest_in_dorm(&mut self, mut state: GameState) -> ActionVec {
-        state.player.health += self.rng.random_in_range(7..15);
-        self.hour_pass(state)
-    }
-
-    fn i_am_done(&mut self, state: GameState) -> ActionVec {
-        self.screen = GameScreen::IAmDone(state);
-        ActionVec::from([Action::NoIAmNotDone, Action::IAmCertainlyDone])
-    }
-
-    fn handle_i_am_done(&mut self, state: GameState, action: Action) -> ActionVec {
-        match action {
-            Action::NoIAmNotDone => self.scene_router(state),
-            Action::IAmCertainlyDone => self.game_end(state),
-            _ => illegal_action!(action),
-        }
-    }
-
-    fn game_end(&mut self, state: GameState) -> ActionVec {
-        self.screen = GameScreen::GameEnd(state);
-        wait_for_any_key()
-    }
-
-    fn wanna_try_again(&mut self) -> ActionVec {
-        self.screen = GameScreen::WannaTryAgain;
-        // Хочешь попробовать снова? Да или нет.
-        ActionVec::from([Action::WantToTryAgain, Action::DontWantToTryAgain])
-    }
-
-    fn handle_wanna_try_again(&mut self, action: Action) -> ActionVec {
-        match action {
-            Action::WantToTryAgain => self.start_game(),
-            Action::DontWantToTryAgain => {
-                self.screen = GameScreen::Disclaimer;
-                wait_for_any_key()
-            }
-            _ => illegal_action!(action),
-        }
-    }
-
-    fn handle_what_to_do(&mut self, state: GameState, action: Action) -> ActionVec {
-        use GameScreen::*;
-        assert_eq!(state.location(), Location::Dorm);
-        match action {
-            Action::WhatToDoAtAll => self.screen = WhatToDo(state),
-            Action::AboutScreen => self.screen = AboutScreen(state),
-            Action::WhereToGoAndWhy => self.screen = WhereToGoAndWhy(state),
-            Action::AboutProfessors => self.screen = AboutProfessors(state),
-            Action::AboutCharacters => self.screen = AboutCharacters(state),
-            Action::AboutThisProgram => self.screen = AboutThisProgram(state),
-            Action::ThanksButNothing => {
-                return self.scene_router(state);
-            }
-            _ => illegal_action!(action),
-        };
-        ActionVec::from([
-            Action::WhatToDoAtAll,
-            Action::AboutScreen,
-            Action::WhereToGoAndWhy,
-            Action::AboutProfessors,
-            Action::AboutCharacters,
-            Action::AboutThisProgram,
-            Action::ThanksButNothing,
-        ])
+        scene_router::run(self, state)
     }
 }
 

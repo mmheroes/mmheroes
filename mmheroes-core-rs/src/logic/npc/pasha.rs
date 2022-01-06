@@ -48,5 +48,5 @@ pub(in crate::logic) fn proceed(
             }
         }
     }
-    game.scene_router(state)
+    scene_router::run(game, state)
 }

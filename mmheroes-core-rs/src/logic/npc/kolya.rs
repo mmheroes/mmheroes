@@ -100,7 +100,7 @@ pub(in crate::logic) fn proceed(
                     if player.brain <= BrainLevel(0) {
                         player.health = HealthLevel(0);
                         player.cause_of_death = Some(CauseOfDeath::DrankTooMuch);
-                        return game.game_end(state);
+                        return scene_router::game_end(game, state);
                     }
                 }
                 BrakeFluidBecauseRefused => {
@@ -112,7 +112,7 @@ pub(in crate::logic) fn proceed(
                     player.money -= Money::oat_tincture_cost();
                 }
             }
-            game.scene_router(state)
+            scene_router::run(game, state)
         }
         Action::Yes => {
             assert_eq!(interaction, PromptOatTincture);
