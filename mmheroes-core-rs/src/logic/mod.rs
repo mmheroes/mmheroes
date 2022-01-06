@@ -11,99 +11,27 @@ pub mod subjects;
 pub use subjects::*;
 
 pub mod npc;
+
 pub use npc::*;
 
 pub mod player;
+
 pub use player::Player;
 
 pub mod subject_status;
+
 pub use subject_status::SubjectStatus;
+
+#[macro_use]
+pub mod actions;
+
+pub use actions::*;
 
 use npc::Classmate::*;
 
 use crate::random;
-use crate::util::TinyVec;
 
 use assert_matches::*;
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum Action {
-    AnyKey,
-    Yes,
-    No,
-    InteractWithClassmate(Classmate),
-    Exam(Subject),
-    DontGoToProfessor,
-    RandomStudent,
-    CleverStudent,
-    ImpudentStudent,
-    SociableStudent,
-    GodMode,
-    Study,
-    DoStudy {
-        subject: Subject,
-        lecture_notes_available: bool,
-    },
-    DontStudy,
-    UseLectureNotes(Subject),
-    DontUseLectureNotes(Subject),
-    RequestLectureNotesFromSasha(Subject),
-    DontNeedAnythingFromSasha,
-    ViewTimetable,
-    Rest,
-    GoToBed,
-    GoFromPunkToDorm,
-    GoFromDormToPunk,
-    GoFromMausoleumToDorm,
-    GoFromMausoleumToPunk,
-    RestByOurselvesInMausoleum,
-    NoRestIsNoGood,
-    AcceptEmploymentAtTerkom,
-    DeclineEmploymentAtTerkom,
-    GoToComputerClass,
-    LeaveComputerClass,
-    GoToPDMI,
-    GoToMausoleum,
-    GoToCafePUNK,
-    SurfInternet,
-    PlayMMHEROES,
-    GoToProfessor,
-    GoToWork,
-    LookAtBaobab,
-    OrderCola,
-    OrderSoup,
-    OrderBeer,
-    OrderTea,
-    OrderCake,
-    OrderTeaWithCake,
-    RestInCafePUNK,
-    ShouldntHaveComeToCafePUNK,
-    IAmDone,
-    NoIAmNotDone,
-    IAmCertainlyDone,
-    WhatToDo,
-    WhatToDoAtAll,
-    WantToTryAgain,
-    DontWantToTryAgain,
-    AboutScreen,
-    WhereToGoAndWhy,
-    AboutProfessors,
-    AboutCharacters,
-    AboutThisProgram,
-    ThanksButNothing,
-}
-
-type ActionVec = TinyVec<Action, 16>;
-
-macro_rules! illegal_action {
-    ($action:expr) => {
-        panic!("Illegal action: {:?}", $action)
-    };
-}
-
-fn wait_for_any_key() -> ActionVec {
-    ActionVec::from([Action::AnyKey])
-}
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum CauseOfDeath {
@@ -803,7 +731,7 @@ impl Game {
             HealthLevel(health_penalty),
             state,
             CauseOfDeath::Overstudied,
-            |game, mut state| {
+            |game, state| {
                 if state
                     .player
                     .status_for_subject(subject)
