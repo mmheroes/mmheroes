@@ -199,7 +199,7 @@ impl Game {
             GrishaInteraction(state, interaction) => {
                 let state = state.clone();
                 let interaction = *interaction;
-                self.proceed_with_grisha(state, action, interaction)
+                interactions::grisha::proceed(self, state, action, interaction)
             }
             SashaInteraction(state, interaction) => {
                 let state = state.clone();
@@ -819,7 +819,7 @@ impl Game {
             Kuzmenko => self.interact_with_kuzmenko(state),
             DJuG => todo!(),
             Andrew => todo!(),
-            Grisha => self.interact_with_grisha(state),
+            Grisha => interactions::grisha::interact(self, state),
         }
     }
 
@@ -963,210 +963,6 @@ impl Game {
             }
             Action::PlayMMHEROES => todo!(),
             Action::IAmDone => self.i_am_done(state),
-            _ => illegal_action!(action),
-        }
-    }
-
-    fn interact_with_grisha(&mut self, state: GameState) -> ActionVec {
-        use npc::GrishaInteraction::*;
-        assert_eq!(state.location, Location::Mausoleum);
-        let player = &state.player;
-        let has_enough_charisma = player.charisma > self.rng.random(CharismaLevel(20));
-        let (actions, interaction) =
-            if !player.is_employed_at_terkom() && has_enough_charisma {
-                (
-                    ActionVec::from([
-                        Action::AcceptEmploymentAtTerkom,
-                        Action::DeclineEmploymentAtTerkom,
-                    ]),
-                    PromptEmploymentAtTerkom,
-                )
-            } else if !player.has_internet() && has_enough_charisma {
-                (wait_for_any_key(), ProxyAddress)
-            } else {
-                let drink_beer = self.rng.random(3) > 0;
-                let hour_pass = self.rng.roll_dice(3);
-                let replies = [
-                    WantFreebie {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    FreebieComeToMe {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    FreebieExists {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    LetsOrganizeFreebieLoversClub {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    NoNeedToStudyToGetDiploma {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    YouStudiedDidItHelp {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    ThirdYearStudentsDontAttendLectures {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    TakeExampleFromKolya {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    HateLevTolstoy {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    DontGoToPDMI {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    NamesOfFreebieLovers {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    LetsHaveABreakHere {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    NoNeedToTakeLectureNotes {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    CantBeExpelledInFourthYear {
-                        drink_beer,
-                        hour_pass,
-                    },
-                    MechanicsHaveFreebie {
-                        drink_beer,
-                        hour_pass,
-                    },
-                ];
-                (wait_for_any_key(), *self.rng.random_element(&replies[..]))
-            };
-        self.screen = GameScreen::GrishaInteraction(state, interaction);
-        actions
-    }
-
-    fn proceed_with_grisha(
-        &mut self,
-        mut state: GameState,
-        action: Action,
-        interaction: npc::GrishaInteraction,
-    ) -> ActionVec {
-        use npc::GrishaInteraction::*;
-        assert_matches!(self.screen, GameScreen::GrishaInteraction(_, _));
-        let player = &mut state.player;
-        match action {
-            Action::AnyKey => match interaction {
-                PromptEmploymentAtTerkom => unreachable!(),
-                CongratulationsYouAreNowEmployed | AsYouWantButDontOverstudy => {
-                    self.scene_router(state)
-                }
-                ProxyAddress => {
-                    assert!(!player.has_internet());
-                    player.set_has_internet();
-                    self.scene_router(state)
-                }
-                WantFreebie {
-                    drink_beer,
-                    hour_pass,
-                }
-                | FreebieComeToMe {
-                    drink_beer,
-                    hour_pass,
-                }
-                | FreebieExists {
-                    drink_beer,
-                    hour_pass,
-                }
-                | LetsOrganizeFreebieLoversClub {
-                    drink_beer,
-                    hour_pass,
-                }
-                | NoNeedToStudyToGetDiploma {
-                    drink_beer,
-                    hour_pass,
-                }
-                | YouStudiedDidItHelp {
-                    drink_beer,
-                    hour_pass,
-                }
-                | ThirdYearStudentsDontAttendLectures {
-                    drink_beer,
-                    hour_pass,
-                }
-                | TakeExampleFromKolya {
-                    drink_beer,
-                    hour_pass,
-                }
-                | HateLevTolstoy {
-                    drink_beer,
-                    hour_pass,
-                }
-                | DontGoToPDMI {
-                    drink_beer,
-                    hour_pass,
-                }
-                | NamesOfFreebieLovers {
-                    drink_beer,
-                    hour_pass,
-                }
-                | LetsHaveABreakHere {
-                    drink_beer,
-                    hour_pass,
-                }
-                | NoNeedToTakeLectureNotes {
-                    drink_beer,
-                    hour_pass,
-                }
-                | CantBeExpelledInFourthYear {
-                    drink_beer,
-                    hour_pass,
-                }
-                | MechanicsHaveFreebie {
-                    drink_beer,
-                    hour_pass,
-                } => {
-                    if drink_beer {
-                        player.brain -= self.rng.random(2);
-                        if player.brain <= BrainLevel(0) {
-                            player.health = HealthLevel(0);
-                            player.cause_of_death = Some(CauseOfDeath::DrankTooMuchBeer);
-                            return self.game_end(state);
-                        }
-                        player.charisma += self.rng.random(2);
-                    }
-                    if hour_pass {
-                        return self.hour_pass(state);
-                    }
-
-                    self.scene_router(state)
-                }
-            },
-            Action::AcceptEmploymentAtTerkom => {
-                assert_eq!(interaction, PromptEmploymentAtTerkom);
-                assert!(!player.is_employed_at_terkom());
-                player.set_employed_at_terkom();
-                self.screen = GameScreen::GrishaInteraction(
-                    state,
-                    CongratulationsYouAreNowEmployed,
-                );
-                wait_for_any_key()
-            }
-            Action::DeclineEmploymentAtTerkom => {
-                assert_eq!(interaction, PromptEmploymentAtTerkom);
-                assert!(!player.is_employed_at_terkom());
-                self.screen =
-                    GameScreen::GrishaInteraction(state, AsYouWantButDontOverstudy);
-                wait_for_any_key()
-            }
             _ => illegal_action!(action),
         }
     }
