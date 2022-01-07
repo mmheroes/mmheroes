@@ -7,7 +7,7 @@ pub(super) fn handle_action(
 ) -> ActionVec {
     assert_eq!(state.location, Location::PUNK);
     match action {
-        Action::GoToProfessor => go_to_professor(game, state),
+        Action::GoToProfessor => actions::go_to_professor(game, state),
         Action::LookAtBaobab => {
             game.screen = GameScreen::HighScores(state);
             wait_for_any_key()
@@ -37,6 +37,7 @@ pub(super) fn handle_action(
             )
         }
         Action::GoToCafePUNK => {
+            // TODO: Логику можно переиспользовать в кафе ПОМИ
             assert!(state.current_time.is_cafe_open());
             let mut available_actions = ActionVec::new();
             let available_money = state.player.money;
@@ -75,6 +76,7 @@ pub(in crate::logic) fn handle_cafe_punk_action(
     mut state: GameState,
     action: Action,
 ) -> ActionVec {
+    // TODO: Логику можно переиспользовать в кафе ПОМИ
     assert_eq!(state.location, Location::PUNK);
     assert!(state.current_time.is_cafe_open());
     assert_matches!(game.screen, GameScreen::CafePUNK(_));

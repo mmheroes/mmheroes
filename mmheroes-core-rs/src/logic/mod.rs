@@ -20,7 +20,8 @@ pub mod subject_status;
 pub use subject_status::SubjectStatus;
 
 pub mod actions;
-pub use actions::*;
+pub use actions::Action;
+pub(in crate::logic) use actions::{illegal_action, wait_for_any_key, ActionVec};
 
 pub mod cause_of_death;
 pub use cause_of_death::*;

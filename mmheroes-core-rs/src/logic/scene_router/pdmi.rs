@@ -7,7 +7,7 @@ pub(super) fn handle_action(
 ) -> ActionVec {
     assert_eq!(state.location, Location::PDMI);
     match action {
-        Action::GoToProfessor => go_to_professor(game, state),
+        Action::GoToProfessor => actions::go_to_professor(game, state),
         Action::LookAtBulletinBoard => {
             game.screen = GameScreen::HighScores(state);
             wait_for_any_key()
