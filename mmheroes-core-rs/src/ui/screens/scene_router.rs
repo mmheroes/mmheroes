@@ -15,17 +15,19 @@ pub(in crate::ui) fn display_scene_router(
 
     match state.location() {
         Location::PUNK => {
-            writeln!(r, "Ты на факультете. Что делать?");
+            write!(r, "Ты на факультете. Что делать?");
         }
-        Location::PDMI => todo!(),
+        Location::PDMI => {
+            write!(r, "Ты в ПОМИ. Что делать?");
+        }
         Location::ComputerClass => {
-            writeln!(r, "Ты в компьютерном классе. Что делать?");
+            write!(r, "Ты в компьютерном классе. Что делать?");
         }
         Location::Dorm => {
-            writeln!(r, "Ты в общаге. Что делать?");
+            write!(r, "Ты в общаге. Что делать?");
         }
         Location::Mausoleum => {
-            writeln!(r, "Ты в мавзолее. Что делать?");
+            write!(r, "Ты в мавзолее. Что делать?");
         }
     }
 

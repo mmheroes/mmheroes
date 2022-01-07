@@ -1,6 +1,7 @@
 pub(in crate::logic) mod computer_class;
 pub(in crate::logic) mod dorm;
 pub(in crate::logic) mod mausoleum;
+pub(in crate::logic) mod pdmi;
 pub(in crate::logic) mod punk;
 pub mod train;
 
@@ -9,8 +10,26 @@ use super::*;
 pub(super) fn run(game: &mut Game, state: GameState) -> ActionVec {
     // TODO: assert that no exam is in progress
     let location = state.location;
+
+    let add_classmates = |available_actions: &mut ActionVec| {
+        for classmate_info in state.classmates.filter_by_location(location) {
+            available_actions
+                .push(Action::InteractWithClassmate(classmate_info.classmate()));
+        }
+    };
+
     let available_actions = match location {
-        Location::PDMI => todo!(),
+        Location::PDMI => {
+            let mut available_actions = ActionVec::from([
+                Action::GoToProfessor,
+                Action::LookAtBulletinBoard,
+                Action::RestInCafePDMI,
+                Action::GoToPUNKFromPDMI,
+            ]);
+            add_classmates(&mut available_actions);
+            available_actions.push(Action::IAmDone);
+            available_actions
+        }
         Location::PUNK => {
             let mut available_actions = ActionVec::from([
                 Action::GoToProfessor,
@@ -25,10 +44,7 @@ pub(super) fn run(game: &mut Game, state: GameState) -> ActionVec {
             if state.current_time.is_cafe_open() {
                 available_actions.push(Action::GoToCafePUNK);
             }
-            for classmate_info in state.classmates.filter_by_location(location) {
-                available_actions
-                    .push(Action::InteractWithClassmate(classmate_info.classmate()));
-            }
+            add_classmates(&mut available_actions);
             if state.player.is_employed_at_terkom() {
                 available_actions.push(Action::GoToWork);
             }
@@ -101,7 +117,7 @@ pub(super) fn handle_action(
 ) -> ActionVec {
     match state.location() {
         Location::PUNK => punk::handle_action(game, state, action),
-        Location::PDMI => todo!(),
+        Location::PDMI => pdmi::handle_action(game, state, action),
         Location::ComputerClass => computer_class::handle_action(game, state, action),
         Location::Dorm => dorm::handle_action(game, state, action),
         Location::Mausoleum => mausoleum::handle_action(game, state, action),

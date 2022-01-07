@@ -7,16 +7,7 @@ pub(super) fn handle_action(
 ) -> ActionVec {
     assert_eq!(state.location, Location::PUNK);
     match action {
-        Action::GoToProfessor => {
-            let mut available_actions = state
-                .current_day()
-                .current_exams(state.location, state.current_time)
-                .map(|exam| Action::Exam(exam.subject()))
-                .collect::<ActionVec>();
-            available_actions.push(Action::DontGoToProfessor);
-            game.screen = GameScreen::GoToProfessor(state);
-            available_actions
-        }
+        Action::GoToProfessor => go_to_professor(game, state),
         Action::LookAtBaobab => {
             game.screen = GameScreen::HighScores(state);
             wait_for_any_key()

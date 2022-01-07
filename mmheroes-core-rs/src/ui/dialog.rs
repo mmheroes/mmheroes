@@ -95,6 +95,7 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::GoToComputerClass => "Пойти в компьютерный класс",
         Action::LeaveComputerClass => "Покинуть класс",
         Action::GoToPDMI => "Поехать в ПОМИ",
+        Action::GoToPUNKFromPDMI => "Поехать в ПУНК",
         Action::GatecrashTrain => "Ехать зайцем",
         Action::BuyRoundtripTrainTicket => {
             set_color(r, Color::CyanBright);
@@ -111,6 +112,7 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::GoToProfessor => "Идти к преподу",
         Action::GoToWork => "Пойти в ТЕРКОМ, поработать",
         Action::LookAtBaobab => "Посмотреть на баобаб",
+        Action::LookAtBulletinBoard => "Посмотреть на доску объявлений",
         Action::OrderCola => {
             set_color(r, Color::CyanBright);
             write!(r, "Стакан колы за {} р.", Money::cola_cost());
@@ -143,6 +145,7 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         }
         Action::RestInCafePUNK => "Просто посижу с приятелями.",
         Action::ShouldntHaveComeToCafePUNK => "Я вообще зря сюда зашел.",
+        Action::RestInCafePDMI => "Пойти в кафе",
         Action::AcceptEmploymentAtTerkom => "Да, мне бы не помешало.",
         Action::DeclineEmploymentAtTerkom => "Нет, я лучше поучусь уще чуток.",
         Action::IAmDone => {

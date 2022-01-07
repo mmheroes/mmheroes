@@ -1,4 +1,4 @@
-use crate::logic::{Classmate, Subject};
+use crate::logic::{Classmate, Game, GameScreen, GameState, Subject};
 use crate::util::TinyVec;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -38,6 +38,7 @@ pub enum Action {
     GoToComputerClass,
     LeaveComputerClass,
     GoToPDMI,
+    GoToPUNKFromPDMI,
     BuyRoundtripTrainTicket,
     GatecrashTrain,
     GoToMausoleum,
@@ -47,6 +48,7 @@ pub enum Action {
     GoToProfessor,
     GoToWork,
     LookAtBaobab,
+    LookAtBulletinBoard,
     OrderCola,
     OrderSoup,
     OrderBeer,
@@ -55,6 +57,7 @@ pub enum Action {
     OrderTeaWithCake,
     RestInCafePUNK,
     ShouldntHaveComeToCafePUNK,
+    RestInCafePDMI,
     IAmDone,
     NoIAmNotDone,
     IAmCertainlyDone,
@@ -74,6 +77,17 @@ pub(in crate::logic) type ActionVec = TinyVec<Action, 16>;
 
 pub(in crate::logic) fn wait_for_any_key() -> ActionVec {
     ActionVec::from([Action::AnyKey])
+}
+
+pub(in crate::logic) fn go_to_professor(game: &mut Game, state: GameState) -> ActionVec {
+    let mut available_actions = state
+        .current_day()
+        .current_exams(state.location, state.current_time)
+        .map(|exam| Action::Exam(exam.subject()))
+        .collect::<ActionVec>();
+    available_actions.push(Action::DontGoToProfessor);
+    game.screen = GameScreen::GoToProfessor(state);
+    available_actions
 }
 
 macro_rules! illegal_action {
