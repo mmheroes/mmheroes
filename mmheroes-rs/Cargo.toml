@@ -11,7 +11,3 @@ app_dirs = "1.2.1"
 [dependencies.pancurses]
 version = "0.16.1"
 features = ["win32"]
-
-[profile.release]
-opt-level = "s"  # Optimize for size.
-lto = true

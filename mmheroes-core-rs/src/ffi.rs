@@ -1,3 +1,5 @@
+#![allow(clippy::missing_safety_doc)]
+
 use crate::ui::high_scores;
 use crate::ui::recording::InputRecorder;
 use crate::ui::Milliseconds;

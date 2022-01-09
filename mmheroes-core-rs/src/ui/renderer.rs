@@ -137,6 +137,7 @@ mod tests {
         }
     }
 
+    #[allow(clippy::write_literal)]
     #[test]
     fn test_write() {
         let mut r = Renderer::new(RRC::new());

@@ -4,3 +4,7 @@ members = [
     "mmheroes-core-rs",
     "mmheroes-rs",
 ]
+
+[profile.release]
+opt-level = "z"  # Optimize for size.
+lto = true

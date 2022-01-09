@@ -1,4 +1,5 @@
 #![macro_use]
+#![allow(clippy::redundant_slicing)]
 
 use core::cmp::Ordering;
 use core::fmt::{Debug, Formatter, Result as FmtResult};
@@ -214,26 +215,17 @@ impl<const N: usize, const M: usize> PartialEq<TinyString<M>> for TinyString<N> 
     fn eq(&self, other: &TinyString<M>) -> bool {
         PartialEq::eq(&self[..], &other[..])
     }
-    fn ne(&self, other: &TinyString<M>) -> bool {
-        PartialEq::ne(&self[..], &other[..])
-    }
 }
 
 impl<const CAPACITY: usize> PartialEq<str> for TinyString<CAPACITY> {
     fn eq(&self, other: &str) -> bool {
         PartialEq::eq(&self[..], &other[..])
     }
-    fn ne(&self, other: &str) -> bool {
-        PartialEq::ne(&self[..], &other[..])
-    }
 }
 
 impl<'a, const CAPACITY: usize> PartialEq<&'a str> for TinyString<CAPACITY> {
     fn eq(&self, other: &&'a str) -> bool {
         PartialEq::eq(&self[..], &other[..])
-    }
-    fn ne(&self, other: &&'a str) -> bool {
-        PartialEq::ne(&self[..], &other[..])
     }
 }
 

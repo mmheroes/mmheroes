@@ -28,7 +28,7 @@ pub fn decode(mut buffer: &[u8]) -> Option<[HighScore; SCORE_COUNT]> {
     }
 
     let mut loaded = default_high_scores();
-    for i in 0..SCORE_COUNT {
+    for high_score in loaded.iter_mut() {
         let name_length = min(buffer[0] as usize, MAX_NAME_LENGTH);
         buffer = &buffer[1..];
         let name = cp866_encoding::string_from_cp866(&buffer[..name_length]);
@@ -38,7 +38,7 @@ pub fn decode(mut buffer: &[u8]) -> Option<[HighScore; SCORE_COUNT]> {
                 .unwrap(),
         );
         buffer = &buffer[(MAX_NAME_LENGTH + 2)..];
-        loaded[i] = (TinyString::from(&*name), Money(score));
+        *high_score = (TinyString::from(&*name), Money(score));
     }
     Some(loaded)
 }

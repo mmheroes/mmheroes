@@ -92,8 +92,7 @@ impl<'input> InputRecordingParser<'input> {
         mut into: F,
     ) -> Result<(), InputRecordingParserError> {
         let mut number_start = None;
-        let mut grapheme = 0usize;
-        for (i, c) in self.input.char_indices() {
+        for (grapheme, (i, c)) in self.input.char_indices().enumerate() {
             match number_start {
                 None => {
                     if c.is_ascii_digit() {
@@ -129,7 +128,6 @@ impl<'input> InputRecordingParser<'input> {
                     }
                 }
             }
-            grapheme += 1;
         }
 
         if number_start.is_none() {

@@ -8,10 +8,10 @@ fuzz_target!(|input: &[u8]| {
     let structured_input = input.iter().map(|b| {
         use mmheroes_core::ui::Input::*;
         match b {
-            0   => KeyUp,
-            1   => KeyDown,
-            2   => Enter,
-            _   => Other,
+            0 => KeyUp,
+            1 => KeyDown,
+            2 => Enter,
+            _ => Other,
         }
     });
     let mut game = Game::new(GameMode::God, 0);

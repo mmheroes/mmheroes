@@ -1,6 +1,10 @@
 use mmheroes_core::{
     logic::{Game, GameMode},
-    ui::{self, recording, renderer::{RendererRequestConsumer, RendererRequest}, *},
+    ui::{
+        self, recording,
+        renderer::{RendererRequest, RendererRequestConsumer},
+        *,
+    },
 };
 use pancurses::*;
 use std::cell::RefCell;
@@ -51,7 +55,8 @@ mod high_scores {
 
     fn hi_file_path() -> PathBuf {
         use app_dirs::*;
-        let dir = app_root(AppDataType::UserData, &crate::APP_INFO).unwrap_or(PathBuf::from("."));
+        let dir = app_root(AppDataType::UserData, &crate::APP_INFO)
+            .unwrap_or_else(|_| PathBuf::from("."));
         dir.join("MMHEROES.HI")
     }
 
@@ -62,7 +67,7 @@ mod high_scores {
         };
 
         let mut buffer = [0u8; BUFFER_SIZE];
-        if let Err(_) = f.read_exact(&mut buffer) {
+        if f.read_exact(&mut buffer).is_err() {
             return None;
         }
 
@@ -80,7 +85,7 @@ use screen::ScreenRAII;
 type Log = String;
 type Logger = Mutex<RefCell<recording::InputRecorder<'static, Log>>>;
 
-fn getch<'a>(window: &ScreenRAII, logger: &Logger) -> ui::Input {
+fn getch(window: &ScreenRAII, logger: &Logger) -> ui::Input {
     loop {
         let ui_input = match window.getch() {
             None | Some(pancurses::Input::KeyResize) => continue,
@@ -121,7 +126,7 @@ fn resize_terminal(height: i32, width: i32) {
 
 struct RendererRequestEvaluator<'a, 'b> {
     window: &'a ScreenRAII,
-    color_pairs_map: &'b HashMap::<(Color, Color), i16>,
+    color_pairs_map: &'b HashMap<(Color, Color), i16>,
 }
 
 impl RendererRequestConsumer for RendererRequestEvaluator<'_, '_> {
@@ -137,7 +142,8 @@ impl RendererRequestConsumer for RendererRequestEvaluator<'_, '_> {
                 foreground,
                 background,
             } => self.window.color_set(
-                *self.color_pairs_map
+                *self
+                    .color_pairs_map
                     .get(&(foreground, background))
                     .unwrap_or_else(|| {
                         panic!("Unknown color pair: ({:?}, {:?})", foreground, background)

@@ -198,8 +198,8 @@ impl Timetable {
             exams: [None; NUM_SUBJECTS],
         }; NUM_DAYS];
 
-        for i in 0..days.len() {
-            days[i].index = i;
+        for (i, day) in days.iter_mut().enumerate() {
+            day.index = i;
         }
 
         for (subject, subject_info) in SUBJECTS.iter() {

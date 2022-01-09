@@ -102,7 +102,7 @@ impl SubjectStatus {
 
     pub fn subject(&self) -> Subject {
         let subject_bits = (self.bits & SUBJECT_BITMASK) as u8;
-        return Subject::try_from(subject_bits).unwrap();
+        Subject::try_from(subject_bits).unwrap()
     }
 
     pub fn problems_done(&self) -> u8 {
