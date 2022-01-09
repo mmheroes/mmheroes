@@ -1,0 +1,6 @@
+[workspace]
+
+members = [
+    "mmheroes-core-rs",
+    "mmheroes-rs",
+]
