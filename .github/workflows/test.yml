@@ -1,0 +1,53 @@
+name: Rust
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Install latest stable Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        components: rustfmt, clippy
+    - uses: actions/checkout@v2
+    - name: Build core with no_std
+      run: |
+        cd mmheroes-core-rs
+        cargo build --verbose --no-default-features
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
+    - name: Run rustfmt for core
+      run: |
+        rustfmt --check mmheroes-core-rs/src/lib.rs
+        rustfmt --check mmheroes-core-rs/tests/*.rs
+        rustfmt --check mmheroes-core-rs/fuzz/fuzz_targets/*.rs
+    - name: Run rustfmt for CLI executable
+      run: |
+        rustfmt --check mmheroes-rs/src/main.rs
+    - name: Run clippy
+      uses: actions-rs/clippy-check@v1
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        args: --all-features
+    - name: Install cbindgen
+      run: cargo install cbindgen
+    - name: Install latest nightly Rust toolchain
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        override: true
+    - name: Run cbindgen
+      run: |
+        cd mmheroes-core-rs
+        cbindgen | diff mmheroes.h -
