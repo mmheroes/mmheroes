@@ -236,11 +236,10 @@ final class MainSceneViewController: UIViewController {
         let confirmCommand = UIKeyCommand(input: "\r",
                                           modifierFlags: [],
                                           action: #selector(confirm(_:)))
-        if #available(iOS 9.0, *) {
-            upCommand.discoverabilityTitle = "Выбрать предыдущий вариант"
-            downCommand.discoverabilityTitle = "Выбрать следующий вариант"
-            confirmCommand.discoverabilityTitle = "Подтвердить выбор"
-        }
+        upCommand.discoverabilityTitle = "Выбрать предыдущий вариант"
+        downCommand.discoverabilityTitle = "Выбрать следующий вариант"
+
+        confirmCommand.discoverabilityTitle = "Подтвердить выбор"
         var commands = [
             upCommand,
             downCommand,

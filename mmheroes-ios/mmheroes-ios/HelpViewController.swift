@@ -57,9 +57,7 @@ final class HelpViewController: UIViewController {
         let exitCommand = UIKeyCommand(input: UIKeyCommand.inputEscape,
                                        modifierFlags: [],
                                        action: #selector(done))
-        if #available(iOS 9.0, *) {
-            exitCommand.discoverabilityTitle = "Убрать информацию"
-        }
+        exitCommand.discoverabilityTitle = "Убрать информацию"
         return [exitCommand]
     }
 }
