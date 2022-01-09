@@ -1,4 +1,4 @@
-name: Rust
+name: Build
 
 on:
   push:
@@ -22,11 +22,11 @@ jobs:
     - name: Build core with no_std
       run: |
         cd mmheroes-core-rs
-        cargo build --verbose --no-default-features
+        cargo build --no-default-features
     - name: Build
-      run: cargo build --verbose
+      run: cargo build
     - name: Run tests
-      run: cargo test --verbose
+      run: cargo test
     - name: Run rustfmt for core
       run: |
         rustfmt --check mmheroes-core-rs/src/lib.rs
