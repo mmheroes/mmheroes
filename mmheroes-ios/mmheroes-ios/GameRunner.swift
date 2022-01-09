@@ -49,8 +49,19 @@ final class GameRunner {
     init(worker: DispatchQueue,
          font: UIFont,
          _ requestDrawingRenderedContent: @escaping (NSAttributedString, Caret) -> Void) {
+
+        let diamondBirthday = DateComponents(month: 12, day: 3)
+        let today = Calendar.current.dateComponents([.month, .day], from: Date())
+
+        let mode: MMHEROES_GameMode
+        if diamondBirthday == today {
+            mode = MMHEROES_GameMode_God
+        } else {
+            mode = MMHEROES_GameMode_SelectInitialParameters
+        }
+
         self.worker = worker
-        let game = Game(mode: MMHEROES_GameMode_Normal, seed: .random(in: 0 ... .max))
+        let game = Game(mode: mode, seed: .random(in: 0 ... .max))
         self.gameUI = GameUI(game: game)
         self.font = font
         self.requestDrawingRenderedContent = requestDrawingRenderedContent
