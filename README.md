@@ -3,6 +3,8 @@
 
 Попытка переписать известный в узких кругах текстовый квест «Герои Мата и Меха» на Rust. **Ещё не закончено!**
 
+![Screenshot](https://github.com/mmheroes/mmheroes/blob/master/.github/screenshot.png?raw=true)
+
 Оригинальная версия «Героев Мата и Меха» была написана в 1998-м году на Borland Pascal 7.0 под MS-DOS.
 
 В 2021-м году появился [порт на JavaScript](https://sharpden.github.io/mmheroes), но у него [есть свои недостатки](http://sharpc.livejournal.com/75856.html).
