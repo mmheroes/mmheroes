@@ -58,6 +58,8 @@ jobs:
     steps:
       - name: Install latest stable Rust toolchain
         uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
       - name: Install iOS rustup targets
         run: |
           rustup target add \
