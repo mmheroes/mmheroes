@@ -1,4 +1,4 @@
-name: Build
+name: build
 
 on:
   push:
@@ -10,7 +10,7 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  build:
+  build-rust:
     runs-on: ubuntu-latest
     steps:
     - name: Install latest stable Rust toolchain
@@ -51,3 +51,33 @@ jobs:
       run: |
         cd mmheroes-core-rs
         cbindgen | diff mmheroes.h -
+
+  build-ios:
+    needs: build-rust
+    runs-on: macOS-latest
+    steps:
+      - name: Install latest stable Rust toolchain
+        uses: actions-rs/toolchain@v1
+      - name: Install iOS rustup targets
+        run: |
+          rustup target add \
+            aarch64-apple-ios \
+            armv7-apple-ios \
+            armv7s-apple-ios \
+            x86_64-apple-ios \
+            i386-apple-ios
+      - name: Install cargo-lipo
+        run: cargo install cargo-lipo
+      - uses: actions/checkout@v2
+      - name: Build iOS project (debug)
+        uses: devbotsxyz/xcode-build@v1.0.0
+        with:
+          project: mmheroes-ios/mmheroes-ios.xcodeproj
+          scheme: mmheroes-ios
+          configuration: DEBUG
+      - name: Build iOS project (release)
+        uses: devbotsxyz/xcode-build@v1.0.0
+        with:
+          project: mmheroes-ios/mmheroes-ios.xcodeproj
+          scheme: mmheroes-ios
+          configuration: RELEASE
