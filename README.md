@@ -49,7 +49,7 @@ cargo run
 1. Убеждаемся, что установлен Rust.
 1. Устанавливаем тулчейны Rust с поддержкой сборки под iOS:
    ```
-   rustup target add aarch64-apple-ios armv7-apple-ios armv7s-apple-ios x86_64-apple-ios i386-apple-ios
+   rustup target add aarch64-apple-ios x86_64-apple-ios
    ```
 1. Устанавливаем `cargo-lipo`. Это утилита, позволяющая создавать универсальные бинарники для iOS.
    ```
