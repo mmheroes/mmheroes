@@ -9,12 +9,23 @@ use mmheroes_core::{
 use pancurses::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::str::FromStr;
 use std::sync::Mutex;
 
 const APP_INFO: app_dirs::AppInfo = app_dirs::AppInfo {
     name: "mmheroes",
     author: "broadwaylamb",
 };
+
+fn env_seed() -> Option<u64> {
+    if cfg!(debug_assertions) {
+        std::env::var("MMHEROES_SEED")
+            .ok()
+            .and_then(|s| u64::from_str(&*s).ok())
+    } else {
+        None
+    }
+}
 
 mod screen {
     use super::{endwin, initscr, Window};
@@ -218,10 +229,12 @@ fn main() {
         None => GameMode::Normal,
     };
 
-    let seed = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_millis() as u64;
+    let seed = env_seed().unwrap_or_else(|| {
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64
+    });
 
     let mut game = Game::new(mode, seed);
 
