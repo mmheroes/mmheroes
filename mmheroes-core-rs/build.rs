@@ -61,6 +61,10 @@ fn regenerate_ios_files() -> Result<(), Error> {
     writeln!(output, "opt-level = 's'")?;
     writeln!(output, "lto = true")?;
     writeln!(output)?;
+    writeln!(
+        output,
+        "[workspace] # Prevent Cargo thinking that this crate is a part of a workspace"
+    )?;
 
     std::fs::write("iOS/Cargo.toml", output)?;
 

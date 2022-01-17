@@ -54,7 +54,7 @@ jobs:
 
   build-ios:
     needs: build-rust
-    runs-on: macOS-latest
+    runs-on: macos-latest
     steps:
       - name: Install latest stable Rust toolchain
         uses: actions-rs/toolchain@v1
@@ -65,10 +65,36 @@ jobs:
           rustup target add \
             aarch64-apple-ios \
             x86_64-apple-ios
-      - name: Install cargo-lipo
-        run: cargo install cargo-lipo
       - uses: actions/checkout@v2
-      - name: Build iOS project (debug)
-        run: xcodebuild -project mmheroes-ios/mmheroes-ios.xcodeproj -scheme mmheroes-ios -configuration DEBUG build
-      - name: Build iOS project (release)
-        run: xcodebuild -project mmheroes-ios/mmheroes-ios.xcodeproj -scheme mmheroes-ios -configuration RELEASE build
+      - name: Build iOS project (debug, device)
+        uses: sersoft-gmbh/xcodebuild-action@v1
+        with:
+          project: mmheroes-ios/mmheroes-ios.xcodeproj
+          scheme: mmheroes-ios
+          sdk: iphoneos
+          configuration: Debug
+          action: build
+      - name: Build iOS project (debug, simulator)
+        uses: sersoft-gmbh/xcodebuild-action@v1
+        with:
+          project: mmheroes-ios/mmheroes-ios.xcodeproj
+          scheme: mmheroes-ios
+          sdk: iphonesimulator
+          configuration: Debug
+          action: build
+      - name: Build iOS project (release, device)
+        uses: sersoft-gmbh/xcodebuild-action@v1
+        with:
+          project: mmheroes-ios/mmheroes-ios.xcodeproj
+          scheme: mmheroes-ios
+          sdk: iphoneos
+          configuration: Release
+          action: build
+      - name: Build iOS project (release, simulator)
+        uses: sersoft-gmbh/xcodebuild-action@v1
+        with:
+          project: mmheroes-ios/mmheroes-ios.xcodeproj
+          scheme: mmheroes-ios
+          sdk: iphonesimulator
+          configuration: Release
+          action: build

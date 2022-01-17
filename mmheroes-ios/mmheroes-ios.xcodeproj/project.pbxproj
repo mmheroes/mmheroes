@@ -11,7 +11,6 @@
 		873C33FB245C71E700754F00 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B132459E47D00E4BF6B /* AppDelegate.swift */; };
 		873C33FD245C8E8400754F00 /* HelpViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 873C33FC245C8E8400754F00 /* HelpViewController.swift */; };
 		873C33FF245C9C5B00754F00 /* help.html in Resources */ = {isa = PBXBuildFile; fileRef = 873C33FE245C9C5B00754F00 /* help.html */; };
-		8741D5F42641EC42008DFF7D /* libmmheroes_core_ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 873C33F7245BA0F300754F00 /* libmmheroes_core_ios.a */; };
 		8754BDE02465571000DC466E /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8754BDDF2465571000DC466E /* Game.swift */; };
 		875B3B182459E47D00E4BF6B /* MainSceneViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875B3B172459E47D00E4BF6B /* MainSceneViewController.swift */; };
 		875B3B1D2459E47E00E4BF6B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 875B3B1C2459E47E00E4BF6B /* Assets.xcassets */; };
@@ -29,7 +28,6 @@
 
 /* Begin PBXFileReference section */
 		873C33F4245B755000754F00 /* Caret.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Caret.swift; sourceTree = "<group>"; };
-		873C33F7245BA0F300754F00 /* libmmheroes_core_ios.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmmheroes_core_ios.a; path = "../mmheroes-core-rs/iOS/target/universal/debug/libmmheroes_core_ios.a"; sourceTree = "<group>"; };
 		873C33FC245C8E8400754F00 /* HelpViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpViewController.swift; sourceTree = "<group>"; };
 		873C33FE245C9C5B00754F00 /* help.html */ = {isa = PBXFileReference; lastKnownFileType = text.html; path = help.html; sourceTree = "<group>"; };
 		8754BDDF2465571000DC466E /* Game.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
@@ -39,12 +37,10 @@
 		875B3B1C2459E47E00E4BF6B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		875B3B1F2459E47E00E4BF6B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		875B3B212459E47E00E4BF6B /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		875B3B282459E60F00E4BF6B /* libmmheroes_core.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmmheroes_core.a; path = "../mmheroes-core-rs/target/universal/release/libmmheroes_core.a"; sourceTree = "<group>"; };
 		875B3B2C2459E75500E4BF6B /* GameRunner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameRunner.swift; sourceTree = "<group>"; };
 		875B3B30245A2D2400E4BF6B /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		875B3B32245A35ED00E4BF6B /* StringExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringExtensions.swift; sourceTree = "<group>"; };
 		875B3B34245A4F5C00E4BF6B /* mmheroes-ios.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "mmheroes-ios.entitlements"; sourceTree = "<group>"; };
-		875B3B35245A532B00E4BF6B /* libmmheroes_core.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libmmheroes_core.a; path = "../mmheroes-core-rs/target/release/libmmheroes_core.a"; sourceTree = "<group>"; };
 		875B3B3B245B33B700E4BF6B /* NSCoderExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NSCoderExtensions.swift; sourceTree = "<group>"; };
 		875B3B3D245B385400E4BF6B /* ApplicationInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ApplicationInfo.swift; sourceTree = "<group>"; };
 		875B3B42245B3E3500E4BF6B /* MMHeroesExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MMHeroesExtensions.swift; sourceTree = "<group>"; };
@@ -57,7 +53,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8741D5F42641EC42008DFF7D /* libmmheroes_core_ios.a in Frameworks */,
 				875B3B3A245B315B00E4BF6B /* Version in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -108,9 +103,6 @@
 		875B3B272459E60F00E4BF6B /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				873C33F7245BA0F300754F00 /* libmmheroes_core_ios.a */,
-				875B3B35245A532B00E4BF6B /* libmmheroes_core.a */,
-				875B3B282459E60F00E4BF6B /* libmmheroes_core.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -156,7 +148,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1140;
-				LastUpgradeCheck = 1250;
+				LastUpgradeCheck = 1320;
 				ORGANIZATIONNAME = "Sergej Jaskiewicz";
 				TargetAttributes = {
 					875B3B0F2459E47D00E4BF6B = {
@@ -215,7 +207,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# The $PATH used by Xcode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\n# --xcode-integ determines --release and --targets from XCode's env vars.\n# Depending your setup, specify the rustup toolchain explicitly.\ncargo lipo -vv --xcode-integ --manifest-path $SRCROOT/../mmheroes-core-rs/iOS/Cargo.toml\n";
+			shellScript = "# The $PATH used by Xcode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\nfor arch in $ARCHS\ndo\n    if [ \"$arch\" == \"arm64\" ]; then\n        arch=\"aarch64\"\n    fi\n    config=\"\"\n    if [ \"$CONFIGURATION\" == \"Release\" ]; then\n        config=\"--release\"\n    fi\n    cargo_command=\"cargo build --target $arch-apple-ios $config --manifest-path $SRCROOT/../mmheroes-core-rs/iOS/Cargo.toml\"\n    echo $cargo_command >&2\n    `$cargo_command`\ndone\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -377,7 +369,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "mmheroes-ios/mmheroes-ios.entitlements";
-				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N4X84VA3BB;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = "mmheroes-ios/Info.plist";
@@ -385,8 +376,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/universal/debug";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.jaskiewiczs.mmheroes-ios";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/aarch64-apple-ios/debug";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=x86_64]" = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/x86_64-apple-ios/debug";
+				OTHER_LDFLAGS = "-lmmheroes_core_ios";
+				PRODUCT_BUNDLE_IDENTIFIER = com.broadwaylamb.mmheroes.ios;
 				PRODUCT_NAME = MMHEROES.EXE;
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "../mmheroes-core-rs/mmheroes.h";
@@ -400,7 +393,6 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = "mmheroes-ios/mmheroes-ios.entitlements";
-				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_TEAM = N4X84VA3BB;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = "mmheroes-ios/Info.plist";
@@ -408,8 +400,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/universal/release";
-				PRODUCT_BUNDLE_IDENTIFIER = "com.jaskiewiczs.mmheroes-ios";
+				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/aarch64-apple-ios/release";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=x86_64]" = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/x86_64-apple-ios/release";
+				OTHER_LDFLAGS = "-lmmheroes_core_ios";
+				PRODUCT_BUNDLE_IDENTIFIER = com.broadwaylamb.mmheroes.ios;
 				PRODUCT_NAME = MMHEROES.EXE;
 				SUPPORTS_MACCATALYST = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "../mmheroes-core-rs/mmheroes.h";

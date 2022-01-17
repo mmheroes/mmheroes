@@ -11,7 +11,7 @@ authors = ["Sergej Jaskiewicz <jaskiewiczs@icloud.com>"]
 edition = "2021"
 
 [dependencies]
-unicode-segmentation = "1.6.0"
+unicode-segmentation = "1.8.0"
 assert_matches = "1.5.0"
 bitflags = "1.3.2"
 
@@ -33,3 +33,4 @@ panic = "abort"
 opt-level = 's'
 lto = true
 
+[workspace] # Prevent Cargo thinking that this crate is a part of a workspace

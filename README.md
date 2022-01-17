@@ -51,9 +51,5 @@ cargo run
    ```
    rustup target add aarch64-apple-ios x86_64-apple-ios
    ```
-1. Устанавливаем `cargo-lipo`. Это утилита, позволяющая создавать универсальные бинарники для iOS.
-   ```
-   cargo install cargo-lipo
-   ```
 1. Открываем проект Xcode и собираем, проблем быть не должно. Проблемы всё же есть? Смело [открывай issue](https://github.com/mmheroes/mmheroes/issues/new).
     
