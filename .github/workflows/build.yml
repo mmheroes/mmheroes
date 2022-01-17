@@ -69,14 +69,6 @@ jobs:
         run: cargo install cargo-lipo
       - uses: actions/checkout@v2
       - name: Build iOS project (debug)
-        uses: devbotsxyz/xcode-build@v1.0.0
-        with:
-          project: mmheroes-ios/mmheroes-ios.xcodeproj
-          scheme: mmheroes-ios
-          configuration: DEBUG
+        run: xcodebuild -project mmheroes-ios/mmheroes-ios.xcodeproj -scheme mmheroes-ios -configuration DEBUG build
       - name: Build iOS project (release)
-        uses: devbotsxyz/xcode-build@v1.0.0
-        with:
-          project: mmheroes-ios/mmheroes-ios.xcodeproj
-          scheme: mmheroes-ios
-          configuration: RELEASE
+        run: xcodebuild -project mmheroes-ios/mmheroes-ios.xcodeproj -scheme mmheroes-ios -configuration RELEASE build
