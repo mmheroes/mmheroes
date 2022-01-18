@@ -66,14 +66,14 @@ jobs:
             aarch64-apple-ios \
             x86_64-apple-ios
       - uses: actions/checkout@v2
-      - name: Build iOS project (debug, device)
-        uses: sersoft-gmbh/xcodebuild-action@v1
-        with:
-          project: mmheroes-ios/mmheroes-ios.xcodeproj
-          scheme: mmheroes-ios
-          sdk: iphoneos
-          configuration: Debug
-          action: build
+#      - name: Build iOS project (debug, device)
+#        uses: sersoft-gmbh/xcodebuild-action@v1
+#        with:
+#          project: mmheroes-ios/mmheroes-ios.xcodeproj
+#          scheme: mmheroes-ios
+#          sdk: iphoneos
+#          configuration: Debug
+#          action: build
       - name: Build iOS project (debug, simulator)
         uses: sersoft-gmbh/xcodebuild-action@v1
         with:
@@ -82,14 +82,14 @@ jobs:
           sdk: iphonesimulator
           configuration: Debug
           action: build
-      - name: Build iOS project (release, device)
-        uses: sersoft-gmbh/xcodebuild-action@v1
-        with:
-          project: mmheroes-ios/mmheroes-ios.xcodeproj
-          scheme: mmheroes-ios
-          sdk: iphoneos
-          configuration: Release
-          action: build
+#      - name: Build iOS project (release, device)
+#        uses: sersoft-gmbh/xcodebuild-action@v1
+#        with:
+#          project: mmheroes-ios/mmheroes-ios.xcodeproj
+#          scheme: mmheroes-ios
+#          sdk: iphoneos
+#          configuration: Release
+#          action: build
       - name: Build iOS project (release, simulator)
         uses: sersoft-gmbh/xcodebuild-action@v1
         with:

@@ -1,0 +1,8 @@
+// See https://samwize.com/2020/11/20/using-xcconfig-to-configure-to-your-developer-account/
+
+CODE_SIGN_IDENTITY=Apple Development
+DEVELOPMENT_TEAM=N4X84VA3BB
+ORGANIZATION_IDENTIFIER=com.broadwaylamb
+CODE_SIGN_STYLE=Automatic
+
+#include? "DeveloperSettings.xcconfig"

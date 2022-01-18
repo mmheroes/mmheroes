@@ -51,5 +51,16 @@ cargo run
    ```
    rustup target add aarch64-apple-ios x86_64-apple-ios
    ```
+1. Если будем собирать проект для устройства (а не для симулятора), нужно будет в каталоге `mmheroes-ios` создать файл
+   с именем `DeveloperSettings.xcconfig` и следующим содержимым:
+   ```
+   DEVELOPMENT_TEAM=<your team ID>
+   ORGANIZATION_IDENTIFIER=<your organization identifier>
+   ```
+   
+   `DEVELOPMENT_TEAM` — это идентификатор, который можно узнать, залогинившись в
+   [Apple Developer Center](https://developer.apple.com/account/) и открыв раздел "Membership". Team ID — это оно.
+   
+   `ORGANIZATION_IDENTIFIER` — это любая строка в reverse-DNS-нотации. Используется для формирования bundle identifier'а.
 1. Открываем проект Xcode и собираем, проблем быть не должно. Проблемы всё же есть? Смело [открывай issue](https://github.com/mmheroes/mmheroes/issues/new).
     
