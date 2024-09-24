@@ -11,7 +11,7 @@ authors = ["Sergej Jaskiewicz <jaskiewiczs@icloud.com>"]
 edition = "2021"
 
 [dependencies]
-unicode-segmentation = "1.8.0"
+unicode-segmentation = "1.12.0"
 assert_matches = "1.5.0"
 bitflags = "2.6.0"
 
