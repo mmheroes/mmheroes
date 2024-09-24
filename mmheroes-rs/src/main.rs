@@ -12,11 +12,6 @@ use std::collections::HashMap;
 use std::str::FromStr;
 use std::sync::Mutex;
 
-const APP_INFO: app_dirs::AppInfo = app_dirs::AppInfo {
-    name: "mmheroes",
-    author: "broadwaylamb",
-};
-
 fn env_seed() -> Option<u64> {
     if cfg!(debug_assertions) {
         std::env::var("MMHEROES_SEED")
@@ -65,9 +60,9 @@ mod high_scores {
     use std::path::PathBuf;
 
     fn hi_file_path() -> PathBuf {
-        use app_dirs::*;
-        let dir = app_root(AppDataType::UserData, &crate::APP_INFO)
-            .unwrap_or_else(|_| PathBuf::from("."));
+        let dir = directories::ProjectDirs::from("com.broadwaylamb", "", "mmheroes")
+            .map(|dirs| dirs.data_local_dir().to_path_buf())
+            .unwrap_or_else(|| PathBuf::from("."));
         dir.join("MMHEROES.HI")
     }
 
