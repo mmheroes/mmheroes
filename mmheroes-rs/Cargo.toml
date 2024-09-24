@@ -9,5 +9,5 @@ mmheroes-core = { path = "../mmheroes-core-rs" }
 app_dirs = "1.2.1"
 
 [dependencies.pancurses]
-version = "0.16.1"
+version = "0.17.0"
 features = ["win32"]
