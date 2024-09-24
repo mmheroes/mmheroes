@@ -2,17 +2,18 @@ use crate::Error::{FmtError, IoError};
 
 #[derive(Debug)]
 enum Error {
+    #[allow(dead_code)]
     IoError(std::io::Error),
     FmtError(std::fmt::Error),
 }
 
-impl std::convert::From<std::io::Error> for Error {
+impl From<std::io::Error> for Error {
     fn from(io_error: std::io::Error) -> Self {
         IoError(io_error)
     }
 }
 
-impl std::convert::From<std::fmt::Error> for Error {
+impl From<std::fmt::Error> for Error {
     fn from(fmt_error: std::fmt::Error) -> Self {
         FmtError(fmt_error)
     }

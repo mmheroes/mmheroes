@@ -47,9 +47,9 @@ pub(crate) fn string_from_cp866(cp866_encoded: &[u8]) -> TinyString<128> {
 pub(crate) fn char_to_cp866_lossy(c: char) -> u8 {
     let result = match c {
         '\x00'..='\x7F' => c as u32,
-        'А'..='п' => (0x80 + (c as u32) - ('А' as u32)),
-        'р'..='я' => (0xE0 + (c as u32) - ('р' as u32)),
-        '░'..='▓' => (0xB0 + (c as u32) - ('░' as u32)),
+        'А'..='п' => 0x80 + (c as u32) - ('А' as u32),
+        'р'..='я' => 0xE0 + (c as u32) - ('р' as u32),
+        '░'..='▓' => 0xB0 + (c as u32) - ('░' as u32),
         '│' => 0xB3,
         '┤' => 0xB4,
         '╡' => 0xB5,

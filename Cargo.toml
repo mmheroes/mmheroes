@@ -5,6 +5,8 @@ members = [
     "mmheroes-rs",
 ]
 
+resolver = "2"
+
 [profile.release]
 opt-level = "z"  # Optimize for size.
 lto = true
