@@ -4,6 +4,7 @@ use bitflags::bitflags;
 
 bitflags! {
     #[repr(transparent)]
+    #[derive(Debug, Clone, Copy)]
     struct PlayerFlags: u16 {
 
         /// Получил ли персонаж дискету с новой версией MMHEROES от Diamond
