@@ -22,10 +22,7 @@ impl<T, const CAPACITY: usize> TinyVec<T, CAPACITY> {
 impl<T, const CAPACITY: usize> TinyVec<T, CAPACITY> {
     pub(crate) fn new() -> Self {
         Self {
-            // This should be replaced with [MaybeUninit::uninit(); CAPACITY]
-            // as soon as the corresponding feature is stabilized.
-            // For now we use this workaround, see // See http://doc.rust-lang.org/1.51.0/core/mem/union.MaybeUninit.html#initializing-an-array-element-by-element
-            storage: unsafe { MaybeUninit::uninit().assume_init() },
+            storage: [const { MaybeUninit::uninit() }; CAPACITY],
             count: 0,
         }
     }
