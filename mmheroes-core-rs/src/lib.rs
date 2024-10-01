@@ -1,8 +1,11 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 #![allow(clippy::unusual_byte_groupings)]
+#![feature(context_ext)]
+#![feature(local_waker)]
 
 pub mod util;
 
+mod async_support;
 mod random;
 
 pub mod ffi;
