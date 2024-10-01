@@ -161,6 +161,10 @@ typedef struct MMHEROES_InputRecorderSink {
   bool (*sink)(void*, const uint8_t*, uintptr_t);
 } MMHEROES_InputRecorderSink;
 
+#define MMHEROES_WORKDAY_BEGINS 9
+
+#define MMHEROES_WORKDAY_ENDS 18
+
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -273,7 +277,7 @@ bool mmheroes_input_recorder_record(struct MMHEROES_InputRecorder_InputRecorderS
 bool mmheroes_input_recorder_flush(struct MMHEROES_InputRecorder_InputRecorderSink *recorder);
 
 #ifdef __cplusplus
-} // extern "C"
-#endif // __cplusplus
+}  // extern "C"
+#endif  // __cplusplus
 
-#endif /* MMHEROES_CORE_H */
+#endif  /* MMHEROES_CORE_H */
