@@ -378,7 +378,7 @@ impl Game {
 fn memory() {
     use core::mem::size_of;
 
-    assert_eq!(size_of::<Game>(), 376);
+    assert_eq!(size_of::<Game>(), 352);
     assert_eq!(size_of::<Player>(), 40);
-    assert_eq!(size_of::<Action>(), 3);
+    assert_eq!(size_of::<Action>(), 2);
 }

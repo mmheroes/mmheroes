@@ -142,9 +142,6 @@ mod tests {
     fn test_write() {
         let mut r = Renderer::new(RRC::new());
         write!(r, "Hello, world!\n{} {}", 123, "string");
-        assert_eq!(
-            r.request_consumer.strings,
-            ["Hello, world!\n", "123", " ", "string"]
-        );
+        assert_eq!(r.request_consumer.strings, ["Hello, world!\n123 string"]);
     }
 }
