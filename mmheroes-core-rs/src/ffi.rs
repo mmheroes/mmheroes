@@ -38,26 +38,6 @@ impl RendererRequestConsumer for FfiRendererRequestConsumer {
     }
 }
 
-// Unwinding through FFI boundaries is undefined behavior, so we stop any
-// unwinding and abort.
-#[cfg(feature = "std")]
-fn ffi_safely_run<R, F: FnOnce() -> R>(f: F) -> R {
-    use std::panic::*;
-
-    // AssertUnwindSafe is okay here, since we'll abort anyway.
-    match catch_unwind(AssertUnwindSafe(f)) {
-        Ok(r) => r,
-        Err(_) => std::process::abort(),
-    }
-}
-
-// However, if this crate is compiled as no_std, there is no unwinding.
-// The client will define the panic behavior themselves using #[panic_handler]
-#[cfg(not(feature = "std"))]
-fn ffi_safely_run<R, F: FnOnce() -> R>(f: F) -> R {
-    f()
-}
-
 macro_rules! ffi_constructor {
     ($name:tt, $(<$($lifetime:lifetime),*>)? ($($arg_name:ident: $args:ty),*) -> $retty:ty) => {
         /// Выделяет память для объекта, используя переданный аллокатор,
@@ -84,9 +64,7 @@ macro_rules! ffi_constructor {
                 return null_mut();
             }
 
-            ffi_safely_run(move || {
-                write(memory, <$retty>::new($($arg_name),*));
-            });
+            write(memory, <$retty>::new($($arg_name),*));
 
             memory
         }
@@ -104,7 +82,7 @@ macro_rules! ffi_destructor {
             if $arg.is_null() {
                 return;
             }
-            ffi_safely_run(|| $arg.drop_in_place());
+            $arg.drop_in_place();
             deallocator(
                 deallocator_context,
                 $arg as *mut c_void,
@@ -128,15 +106,13 @@ pub extern "C" fn mmheroes_game_get_current_time(
     out_day: &mut u8,
     out_time: &mut Time,
 ) -> bool {
-    ffi_safely_run(|| {
-        if let Some(state) = game.screen().state() {
-            *out_day = state.current_day().index() as u8;
-            *out_time = state.current_time();
-            true
-        } else {
-            false
-        }
-    })
+    if let Some(state) = game.screen().state() {
+        *out_day = state.current_day().index() as u8;
+        *out_time = state.current_time();
+        true
+    } else {
+        false
+    }
 }
 
 #[repr(C)]
@@ -167,41 +143,36 @@ pub unsafe extern "C" fn mmheroes_game_ui_create(
 ) -> *mut GameUI<FfiRendererRequestConsumer> {
     use core::ptr::{null_mut, write};
 
-    ffi_safely_run(move || {
-        let scores = if high_scores.is_null() {
-            None
-        } else {
-            let mut scores = crate::ui::high_scores::default_high_scores();
-            let slice =
-                core::slice::from_raw_parts(high_scores, high_scores::SCORE_COUNT);
-            for (i, score) in slice.iter().enumerate() {
-                let name_buf = core::slice::from_raw_parts(score.name, score.name_len);
-                let name =
-                    core::str::from_utf8(name_buf).expect("Name is not valid UTF-8");
-                scores[i].0 = TinyString::from(name);
-                scores[i].1 = score.score;
-            }
-            Some(scores)
-        };
-
-        let renderer_request_consumer = FfiRendererRequestConsumer {
-            context: renderer_request_callback_context,
-            callback: renderer_request_callback,
-        };
-
-        let game = GameUI::new(game, scores, renderer_request_consumer);
-
-        let memory: *mut GameUI<_> =
-            allocator(allocator_context, size_of_val(&game), align_of_val(&game))
-                as *mut _;
-        if memory.is_null() {
-            return null_mut();
+    let scores = if high_scores.is_null() {
+        None
+    } else {
+        let mut scores = crate::ui::high_scores::default_high_scores();
+        let slice = core::slice::from_raw_parts(high_scores, high_scores::SCORE_COUNT);
+        for (i, score) in slice.iter().enumerate() {
+            let name_buf = core::slice::from_raw_parts(score.name, score.name_len);
+            let name = core::str::from_utf8(name_buf).expect("Name is not valid UTF-8");
+            scores[i].0 = TinyString::from(name);
+            scores[i].1 = score.score;
         }
+        Some(scores)
+    };
 
-        write(memory, game);
+    let renderer_request_consumer = FfiRendererRequestConsumer {
+        context: renderer_request_callback_context,
+        callback: renderer_request_callback,
+    };
 
-        memory
-    })
+    let game = GameUI::new(game, scores, renderer_request_consumer);
+
+    let memory: *mut GameUI<_> =
+        allocator(allocator_context, size_of_val(&game), align_of_val(&game)) as *mut _;
+    if memory.is_null() {
+        return null_mut();
+    }
+
+    write(memory, game);
+
+    memory
 }
 
 ffi_destructor!(
@@ -218,17 +189,15 @@ pub unsafe extern "C" fn mmheroes_game_ui_get_high_scores(
     game_ui: &GameUI<FfiRendererRequestConsumer>,
     out: *mut FfiHighScore,
 ) {
-    ffi_safely_run(|| {
-        assert!(!out.is_null());
-        let out_slice = core::slice::from_raw_parts_mut(out, SCORE_COUNT);
-        for (high_score, out) in game_ui.high_scores.iter().zip(out_slice.iter_mut()) {
-            *out = FfiHighScore {
-                name: high_score.0.as_ptr(),
-                name_len: high_score.0.len(),
-                score: high_score.1,
-            }
+    assert!(!out.is_null());
+    let out_slice = core::slice::from_raw_parts_mut(out, SCORE_COUNT);
+    for (high_score, out) in game_ui.high_scores.iter().zip(out_slice.iter_mut()) {
+        *out = FfiHighScore {
+            name: high_score.0.as_ptr(),
+            name_len: high_score.0.len(),
+            score: high_score.1,
         }
-    })
+    }
 }
 /// `new_high_scores` — ненулевой указатель на массив из `MMHEROES_SCORE_COUNT` элементов.
 #[no_mangle]
@@ -236,19 +205,17 @@ pub unsafe extern "C" fn mmheroes_game_ui_set_high_scores(
     game_ui: &mut GameUI<FfiRendererRequestConsumer>,
     new_high_scores: *const FfiHighScore,
 ) {
-    ffi_safely_run(|| {
-        assert!(!new_high_scores.is_null());
-        let new_high_scores = core::slice::from_raw_parts(new_high_scores, SCORE_COUNT);
-        for (high_score, new_high_score) in
-            game_ui.high_scores.iter_mut().zip(new_high_scores.iter())
-        {
-            let name_buf =
-                core::slice::from_raw_parts(new_high_score.name, new_high_score.name_len);
-            let name = core::str::from_utf8(name_buf).expect("Name is not valid UTF-8");
-            high_score.0 = TinyString::from(name);
-            high_score.1 = new_high_score.score;
-        }
-    })
+    assert!(!new_high_scores.is_null());
+    let new_high_scores = core::slice::from_raw_parts(new_high_scores, SCORE_COUNT);
+    for (high_score, new_high_score) in
+        game_ui.high_scores.iter_mut().zip(new_high_scores.iter())
+    {
+        let name_buf =
+            core::slice::from_raw_parts(new_high_score.name, new_high_score.name_len);
+        let name = core::str::from_utf8(name_buf).expect("Name is not valid UTF-8");
+        high_score.0 = TinyString::from(name);
+        high_score.1 = new_high_score.score;
+    }
 }
 
 #[repr(C)]
@@ -309,18 +276,16 @@ pub unsafe extern "C" fn mmheroes_replay(
     recorded_input: *const u8,
     recorded_input_len: usize,
 ) -> bool {
-    ffi_safely_run(|| {
-        assert!(!recorded_input.is_null());
-        let slice = core::slice::from_raw_parts(recorded_input, recorded_input_len);
-        let s = match core::str::from_utf8(slice) {
-            Ok(s) => s,
-            Err(_) => return false,
-        };
-        let mut parser = recording::InputRecordingParser::new(s);
-        parser
-            .parse_all(|input| game_ui.continue_game(input))
-            .is_ok()
-    })
+    assert!(!recorded_input.is_null());
+    let slice = core::slice::from_raw_parts(recorded_input, recorded_input_len);
+    let s = match core::str::from_utf8(slice) {
+        Ok(s) => s,
+        Err(_) => return false,
+    };
+    let mut parser = recording::InputRecordingParser::new(s);
+    parser
+        .parse_all(|input| game_ui.continue_game(input))
+        .is_ok()
 }
 
 /// Продолжает игру до следующего запроса на нажатие клавиши.
@@ -331,7 +296,7 @@ pub extern "C" fn mmheroes_continue(
     game_ui: &mut GameUI<FfiRendererRequestConsumer>,
     input: Input,
 ) -> bool {
-    ffi_safely_run(|| game_ui.continue_game(input))
+    game_ui.continue_game(input)
 }
 
 #[repr(C)]
@@ -364,14 +329,14 @@ pub unsafe extern "C" fn mmheroes_input_recorder_record(
     recorder: &mut InputRecorder<InputRecorderSink>,
     input: Input,
 ) -> bool {
-    ffi_safely_run(|| recorder.record_input(input).is_ok())
+    recorder.record_input(input).is_ok()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn mmheroes_input_recorder_flush(
     recorder: &mut InputRecorder<InputRecorderSink>,
 ) -> bool {
-    ffi_safely_run(|| recorder.flush().is_ok())
+    recorder.flush().is_ok()
 }
 
 #[cfg(feature = "std")]
