@@ -23,28 +23,30 @@ fn make_noop_waker() -> Waker {
     unsafe { Waker::from_raw(NOOP) }
 }
 
-pub(crate) struct AwaitingInputExecutor<'a, F, Input> {
-    future: Pin<&'a mut F>,
+pub(crate) struct AwaitingInputExecutor<F, Input> {
+    future: F,
     phantom_data: PhantomData<Input>,
 }
 
-impl<'a, Result, Input: Any, F: Future<Output = Result>>
-    AwaitingInputExecutor<'a, F, Input>
-{
-    pub(crate) fn new(pinned_future: Pin<&'a mut F>) -> Self {
+impl<Result, Input: Any, F: Future<Output = Result>> AwaitingInputExecutor<F, Input> {
+    pub(crate) fn new(future: F) -> Self {
         Self {
-            future: pinned_future,
+            future,
             phantom_data: PhantomData,
         }
     }
 
-    pub(crate) fn resume(&mut self, input: Input) -> Poll<Result> {
+    pub(crate) fn resume(self: &mut Pin<&mut Self>, input: Input) -> Poll<Result> {
         let waker = make_noop_waker();
         let mut wrapped_input = Some(input);
         let mut context = ContextBuilder::from_waker(&waker)
             .ext(&mut wrapped_input)
             .build();
-        self.future.as_mut().poll(&mut context)
+        let pinned_future = unsafe {
+            self.as_mut()
+                .map_unchecked_mut(|executor| &mut executor.future)
+        };
+        pinned_future.poll(&mut context)
     }
 }
 
@@ -93,12 +95,13 @@ mod tests {
             read_input::<&str>().await
         });
         let mut executor = AwaitingInputExecutor::new(future);
+        let mut pinned_executor = pin!(executor);
         assert_eq!(input_collector.borrow().as_slice(), &[] as &[&str]);
-        assert_matches!(executor.resume("Hello"), Poll::Pending);
+        assert_matches!(pinned_executor.resume("Hello"), Poll::Pending);
         assert_eq!(input_collector.borrow().as_slice(), [">", "Hello"]);
-        assert_matches!(executor.resume("World"), Poll::Pending);
+        assert_matches!(pinned_executor.resume("World"), Poll::Pending);
         assert_eq!(input_collector.borrow().as_slice(), [">", "Hello", "World"]);
-        assert_matches!(executor.resume("!"), Poll::Ready("!"));
+        assert_matches!(pinned_executor.resume("!"), Poll::Ready("!"));
         assert_eq!(input_collector.borrow().as_slice(), [">", "Hello", "World"]);
     }
 
@@ -107,7 +110,8 @@ mod tests {
     fn test_panics_if_resumed_after_finishing() {
         let future = pin!(async { 42 });
         let mut executor = AwaitingInputExecutor::new(future);
-        let _ = executor.resume(());
-        let _ = executor.resume(());
+        let mut pinned_executor = pin!(executor);
+        let _ = pinned_executor.resume(());
+        let _ = pinned_executor.resume(());
     }
 }
