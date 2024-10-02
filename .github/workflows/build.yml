@@ -13,7 +13,7 @@ jobs:
   build-rust:
     runs-on: ubuntu-latest
     steps:
-      - name: Install the Rust toolchain specified in rust-toolchain.toml
+      - name: Install the Rust toolchain specified in the rust-toolchain file
         uses: actions-rs/toolchain@v1
       - uses: actions/checkout@v2
       - name: Build core with no_std
@@ -48,7 +48,7 @@ jobs:
     needs: build-rust
     runs-on: macos-latest
     steps:
-      - name: Install the Rust toolchain specified in rust-toolchain.toml
+      - name: Install the Rust toolchain specified in the rust-toolchain file
         uses: actions-rs/toolchain@v1
       - name: Install iOS rustup targets
         run: |
