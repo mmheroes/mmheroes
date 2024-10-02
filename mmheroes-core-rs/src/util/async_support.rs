@@ -214,8 +214,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_panics_if_resumed_after_finishing() {
-        let future = pin!(async { 42 });
-        let mut executor = PromptingExecutor::<_, (), ()>::new(future);
+        let mut executor = PromptingExecutor::<_, (), ()>::new(async { 42 });
         let mut pinned_executor = pin!(executor);
         let _ = pinned_executor.resume_with_input(());
         let _ = pinned_executor.resume_with_input(());
