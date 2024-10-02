@@ -13,9 +13,9 @@ jobs:
   build-rust:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Install the Rust toolchain specified in the rust-toolchain file
         uses: dsherret/rust-toolchain-file@v1
-      - uses: actions/checkout@v2
       - name: Build core with no_std
         run: |
           cd mmheroes-core-rs
@@ -48,6 +48,7 @@ jobs:
     needs: build-rust
     runs-on: macos-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Install the Rust toolchain specified in the rust-toolchain file
         uses: dsherret/rust-toolchain-file@v1
       - name: Install iOS rustup targets
@@ -55,7 +56,6 @@ jobs:
           rustup target add \
             aarch64-apple-ios \
             x86_64-apple-ios
-      - uses: actions/checkout@v2
       #      - name: Build iOS project (debug, device)
       #        uses: sersoft-gmbh/xcodebuild-action@v1
       #        with:
