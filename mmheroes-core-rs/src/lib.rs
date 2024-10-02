@@ -5,7 +5,6 @@
 
 pub mod util;
 
-mod async_support;
 mod random;
 
 pub mod ffi;

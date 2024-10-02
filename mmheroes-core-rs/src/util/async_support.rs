@@ -77,7 +77,7 @@ pub(crate) async fn read_input<T: Any>() -> T {
 
 #[cfg(test)]
 mod tests {
-    use crate::async_support::{read_input, AwaitingInputExecutor};
+    use super::{read_input, AwaitingInputExecutor};
     use assert_matches::assert_matches;
     use core::cell::RefCell;
     use core::pin::pin;
