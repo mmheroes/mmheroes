@@ -48,20 +48,18 @@ impl<Result, Input: Any + Unpin, Output: Any + Unpin, F: Future<Output = Result>
     }
 
     pub(crate) fn resume_with_input(
-        self: &mut Pin<&mut Self>,
+        self: Pin<&mut Self>,
         input: Input,
     ) -> Prompt<Output, Result> {
         self.resume(Some(input))
     }
 
-    pub(crate) fn resume_without_input(
-        self: &mut Pin<&mut Self>,
-    ) -> Prompt<Output, Result> {
+    pub(crate) fn resume_without_input(self: Pin<&mut Self>) -> Prompt<Output, Result> {
         self.resume(None)
     }
 
     pub(crate) fn resume(
-        self: &mut Pin<&mut Self>,
+        mut self: Pin<&mut Self>,
         maybe_input: Option<Input>,
     ) -> Prompt<Output, Result> {
         let waker = make_noop_waker();
@@ -160,32 +158,32 @@ mod tests {
         let mut pinned_executor = pin!(executor);
         assert_eq!(input_collector.borrow().as_slice(), &[] as &[&str]);
         assert_matches!(
-            pinned_executor.resume_without_input(),
+            pinned_executor.as_mut().resume_without_input(),
             Prompt::WaitingForInput(0)
         );
         assert_eq!(input_collector.borrow().as_slice(), [">"]);
         assert_matches!(
-            pinned_executor.resume_without_input(),
+            pinned_executor.as_mut().resume_without_input(),
             Prompt::AlreadyPrompted
         );
         assert_eq!(input_collector.borrow().as_slice(), [">"]);
         assert_matches!(
-            pinned_executor.resume_with_input("Hello"),
+            pinned_executor.as_mut().resume_with_input("Hello"),
             Prompt::WaitingForInput(1)
         );
         assert_eq!(input_collector.borrow().as_slice(), [">", "Hello"]);
         assert_matches!(
-            pinned_executor.resume_without_input(),
+            pinned_executor.as_mut().resume_without_input(),
             Prompt::AlreadyPrompted
         );
         assert_eq!(input_collector.borrow().as_slice(), [">", "Hello"]);
         assert_matches!(
-            pinned_executor.resume_with_input("World"),
+            pinned_executor.as_mut().resume_with_input("World"),
             Prompt::WaitingForInput(999)
         );
         assert_eq!(input_collector.borrow().as_slice(), [">", "Hello", "World"]);
         assert_matches!(
-            pinned_executor.resume_with_input("!"),
+            pinned_executor.as_mut().resume_with_input("!"),
             Prompt::Completed("!")
         );
         assert_eq!(input_collector.borrow().as_slice(), [">", "Hello", "World"]);
@@ -200,12 +198,12 @@ mod tests {
         });
         let mut pinned_executor = pin!(executor);
         assert_matches!(
-            pinned_executor.resume_with_input("Hello"),
+            pinned_executor.as_mut().resume_with_input("Hello"),
             Prompt::WaitingForInput(42)
         );
         assert_eq!(input_collector.borrow().as_slice(), &[] as &[&str]);
         assert_matches!(
-            pinned_executor.resume_with_input("Hello"),
+            pinned_executor.as_mut().resume_with_input("Hello"),
             Prompt::Completed(())
         );
         assert_eq!(input_collector.borrow().as_slice(), ["Hello"]);
@@ -216,7 +214,7 @@ mod tests {
     fn test_panics_if_resumed_after_finishing() {
         let mut executor = PromptingExecutor::<_, (), ()>::new(async { 42 });
         let mut pinned_executor = pin!(executor);
-        let _ = pinned_executor.resume_with_input(());
-        let _ = pinned_executor.resume_with_input(());
+        let _ = pinned_executor.as_mut().resume_with_input(());
+        let _ = pinned_executor.as_mut().resume_with_input(());
     }
 }
