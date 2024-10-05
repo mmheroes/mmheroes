@@ -41,7 +41,7 @@ pub(in crate::logic) fn scene_router_run(
     game: &mut InternalGameState,
     state: &GameState,
 ) -> ActionVec {
-    let available_actions = scene_router::available_actions(game, state);
+    let available_actions = scene_router::available_actions(state);
     game.set_screen(GameScreen::SceneRouter(state.clone()));
     available_actions
 }

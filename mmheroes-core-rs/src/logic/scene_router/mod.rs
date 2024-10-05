@@ -7,7 +7,7 @@ pub mod train;
 
 use super::*;
 
-pub(super) fn available_actions(g: &InternalGameState, state: &GameState) -> ActionVec {
+pub(super) fn available_actions(state: &GameState) -> ActionVec {
     // TODO: assert that no exam is in progress
     let location = state.location;
 
@@ -109,7 +109,7 @@ pub(super) fn available_actions(g: &InternalGameState, state: &GameState) -> Act
 }
 
 pub(super) async fn run(g: &mut InternalGameState<'_>, mut state: GameState) {
-    let available_actions = available_actions(g, &state);
+    let available_actions = available_actions(&state);
     g.set_screen(GameScreen::SceneRouter(state.clone()));
     g.set_available_actions_from_vec(available_actions);
     let router_action = g.wait_for_action().await;
