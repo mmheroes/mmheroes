@@ -114,13 +114,6 @@ pub(super) async fn run(g: &mut InternalGameState<'_>, mut state: GameState) {
     g.set_available_actions_from_vec(available_actions);
     let router_action = g.wait_for_action().await;
     handle_router_action(g, &mut state, router_action).await;
-
-    // LEGACY
-    loop {
-        let action = g.wait_for_action().await;
-        let new_actions = g.perform_action(action);
-        g.set_available_actions_from_vec(new_actions);
-    }
 }
 
 pub(super) fn handle_action_sync(
@@ -138,17 +131,24 @@ pub(super) fn handle_action_sync(
 }
 
 async fn handle_router_action(
-    game: &mut InternalGameState<'_>,
+    g: &mut InternalGameState<'_>,
     state: &mut GameState,
     action: Action,
 ) {
     use Location::*;
     match state.location() {
-        PUNK => punk::handle_router_action(game, state, action).await,
-        PDMI => pdmi::handle_router_action(game, state, action).await,
-        ComputerClass => computer_class::handle_router_action(game, state, action).await,
-        Dorm => dorm::handle_router_action(game, state, action).await,
-        Mausoleum => mausoleum::handle_router_action(game, state, action).await,
+        PUNK => punk::handle_router_action(g, state, action).await,
+        PDMI => pdmi::handle_router_action(g, state, action).await,
+        ComputerClass => computer_class::handle_router_action(g, state, action).await,
+        Dorm => dorm::handle_router_action(g, state, action).await,
+        Mausoleum => mausoleum::handle_router_action(g, state, action).await,
+    }
+
+    // LEGACY
+    loop {
+        let action = g.wait_for_action().await;
+        let new_actions = g.perform_action(action);
+        g.set_available_actions_from_vec(new_actions);
     }
 }
 
