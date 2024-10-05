@@ -32,6 +32,7 @@ pub use game_screen::*;
 pub mod scene_router;
 
 mod entry_point;
+mod legacy;
 
 use crate::random;
 

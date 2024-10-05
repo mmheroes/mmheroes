@@ -157,7 +157,7 @@ pub(super) fn handle_wanna_try_again(
     action: Action,
 ) -> ActionVec {
     match action {
-        Action::WantToTryAgain => entry_point::start_game(game),
+        Action::WantToTryAgain => legacy::start_game(game),
         Action::DontWantToTryAgain => {
             game.set_screen(GameScreen::Disclaimer);
             wait_for_any_key()

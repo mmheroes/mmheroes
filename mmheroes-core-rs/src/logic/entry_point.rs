@@ -13,16 +13,7 @@ pub(super) async fn run(g: &mut InternalGameState<'_>) {
     }
 }
 
-#[deprecated]
-pub(super) fn start_game(g: &mut InternalGameState) -> ActionVec {
-    if should_select_game_style(g) {
-        g.observable_state.borrow().available_actions.clone()
-    } else {
-        ding(g, Action::RandomStudent)
-    }
-}
-
-fn should_select_game_style(g: &mut InternalGameState) -> bool {
+pub(super) fn should_select_game_style(g: &mut InternalGameState) -> bool {
     let mode = g.observable_state.borrow().mode;
     match mode {
         GameMode::SelectInitialParameters => {
