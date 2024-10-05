@@ -31,6 +31,8 @@ pub use game_screen::*;
 
 pub mod scene_router;
 
+mod entry_point;
+
 use crate::random;
 
 use crate::util::async_support::*;
@@ -142,7 +144,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             }
             InitialParameters => {
                 drop(borrowed_screen);
-                self.ding(action)
+                entry_point::ding(self, action)
             }
             Ding(player) => {
                 let state = GameState::new(
@@ -295,68 +297,6 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         }
     }
 
-    #[deprecated]
-    fn start_game(&mut self) -> ActionVec {
-        if self.should_select_game_style() {
-            self.observable_state.borrow().available_actions.clone()
-        } else {
-            self.ding(Action::RandomStudent)
-        }
-    }
-
-    fn should_select_game_style(&mut self) -> bool {
-        let mode = self.observable_state.borrow().mode;
-        match mode {
-            GameMode::SelectInitialParameters => {
-                self.set_screen(GameScreen::InitialParameters);
-                // Можно выбрать 4 стиля игры:
-                // - Случайный студент
-                // - Шибко умный
-                // - Шибко наглый
-                // - Шибко общительный
-                self.set_available_actions([
-                    Action::RandomStudent,
-                    Action::CleverStudent,
-                    Action::ImpudentStudent,
-                    Action::SociableStudent,
-                ]);
-                true
-            }
-            GameMode::God => {
-                self.set_screen(GameScreen::InitialParameters);
-                // Можно выбрать 5 стилей игры:
-                // - Случайный студент
-                // - Шибко умный
-                // - Шибко наглый
-                // - Шибко общительный
-                // - GOD-режим
-                self.set_available_actions([
-                    Action::RandomStudent,
-                    Action::CleverStudent,
-                    Action::ImpudentStudent,
-                    Action::SociableStudent,
-                    Action::GodMode,
-                ]);
-                true
-            }
-            GameMode::Normal => false,
-        }
-    }
-
-    async fn select_game_style(&mut self) -> Action {
-        if self.should_select_game_style() {
-            self.wait_for_action().await
-        } else {
-            Action::RandomStudent
-        }
-    }
-
-    fn ding(&mut self, action: Action) -> ActionVec {
-        let player = self.initialize_player(action);
-        self.set_screen(GameScreen::Ding(player));
-        wait_for_any_key()
-    }
-
     fn initialize_player(&mut self, parameters: Action) -> Player {
         let (god_mode, brain, stamina, charisma) = match parameters {
             Action::RandomStudent => (
@@ -465,18 +405,21 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
     }
 
     async fn wait_for_action(&self) -> Action {
-        prompt(()).await
+        let action = prompt(()).await;
+        if !self
+            .observable_state
+            .borrow()
+            .available_actions()
+            .contains(&action)
+        {
+            illegal_action!(action);
+        }
+        action
     }
 
-    async fn run_game(&mut self) {
-        let game_style = self.select_game_style().await;
-        let available_actions = self.ding(game_style);
-        self.set_available_actions_from_vec(available_actions);
-        loop {
-            let action = self.wait_for_action().await;
-            let new_actions = self.perform_action(action);
-            self.set_available_actions_from_vec(new_actions);
-        }
+    async fn wait_for_any_key(&self) {
+        self.set_available_actions([Action::AnyKey]);
+        self.wait_for_action().await;
     }
 }
 
@@ -495,7 +438,7 @@ impl<'a, F: Future> Game for GameExecutor<F> {
 
 pub fn create_game(seed: u64, state: &RefCell<ObservableGameState>) -> impl Game + '_ {
     let mut game = InternalGameState::new(seed, state);
-    GameExecutor::new(async move { game.run_game().await })
+    GameExecutor::new(async move { entry_point::run(&mut game).await })
 }
 
 #[test]
