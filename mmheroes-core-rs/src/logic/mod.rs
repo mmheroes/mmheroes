@@ -123,20 +123,22 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         self.observable_state.borrow_mut().screen = new_screen;
     }
 
-    fn perform_action(&mut self, action: Action) {
-        let new_action = self._perform_action(action);
-        self.observable_state.borrow_mut().available_actions = new_action;
+    fn set_available_actions_from_vec(&self, actions: ActionVec) {
+        self.observable_state.borrow_mut().available_actions = actions
+    }
+
+    fn set_available_actions<const N: usize>(&self, actions: [Action; N]) {
+        self.set_available_actions_from_vec(ActionVec::from(actions))
     }
 
     /// Accepts an action, returns the number of actions available in the updated state.
-    fn _perform_action(&mut self, action: Action) -> ActionVec {
+    fn perform_action(&mut self, action: Action) -> ActionVec {
         use GameScreen::*;
         let borrowed_screen = self.screen();
         match &*borrowed_screen {
             Terminal => panic!("Attempted to perform an action in terminal state"),
             Intro => {
-                drop(borrowed_screen);
-                self.start_game()
+                unreachable!()
             }
             InitialParameters => {
                 drop(borrowed_screen);
@@ -293,7 +295,16 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         }
     }
 
+    #[deprecated]
     fn start_game(&mut self) -> ActionVec {
+        if self.should_select_game_style() {
+            self.observable_state.borrow().available_actions.clone()
+        } else {
+            self.ding(Action::RandomStudent)
+        }
+    }
+
+    fn should_select_game_style(&mut self) -> bool {
         let mode = self.observable_state.borrow().mode;
         match mode {
             GameMode::SelectInitialParameters => {
@@ -303,12 +314,13 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 // - Шибко умный
                 // - Шибко наглый
                 // - Шибко общительный
-                ActionVec::from([
+                self.set_available_actions([
                     Action::RandomStudent,
                     Action::CleverStudent,
                     Action::ImpudentStudent,
                     Action::SociableStudent,
-                ])
+                ]);
+                true
             }
             GameMode::God => {
                 self.set_screen(GameScreen::InitialParameters);
@@ -318,15 +330,24 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 // - Шибко наглый
                 // - Шибко общительный
                 // - GOD-режим
-                ActionVec::from([
+                self.set_available_actions([
                     Action::RandomStudent,
                     Action::CleverStudent,
                     Action::ImpudentStudent,
                     Action::SociableStudent,
                     Action::GodMode,
-                ])
+                ]);
+                true
             }
-            GameMode::Normal => self.ding(Action::RandomStudent),
+            GameMode::Normal => false,
+        }
+    }
+
+    async fn select_game_style(&mut self) -> Action {
+        if self.should_select_game_style() {
+            self.wait_for_action().await
+        } else {
+            Action::RandomStudent
         }
     }
 
@@ -448,10 +469,13 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
     }
 
     async fn run_game(&mut self) {
-        let mut action = Action::AnyKey;
+        let game_style = self.select_game_style().await;
+        let available_actions = self.ding(game_style);
+        self.set_available_actions_from_vec(available_actions);
         loop {
-            self.perform_action(action);
-            action = self.wait_for_action().await;
+            let action = self.wait_for_action().await;
+            let new_actions = self.perform_action(action);
+            self.set_available_actions_from_vec(new_actions);
         }
     }
 }
@@ -484,5 +508,5 @@ fn memory() {
 
     let observable_game_state = RefCell::new(observable_game_state);
     let game = create_game(0, &observable_game_state);
-    assert_eq!(size_of_val(&game), 64);
+    assert_eq!(size_of_val(&game), 80);
 }
