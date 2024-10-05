@@ -1,5 +1,5 @@
 pub mod timetable;
-pub use timetable::*;
+pub use timetable::{Day, Duration, Time, Timetable};
 
 pub mod characteristics;
 pub use characteristics::*;
@@ -148,6 +148,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 legacy::ding(self, action)
             }
             Ding(player) => {
+                // TODO: Remove player
                 let state = GameState::new(
                     player.clone(),
                     timetable::Timetable::random(&mut self.rng),
@@ -159,7 +160,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             Timetable(state) => {
                 let state = state.clone();
                 drop(borrowed_screen);
-                scene_router::run(self, state)
+                scene_router::run_sync(self, state)
             }
             SceneRouter(state) => {
                 let state = state.clone();
@@ -190,7 +191,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 Action::AnyKey => {
                     let state = state.clone();
                     drop(borrowed_screen);
-                    scene_router::run(self, state)
+                    scene_router::run_sync(self, state)
                 }
                 _ => illegal_action!(action),
             },
@@ -238,7 +239,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 assert_eq!(action, Action::AnyKey);
                 let state = state.clone();
                 drop(borrowed_screen);
-                scene_router::run(self, state)
+                scene_router::run_sync(self, state)
             }
             GoToProfessor(state) => match action {
                 Action::Exam(subject) => {
@@ -249,7 +250,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 Action::DontGoToProfessor => {
                     let state = state.clone();
                     drop(borrowed_screen);
-                    scene_router::run(self, state)
+                    scene_router::run_sync(self, state)
                 }
                 _ => illegal_action!(action),
             },
@@ -397,7 +398,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             return self.midnight(state);
         }
 
-        scene_router::run(self, state)
+        scene_router::run_sync(self, state)
     }
 
     async fn wait_for_action(&self) -> Action {

@@ -90,7 +90,7 @@ pub(in crate::logic) fn proceed_with_train(
 ) -> ActionVec {
     match action {
         Action::AnyKey => match interaction {
-            NoPointToGoToPDMI => scene_router::run(game, state),
+            NoPointToGoToPDMI => scene_router::run_sync(game, state),
             GatecrashBecauseNoMoney {
                 caught_by_inspectors,
             }

@@ -12,13 +12,16 @@ pub(super) async fn run(g: &mut InternalGameState<'_>) {
         Timetable::random(&mut g.rng),
         Location::Dorm,
     );
-    g.set_screen(GameScreen::Timetable(state));
-    g.wait_for_any_key().await;
-    let mut action = Action::AnyKey;
+    timetable::show(g, state.clone()).await;
+
+    let selected_router_action = scene_router::run(g, state.clone()).await;
+    scene_router::handle_action(g, state.clone(), selected_router_action);
+
+    // LEGACY
     loop {
+        let action = g.wait_for_action().await;
         let new_actions = g.perform_action(action);
         g.set_available_actions_from_vec(new_actions);
-        action = g.wait_for_action().await;
     }
 }
 

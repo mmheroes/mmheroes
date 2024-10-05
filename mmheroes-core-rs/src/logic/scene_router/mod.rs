@@ -7,7 +7,7 @@ pub mod train;
 
 use super::*;
 
-pub(super) fn run(game: &mut InternalGameState, state: GameState) -> ActionVec {
+pub(super) fn run_sync(game: &mut InternalGameState, state: GameState) -> ActionVec {
     // TODO: assert that no exam is in progress
     let location = state.location;
 
@@ -110,6 +110,12 @@ pub(super) fn run(game: &mut InternalGameState, state: GameState) -> ActionVec {
     available_actions
 }
 
+pub(super) async fn run(g: &mut InternalGameState<'_>, state: GameState) -> Action {
+    let available_actions = run_sync(g, state);
+    g.set_available_actions_from_vec(available_actions);
+    g.wait_for_action().await
+}
+
 pub(super) fn handle_action(
     game: &mut InternalGameState,
     state: GameState,
@@ -135,7 +141,7 @@ pub(super) fn handle_i_am_done(
     action: Action,
 ) -> ActionVec {
     match action {
-        Action::NoIAmNotDone => run(game, state),
+        Action::NoIAmNotDone => run_sync(game, state),
         Action::IAmCertainlyDone => game_end(game, state),
         _ => illegal_action!(action),
     }

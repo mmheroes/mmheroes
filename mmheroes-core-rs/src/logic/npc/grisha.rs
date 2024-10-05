@@ -164,12 +164,12 @@ pub(in crate::logic) fn proceed(
         Action::AnyKey => match interaction {
             PromptEmploymentAtTerkom => unreachable!(),
             CongratulationsYouAreNowEmployed | AsYouWantButDontOverstudy => {
-                scene_router::run(game, state)
+                scene_router::run_sync(game, state)
             }
             ProxyAddress => {
                 assert!(!player.has_internet());
                 player.set_has_internet();
-                scene_router::run(game, state)
+                scene_router::run_sync(game, state)
             }
             WantFreebie {
                 drink_beer,
@@ -244,7 +244,7 @@ pub(in crate::logic) fn proceed(
                     return game.hour_pass(state);
                 }
 
-                scene_router::run(game, state)
+                scene_router::run_sync(game, state)
             }
         },
         Action::AcceptEmploymentAtTerkom => {

@@ -71,7 +71,7 @@ pub(in crate::logic) fn proceed(
         }
         Action::AnyKey => {
             assert_ne!(interaction, ChooseSubject);
-            scene_router::run(game, state)
+            scene_router::run_sync(game, state)
         }
         _ => illegal_action!(action),
     }

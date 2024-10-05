@@ -13,13 +13,13 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_large_penalty(),
                 state,
                 CauseOfDeath::OnTheWayToPUNK,
-                run,
+                run_sync,
             )
         }
         Action::GoToPDMI => train::go_to_pdmi(game, state),
         Action::GoFromMausoleumToDorm => {
             state.location = Location::Dorm;
-            run(game, state)
+            run_sync(game, state)
         }
         Action::Rest => {
             let money = state.player.money;
@@ -89,7 +89,7 @@ pub(in crate::logic) fn handle_rest(
         Action::RestByOurselvesInMausoleum => {
             player.health += game.rng.random(player.charisma.0);
         }
-        Action::NoRestIsNoGood => return scene_router::run(game, state),
+        Action::NoRestIsNoGood => return scene_router::run_sync(game, state),
         _ => illegal_action!(action),
     }
 

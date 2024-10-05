@@ -17,7 +17,7 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_large_penalty(),
                 state,
                 CauseOfDeath::OnTheWayToPUNK,
-                run,
+                run_sync,
             )
         }
         Action::GoToPDMI => train::go_to_pdmi(game, state),
@@ -27,7 +27,7 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_large_penalty(),
                 state,
                 CauseOfDeath::OnTheWayToMausoleum,
-                run,
+                run_sync,
             )
         }
         Action::IAmDone => scene_router::i_am_done(game, state),
@@ -79,7 +79,7 @@ pub(in crate::logic) fn choose_use_lecture_notes(
                 study(game, state, subject, false)
             }
         }
-        Action::DontStudy => scene_router::run(game, state),
+        Action::DontStudy => scene_router::run_sync(game, state),
         _ => illegal_action!(action),
     }
 }
@@ -103,7 +103,7 @@ pub(in crate::logic) fn study(
         state.player.brain.0
     };
     if brain_or_stamina <= 0 {
-        return scene_router::run(game, state);
+        return scene_router::run_sync(game, state);
     }
     let health = state.player.health;
     let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
@@ -181,7 +181,7 @@ pub(in crate::logic) fn handle_sleeping(
     // TODO: Реализовать что-то помимо неудавшегося сна
     assert_matches!(&*game.screen(), GameScreen::Sleep(_));
     assert_eq!(action, Action::AnyKey);
-    scene_router::run(game, state)
+    scene_router::run_sync(game, state)
 }
 
 pub(in crate::logic) fn handle_what_to_do(
@@ -199,7 +199,7 @@ pub(in crate::logic) fn handle_what_to_do(
         Action::AboutCharacters => AboutCharacters(state),
         Action::AboutThisProgram => AboutThisProgram(state),
         Action::ThanksButNothing => {
-            return scene_router::run(game, state);
+            return scene_router::run_sync(game, state);
         }
         _ => illegal_action!(action),
     });

@@ -10,7 +10,7 @@ pub enum GameScreen {
     InitialParameters,
 
     /// Экран с предысторией ("ты просыпаешься от звонка будильника...")
-    Ding(Player),
+    Ding(Player), // TODO: Remove Player
 
     /// Экран с расписанием.
     Timetable(GameState),

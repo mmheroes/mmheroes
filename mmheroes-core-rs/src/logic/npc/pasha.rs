@@ -51,5 +51,5 @@ pub(in crate::logic) fn proceed(
             }
         }
     }
-    scene_router::run(game, state)
+    scene_router::run_sync(game, state)
 }

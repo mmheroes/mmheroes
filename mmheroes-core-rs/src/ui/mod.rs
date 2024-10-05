@@ -416,7 +416,8 @@ impl Display for Location {
 }
 
 pub fn day_date(day: &Day) -> &'static str {
-    const DATES: [&str; NUM_DAYS] = ["22.5", "23.5", "24.5", "25.5", "26.5", "27.5"];
+    const DATES: [&str; timetable::NUM_DAYS] =
+        ["22.5", "23.5", "24.5", "25.5", "26.5", "27.5"];
     DATES[day.index()]
 }
 

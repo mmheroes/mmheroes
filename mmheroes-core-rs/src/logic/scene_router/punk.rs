@@ -14,7 +14,7 @@ pub(super) fn handle_action(
         }
         Action::GoFromPunkToDorm => {
             state.location = Location::Dorm;
-            run(game, state)
+            run_sync(game, state)
         }
         Action::GoToPDMI => train::go_to_pdmi(game, state),
         Action::GoToMausoleum => {
@@ -23,7 +23,7 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_large_penalty(),
                 state,
                 CauseOfDeath::OnTheWayToMausoleum,
-                run,
+                run_sync,
             )
         }
         Action::GoToComputerClass => {
@@ -33,7 +33,7 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_small_penalty(),
                 state,
                 CauseOfDeath::FellFromStairs,
-                run,
+                run_sync,
             )
         }
         Action::GoToCafePUNK => {
@@ -101,7 +101,7 @@ pub(in crate::logic) fn handle_cafe_punk_action(
             *health += charisma_dependent_health_gain;
         }
         Action::ShouldntHaveComeToCafePUNK => {
-            return scene_router::run(game, state);
+            return scene_router::run_sync(game, state);
         }
         _ => illegal_action!(action),
     }

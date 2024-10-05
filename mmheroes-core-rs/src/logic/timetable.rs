@@ -1,5 +1,6 @@
 pub use crate::logic::{Location, Subject, NUM_SUBJECTS, SUBJECTS};
 
+use crate::logic::{GameScreen, GameState, InternalGameState};
 use core::fmt::{Display, Formatter};
 use core::ops::{Add, AddAssign, Sub};
 
@@ -239,6 +240,11 @@ impl Timetable {
     pub fn days_mut(&mut self) -> &mut [Day] {
         &mut self.days
     }
+}
+
+pub(in crate::logic) async fn show(g: &mut InternalGameState<'_>, state: GameState) {
+    g.set_screen(GameScreen::Timetable(state));
+    g.wait_for_any_key().await;
 }
 
 #[cfg(test)]

@@ -10,7 +10,7 @@ pub(super) fn handle_action(
         Action::Exam(Subject::ComputerScience) => todo!(),
         Action::GoFromPunkToDorm => {
             state.location = Location::Dorm;
-            run(game, state)
+            run_sync(game, state)
         }
         Action::LeaveComputerClass => {
             state.location = Location::PUNK;
@@ -18,7 +18,7 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_small_penalty(),
                 state,
                 CauseOfDeath::CouldntLeaveTheComputer,
-                run,
+                run_sync,
             )
         }
         Action::GoToPDMI => train::go_to_pdmi(game, state),
@@ -28,7 +28,7 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_small_penalty(),
                 state,
                 CauseOfDeath::OnTheWayToMausoleum,
-                run,
+                run_sync,
             )
         }
         Action::SurfInternet => surf_internet(game, state),
