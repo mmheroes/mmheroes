@@ -13,16 +13,7 @@ pub(super) async fn run(g: &mut InternalGameState<'_>) {
         Location::Dorm,
     );
     timetable::show(g, state.clone()).await;
-
-    let selected_router_action = scene_router::run(g, state.clone()).await;
-    scene_router::handle_action(g, state.clone(), selected_router_action);
-
-    // LEGACY
-    loop {
-        let action = g.wait_for_action().await;
-        let new_actions = g.perform_action(action);
-        g.set_available_actions_from_vec(new_actions);
-    }
+    scene_router::run(g, state.clone()).await;
 }
 
 pub(super) fn should_select_game_style(g: &mut InternalGameState) -> bool {

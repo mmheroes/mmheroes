@@ -111,9 +111,18 @@ pub(super) fn run_sync(game: &mut InternalGameState, state: GameState) -> Action
 }
 
 pub(super) async fn run(g: &mut InternalGameState<'_>, state: GameState) -> Action {
-    let available_actions = run_sync(g, state);
+    let available_actions = run_sync(g, state.clone());
     g.set_available_actions_from_vec(available_actions);
-    g.wait_for_action().await
+    let router_action = g.wait_for_action().await;
+    let available_actions = handle_action(g, state, router_action);
+    g.set_available_actions_from_vec(available_actions);
+
+    // LEGACY
+    loop {
+        let action = g.wait_for_action().await;
+        let new_actions = g.perform_action(action);
+        g.set_available_actions_from_vec(new_actions);
+    }
 }
 
 pub(super) fn handle_action(
