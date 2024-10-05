@@ -70,3 +70,20 @@ pub fn replay_game<G: Game>(game_ui: &mut TestGameUI<G>, steps: &str) {
         Err(error) => panic!("{:?}", error),
     }
 }
+
+#[macro_export]
+macro_rules! initialize_game {
+    (($seed:expr, $mode:expr) => $state:ident, $game_ui:ident) => {
+        let $state = core::cell::RefCell::new(
+            mmheroes_core::logic::ObservableGameState::new($mode),
+        );
+        let mut game = mmheroes_core::logic::create_game($seed, &$state);
+        let game = pin!(game);
+        let mut $game_ui = $crate::TestGameUI::new(
+            &$state,
+            game,
+            None,
+            TestRendererRequestConsumer::new(),
+        );
+    };
+}

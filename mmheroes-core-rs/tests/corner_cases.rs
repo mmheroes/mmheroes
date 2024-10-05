@@ -2,18 +2,13 @@ mod common;
 
 use assert_matches::*;
 use common::*;
-use core::cell::RefCell;
 use core::pin::pin;
 use mmheroes_core::logic::*;
 use mmheroes_core::ui::Input;
 
 #[test]
 fn overstudy_to_zero_health() {
-    let state = RefCell::new(ObservableGameState::new(GameMode::Normal));
-    let mut game = create_game(1641333345581, &state);
-    let game = pin!(game);
-    let mut game_ui =
-        TestGameUI::new(&state, game, None, TestRendererRequestConsumer::new());
+    initialize_game!((1641333345581, GameMode::Normal) => state, game_ui);
     game_ui.continue_game(Input::Enter);
     replay_game(&mut game_ui, "13r");
     assert_matches!(
@@ -27,11 +22,7 @@ fn overstudy_to_zero_health() {
 /// ни к чему не приводит: знание предмета не увеличивается, время не тратится.
 #[test]
 fn study_with_negative_brain_level() {
-    let state = RefCell::new(ObservableGameState::new(GameMode::Normal));
-    let mut game = create_game(1641336778475, &state);
-    let game = pin!(game);
-    let mut game_ui =
-        TestGameUI::new(&state, game, None, TestRendererRequestConsumer::new());
+    initialize_game!((1641336778475, GameMode::Normal) => state, game_ui);
     game_ui.continue_game(Input::Enter);
     replay_game(&mut game_ui, "3r2↓r2↓r4↓r2↑2r4↓r3↑r↓2r3↑r↓2r4↓r↓2r3↑r↑2r3↑r↑2r3↑r↑2r3↑2r3↑2r2↑2r3↑2r3↑2r2↑r↓3r2↓2r");
     match state.borrow().screen() {
@@ -64,4 +55,16 @@ fn study_with_negative_brain_level() {
         }
         _ => panic!("Unexpected screen"),
     }
+}
+
+/// Проверяем что экран выбора стиля игры показывается после перезапуска
+#[test]
+fn initial_parameters_screen_shown_when_rerunning() {
+    initialize_game!((0, GameMode::SelectInitialParameters) => state, game_ui);
+    replay_game(&mut game_ui, "2r");
+    assert_matches!(state.borrow().screen(), GameScreen::InitialParameters);
+    replay_game(&mut game_ui, "2r↓2r2↑r↓3r");
+    assert_matches!(state.borrow().screen(), GameScreen::InitialParameters);
+    replay_game(&mut game_ui, "r");
+    assert_matches!(state.borrow().screen(), GameScreen::Ding(_));
 }
