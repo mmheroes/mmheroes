@@ -426,7 +426,7 @@ pub trait Game {
 
 pub(in crate::logic) type GameExecutor<F> = PromptingExecutor<F, Action, ()>;
 
-impl<'a, F: Future> Game for GameExecutor<F> {
+impl<F: Future> Game for GameExecutor<F> {
     fn perform_action(self: Pin<&mut Self>, action: Action) {
         // FIXME: The result is ignored, we probably don't want that
         self.resume_with_input(action);
