@@ -116,20 +116,6 @@ pub(super) async fn run(g: &mut InternalGameState<'_>, mut state: GameState) {
     handle_router_action(g, &mut state, router_action).await;
 }
 
-pub(super) fn handle_action_sync(
-    game: &mut InternalGameState,
-    state: GameState,
-    action: Action,
-) -> ActionVec {
-    match state.location() {
-        Location::PUNK => punk::handle_action(game, state, action),
-        Location::PDMI => pdmi::handle_action(game, state, action),
-        Location::ComputerClass => computer_class::handle_action(game, state, action),
-        Location::Dorm => dorm::handle_action(game, state, action),
-        Location::Mausoleum => mausoleum::handle_action(game, state, action),
-    }
-}
-
 async fn handle_router_action(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,

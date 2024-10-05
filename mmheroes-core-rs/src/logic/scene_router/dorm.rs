@@ -1,6 +1,6 @@
 use super::*;
 
-pub(super) fn handle_action(
+pub(in crate::logic) fn handle_action(
     game: &mut InternalGameState,
     mut state: GameState,
     action: Action,

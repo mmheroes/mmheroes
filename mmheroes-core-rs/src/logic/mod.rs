@@ -165,7 +165,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             SceneRouter(state) => {
                 let state = state.clone();
                 drop(borrowed_screen);
-                scene_router::handle_action_sync(self, state, action)
+                legacy::handle_action_sync(self, state, action)
             }
             Study(state) => {
                 let state = state.clone();

@@ -7,9 +7,7 @@
 #![allow(deprecated)]
 
 use crate::logic::actions::{wait_for_any_key, ActionVec};
-use crate::logic::{
-    entry_point, scene_router, Action, GameScreen, GameState, InternalGameState,
-};
+use crate::logic::*;
 
 #[deprecated]
 pub(in crate::logic) fn start_game(g: &mut InternalGameState) -> ActionVec {
@@ -44,4 +42,21 @@ pub(in crate::logic) fn scene_router_run(
     let available_actions = scene_router::available_actions(state);
     game.set_screen(GameScreen::SceneRouter(state.clone()));
     available_actions
+}
+
+#[deprecated]
+pub(in crate::logic) fn handle_action_sync(
+    game: &mut InternalGameState,
+    state: GameState,
+    action: Action,
+) -> ActionVec {
+    use scene_router::*;
+    use Location::*;
+    match state.location() {
+        PUNK => punk::handle_action(game, state, action),
+        PDMI => pdmi::handle_action(game, state, action),
+        ComputerClass => computer_class::handle_action(game, state, action),
+        Dorm => dorm::handle_action(game, state, action),
+        Mausoleum => mausoleum::handle_action(game, state, action),
+    }
 }
