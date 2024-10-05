@@ -8,7 +8,7 @@ pub(super) fn handle_action(
     assert_eq!(state.location, Location::Dorm);
     match action {
         Action::Study => choose_subject_to_study(game, state),
-        Action::ViewTimetable => game.view_timetable(state),
+        Action::ViewTimetable => legacy::view_timetable(game, state),
         Action::Rest => rest(game, state),
         Action::GoToBed => try_to_sleep(game, state),
         Action::GoFromDormToPunk => {

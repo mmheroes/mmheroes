@@ -145,7 +145,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             }
             InitialParameters => {
                 drop(borrowed_screen);
-                entry_point::ding(self, action)
+                legacy::ding(self, action)
             }
             Ding(player) => {
                 let state = GameState::new(
@@ -154,7 +154,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                     Location::Dorm,
                 );
                 drop(borrowed_screen);
-                self.view_timetable(state)
+                legacy::view_timetable(self, state)
             }
             Timetable(state) => {
                 let state = state.clone();
@@ -341,11 +341,6 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         todo!()
     }
 
-    fn view_timetable(&mut self, state: GameState) -> ActionVec {
-        self.set_screen(GameScreen::Timetable(state));
-        wait_for_any_key()
-    }
-
     fn decrease_health<F: FnOnce(&mut InternalGameState, GameState) -> ActionVec>(
         &mut self,
         delta: HealthLevel,
@@ -452,5 +447,5 @@ fn memory() {
 
     let observable_game_state = RefCell::new(observable_game_state);
     let game = create_game(0, &observable_game_state);
-    assert_eq!(size_of_val(&game), 80);
+    assert_eq!(size_of_val(&game), 128);
 }

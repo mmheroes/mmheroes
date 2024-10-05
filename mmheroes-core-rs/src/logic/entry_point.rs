@@ -1,15 +1,24 @@
-use crate::logic::actions::{wait_for_any_key, ActionVec};
-use crate::logic::{Action, GameMode, GameScreen, InternalGameState};
+use super::*;
+use crate::logic::{Action, GameMode, GameScreen, GameState, InternalGameState};
 
 /// Точка входа
 pub(super) async fn run(g: &mut InternalGameState<'_>) {
     let game_style = select_game_style(g).await;
-    let available_actions = ding(g, game_style);
-    g.set_available_actions_from_vec(available_actions);
+    let player = g.initialize_player(game_style);
+    g.set_screen(GameScreen::Ding(player.clone()));
+    g.wait_for_any_key().await;
+    let state = GameState::new(
+        player.clone(),
+        Timetable::random(&mut g.rng),
+        Location::Dorm,
+    );
+    g.set_screen(GameScreen::Timetable(state));
+    g.wait_for_any_key().await;
+    let mut action = Action::AnyKey;
     loop {
-        let action = g.wait_for_action().await;
         let new_actions = g.perform_action(action);
         g.set_available_actions_from_vec(new_actions);
+        action = g.wait_for_action().await;
     }
 }
 
@@ -58,10 +67,4 @@ async fn select_game_style(g: &mut InternalGameState<'_>) -> Action {
     } else {
         Action::RandomStudent
     }
-}
-
-pub(super) fn ding(g: &mut InternalGameState, action: Action) -> ActionVec {
-    let player = g.initialize_player(action);
-    g.set_screen(GameScreen::Ding(player));
-    wait_for_any_key()
 }

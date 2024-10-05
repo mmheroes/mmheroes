@@ -4,14 +4,30 @@
 //! функции. Когда вся игра будет переписана, их можно будет удалить.
 //!
 
-use crate::logic::actions::ActionVec;
-use crate::logic::{entry_point, Action, InternalGameState};
+use crate::logic::actions::{wait_for_any_key, ActionVec};
+use crate::logic::{entry_point, Action, GameScreen, GameState, InternalGameState};
 
 #[deprecated]
 pub(in crate::logic) fn start_game(g: &mut InternalGameState) -> ActionVec {
     if entry_point::should_select_game_style(g) {
         g.observable_state.borrow().available_actions.clone()
     } else {
-        entry_point::ding(g, Action::RandomStudent)
+        ding(g, Action::RandomStudent)
     }
+}
+
+#[deprecated]
+pub(in crate::logic) fn ding(g: &mut InternalGameState, action: Action) -> ActionVec {
+    let player = g.initialize_player(action);
+    g.set_screen(GameScreen::Ding(player));
+    wait_for_any_key()
+}
+
+#[deprecated]
+pub(in crate::logic) fn view_timetable(
+    g: &mut InternalGameState,
+    state: GameState,
+) -> ActionVec {
+    g.set_screen(GameScreen::Timetable(state));
+    wait_for_any_key()
 }
