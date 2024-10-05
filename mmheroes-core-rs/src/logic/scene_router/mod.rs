@@ -7,7 +7,7 @@ pub mod train;
 
 use super::*;
 
-pub(super) fn run_sync(game: &mut InternalGameState, state: GameState) -> ActionVec {
+pub(super) fn available_actions(g: &InternalGameState, state: &GameState) -> ActionVec {
     // TODO: assert that no exam is in progress
     let location = state.location;
 
@@ -18,7 +18,7 @@ pub(super) fn run_sync(game: &mut InternalGameState, state: GameState) -> Action
         }
     };
 
-    let available_actions = match location {
+    match location {
         Location::PDMI => {
             let mut available_actions = ActionVec::from([
                 Action::GoToProfessor,
@@ -105,17 +105,15 @@ pub(super) fn run_sync(game: &mut InternalGameState, state: GameState) -> Action
             available_actions.push(Action::IAmDone);
             available_actions
         }
-    };
-    game.set_screen(GameScreen::SceneRouter(state));
-    available_actions
+    }
 }
 
-pub(super) async fn run(g: &mut InternalGameState<'_>, state: GameState) -> Action {
-    let available_actions = run_sync(g, state.clone());
+pub(super) async fn run(g: &mut InternalGameState<'_>, mut state: GameState) {
+    let available_actions = available_actions(g, &state);
+    g.set_screen(GameScreen::SceneRouter(state.clone()));
     g.set_available_actions_from_vec(available_actions);
     let router_action = g.wait_for_action().await;
-    let available_actions = handle_action(g, state, router_action);
-    g.set_available_actions_from_vec(available_actions);
+    handle_router_action(g, &mut state, router_action).await;
 
     // LEGACY
     loop {
@@ -125,7 +123,7 @@ pub(super) async fn run(g: &mut InternalGameState<'_>, state: GameState) -> Acti
     }
 }
 
-pub(super) fn handle_action(
+pub(super) fn handle_action_sync(
     game: &mut InternalGameState,
     state: GameState,
     action: Action,
@@ -136,6 +134,21 @@ pub(super) fn handle_action(
         Location::ComputerClass => computer_class::handle_action(game, state, action),
         Location::Dorm => dorm::handle_action(game, state, action),
         Location::Mausoleum => mausoleum::handle_action(game, state, action),
+    }
+}
+
+async fn handle_router_action(
+    game: &mut InternalGameState<'_>,
+    state: &mut GameState,
+    action: Action,
+) {
+    use Location::*;
+    match state.location() {
+        PUNK => punk::handle_router_action(game, state, action).await,
+        PDMI => pdmi::handle_router_action(game, state, action).await,
+        ComputerClass => computer_class::handle_router_action(game, state, action).await,
+        Dorm => dorm::handle_router_action(game, state, action).await,
+        Mausoleum => mausoleum::handle_router_action(game, state, action).await,
     }
 }
 
@@ -150,7 +163,7 @@ pub(super) fn handle_i_am_done(
     action: Action,
 ) -> ActionVec {
     match action {
-        Action::NoIAmNotDone => run_sync(game, state),
+        Action::NoIAmNotDone => legacy::scene_router_run(game, &state),
         Action::IAmCertainlyDone => game_end(game, state),
         _ => illegal_action!(action),
     }

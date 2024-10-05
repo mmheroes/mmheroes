@@ -25,3 +25,12 @@ pub(super) fn handle_action(
         _ => illegal_action!(action),
     }
 }
+
+pub(in crate::logic) async fn handle_router_action(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+    action: Action,
+) {
+    let available_actions = handle_action(g, state.clone(), action);
+    g.set_available_actions_from_vec(available_actions);
+}

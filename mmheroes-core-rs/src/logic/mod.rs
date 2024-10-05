@@ -160,12 +160,12 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             Timetable(state) => {
                 let state = state.clone();
                 drop(borrowed_screen);
-                scene_router::run_sync(self, state)
+                legacy::scene_router_run(self, &state)
             }
             SceneRouter(state) => {
                 let state = state.clone();
                 drop(borrowed_screen);
-                scene_router::handle_action(self, state, action)
+                scene_router::handle_action_sync(self, state, action)
             }
             Study(state) => {
                 let state = state.clone();
@@ -191,7 +191,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 Action::AnyKey => {
                     let state = state.clone();
                     drop(borrowed_screen);
-                    scene_router::run_sync(self, state)
+                    legacy::scene_router_run(self, &state)
                 }
                 _ => illegal_action!(action),
             },
@@ -239,7 +239,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 assert_eq!(action, Action::AnyKey);
                 let state = state.clone();
                 drop(borrowed_screen);
-                scene_router::run_sync(self, state)
+                legacy::scene_router_run(self, &state)
             }
             GoToProfessor(state) => match action {
                 Action::Exam(subject) => {
@@ -250,7 +250,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 Action::DontGoToProfessor => {
                     let state = state.clone();
                     drop(borrowed_screen);
-                    scene_router::run_sync(self, state)
+                    legacy::scene_router_run(self, &state)
                 }
                 _ => illegal_action!(action),
             },
@@ -342,7 +342,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         todo!()
     }
 
-    fn decrease_health<F: FnOnce(&mut InternalGameState, GameState) -> ActionVec>(
+    fn decrease_health<F: FnOnce(&mut InternalGameState, &mut GameState) -> ActionVec>(
         &mut self,
         delta: HealthLevel,
         mut state: GameState,
@@ -354,7 +354,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             scene_router::game_end(self, state)
         } else {
             state.player.health -= delta;
-            if_alive(self, state)
+            if_alive(self, &mut state)
         }
     }
 
@@ -398,7 +398,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             return self.midnight(state);
         }
 
-        scene_router::run_sync(self, state)
+        legacy::scene_router_run(self, &state)
     }
 
     async fn wait_for_action(&self) -> Action {

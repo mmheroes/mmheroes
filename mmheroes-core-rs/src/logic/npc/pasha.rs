@@ -51,5 +51,5 @@ pub(in crate::logic) fn proceed(
             }
         }
     }
-    scene_router::run_sync(game, state)
+    legacy::scene_router_run(game, &state)
 }

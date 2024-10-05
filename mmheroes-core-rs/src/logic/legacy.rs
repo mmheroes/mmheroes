@@ -4,8 +4,12 @@
 //! функции. Когда вся игра будет переписана, их можно будет удалить.
 //!
 
+#![allow(deprecated)]
+
 use crate::logic::actions::{wait_for_any_key, ActionVec};
-use crate::logic::{entry_point, Action, GameScreen, GameState, InternalGameState};
+use crate::logic::{
+    entry_point, scene_router, Action, GameScreen, GameState, InternalGameState,
+};
 
 #[deprecated]
 pub(in crate::logic) fn start_game(g: &mut InternalGameState) -> ActionVec {
@@ -30,4 +34,14 @@ pub(in crate::logic) fn view_timetable(
 ) -> ActionVec {
     g.set_screen(GameScreen::Timetable(state));
     wait_for_any_key()
+}
+
+#[deprecated]
+pub(in crate::logic) fn scene_router_run(
+    game: &mut InternalGameState,
+    state: &GameState,
+) -> ActionVec {
+    let available_actions = scene_router::available_actions(game, state);
+    game.set_screen(GameScreen::SceneRouter(state.clone()));
+    available_actions
 }

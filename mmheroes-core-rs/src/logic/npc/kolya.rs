@@ -115,7 +115,7 @@ pub(in crate::logic) fn proceed(
                     player.money -= Money::oat_tincture_cost();
                 }
             }
-            scene_router::run_sync(game, state)
+            legacy::scene_router_run(game, &state)
         }
         Action::Yes => {
             assert_eq!(interaction, PromptOatTincture);

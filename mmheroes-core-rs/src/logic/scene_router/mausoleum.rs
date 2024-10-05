@@ -13,13 +13,13 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_large_penalty(),
                 state,
                 CauseOfDeath::OnTheWayToPUNK,
-                run_sync,
+                |g, state| legacy::scene_router_run(g, state),
             )
         }
         Action::GoToPDMI => train::go_to_pdmi(game, state),
         Action::GoFromMausoleumToDorm => {
             state.location = Location::Dorm;
-            run_sync(game, state)
+            legacy::scene_router_run(game, &state)
         }
         Action::Rest => {
             let money = state.player.money;
@@ -48,6 +48,15 @@ pub(super) fn handle_action(
         Action::IAmDone => scene_router::i_am_done(game, state),
         _ => illegal_action!(action),
     }
+}
+
+pub(in crate::logic) async fn handle_router_action(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+    action: Action,
+) {
+    let available_actions = handle_action(g, state.clone(), action);
+    g.set_available_actions_from_vec(available_actions);
 }
 
 pub(in crate::logic) fn handle_rest(
@@ -89,7 +98,7 @@ pub(in crate::logic) fn handle_rest(
         Action::RestByOurselvesInMausoleum => {
             player.health += game.rng.random(player.charisma.0);
         }
-        Action::NoRestIsNoGood => return scene_router::run_sync(game, state),
+        Action::NoRestIsNoGood => return legacy::scene_router_run(game, &state),
         _ => illegal_action!(action),
     }
 

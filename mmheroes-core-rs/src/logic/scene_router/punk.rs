@@ -14,7 +14,7 @@ pub(super) fn handle_action(
         }
         Action::GoFromPunkToDorm => {
             state.location = Location::Dorm;
-            run_sync(game, state)
+            legacy::scene_router_run(game, &state)
         }
         Action::GoToPDMI => train::go_to_pdmi(game, state),
         Action::GoToMausoleum => {
@@ -23,7 +23,7 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_large_penalty(),
                 state,
                 CauseOfDeath::OnTheWayToMausoleum,
-                run_sync,
+                |g, state| legacy::scene_router_run(g, state),
             )
         }
         Action::GoToComputerClass => {
@@ -33,7 +33,7 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_small_penalty(),
                 state,
                 CauseOfDeath::FellFromStairs,
-                run_sync,
+                |g, state| legacy::scene_router_run(g, state),
             )
         }
         Action::GoToCafePUNK => {
@@ -71,6 +71,15 @@ pub(super) fn handle_action(
     }
 }
 
+pub(in crate::logic) async fn handle_router_action(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+    action: Action,
+) {
+    let available_actions = handle_action(g, state.clone(), action);
+    g.set_available_actions_from_vec(available_actions);
+}
+
 pub(in crate::logic) fn handle_cafe_punk_action(
     game: &mut InternalGameState,
     mut state: GameState,
@@ -101,7 +110,7 @@ pub(in crate::logic) fn handle_cafe_punk_action(
             *health += charisma_dependent_health_gain;
         }
         Action::ShouldntHaveComeToCafePUNK => {
-            return scene_router::run_sync(game, state);
+            return legacy::scene_router_run(game, &state);
         }
         _ => illegal_action!(action),
     }

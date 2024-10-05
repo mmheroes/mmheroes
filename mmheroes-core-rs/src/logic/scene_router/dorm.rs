@@ -17,7 +17,7 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_large_penalty(),
                 state,
                 CauseOfDeath::OnTheWayToPUNK,
-                run_sync,
+                |g, state| legacy::scene_router_run(g, state),
             )
         }
         Action::GoToPDMI => train::go_to_pdmi(game, state),
@@ -27,13 +27,22 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_large_penalty(),
                 state,
                 CauseOfDeath::OnTheWayToMausoleum,
-                run_sync,
+                |g, state| legacy::scene_router_run(g, state),
             )
         }
         Action::IAmDone => scene_router::i_am_done(game, state),
         Action::WhatToDo => handle_what_to_do(game, state, Action::WhatToDoAtAll),
         _ => illegal_action!(action),
     }
+}
+
+pub(in crate::logic) async fn handle_router_action(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+    action: Action,
+) {
+    let available_actions = handle_action(g, state.clone(), action);
+    g.set_available_actions_from_vec(available_actions);
 }
 
 pub(in crate::logic) fn choose_subject_to_study(
@@ -79,7 +88,7 @@ pub(in crate::logic) fn choose_use_lecture_notes(
                 study(game, state, subject, false)
             }
         }
-        Action::DontStudy => scene_router::run_sync(game, state),
+        Action::DontStudy => legacy::scene_router_run(game, &state),
         _ => illegal_action!(action),
     }
 }
@@ -103,7 +112,7 @@ pub(in crate::logic) fn study(
         state.player.brain.0
     };
     if brain_or_stamina <= 0 {
-        return scene_router::run_sync(game, state);
+        return legacy::scene_router_run(game, &state);
     }
     let health = state.player.health;
     let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
@@ -140,12 +149,12 @@ pub(in crate::logic) fn study(
             {
                 game.decrease_health(
                     HealthLevel(10),
-                    state,
+                    state.clone(),
                     CauseOfDeath::StudiedTooWell,
-                    |game, state| game.hour_pass(state),
+                    |game, state| game.hour_pass(state.clone()),
                 )
             } else {
-                game.hour_pass(state)
+                game.hour_pass(state.clone())
             }
         },
     )
@@ -181,7 +190,7 @@ pub(in crate::logic) fn handle_sleeping(
     // TODO: Реализовать что-то помимо неудавшегося сна
     assert_matches!(&*game.screen(), GameScreen::Sleep(_));
     assert_eq!(action, Action::AnyKey);
-    scene_router::run_sync(game, state)
+    legacy::scene_router_run(game, &state)
 }
 
 pub(in crate::logic) fn handle_what_to_do(
@@ -199,7 +208,7 @@ pub(in crate::logic) fn handle_what_to_do(
         Action::AboutCharacters => AboutCharacters(state),
         Action::AboutThisProgram => AboutThisProgram(state),
         Action::ThanksButNothing => {
-            return scene_router::run_sync(game, state);
+            return legacy::scene_router_run(game, &state);
         }
         _ => illegal_action!(action),
     });

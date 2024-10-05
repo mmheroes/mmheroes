@@ -1,4 +1,6 @@
 use super::*;
+use crate::random::Rng;
+use TrainToPDMI::*;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum TrainToPDMI {
@@ -19,9 +21,6 @@ pub enum TrainToPDMI {
     BoughtRoundtripTicket,
 }
 
-use crate::random::Rng;
-use TrainToPDMI::*;
-
 pub(super) fn go_to_pdmi(game: &mut InternalGameState, state: GameState) -> ActionVec {
     assert_ne!(state.location, Location::PDMI);
     if state.current_time > Time(20) {
@@ -34,12 +33,15 @@ pub(super) fn go_to_pdmi(game: &mut InternalGameState, state: GameState) -> Acti
         health_penalty,
         state,
         CauseOfDeath::CorpseFoundInTheTrain,
-        |game, mut state| {
+        |game, state| {
             state.location = Location::PDMI;
             if state.player.money < Money::roundtrip_train_ticket_cost() {
-                no_money(game, state)
+                no_money(game, state.clone())
             } else {
-                game.set_screen(GameScreen::TrainToPDMI(state, PromptToBuyTickets));
+                game.set_screen(GameScreen::TrainToPDMI(
+                    state.clone(),
+                    PromptToBuyTickets,
+                ));
                 ActionVec::from([Action::GatecrashTrain, Action::BuyRoundtripTrainTicket])
             }
         },
@@ -70,7 +72,7 @@ fn no_money(game: &mut InternalGameState, mut state: GameState) -> ActionVec {
                 health_penalty,
                 state,
                 CauseOfDeath::KilledByInspectors,
-                gatecrash_because_no_money,
+                |g, state| gatecrash_because_no_money(g, state.clone()),
             );
         }
         // При попытке поехать в ПОМИ из общежития здоровье уменьшается, но смерть
@@ -90,7 +92,7 @@ pub(in crate::logic) fn proceed_with_train(
 ) -> ActionVec {
     match action {
         Action::AnyKey => match interaction {
-            NoPointToGoToPDMI => scene_router::run_sync(game, state),
+            NoPointToGoToPDMI => legacy::scene_router_run(game, &state),
             GatecrashBecauseNoMoney {
                 caught_by_inspectors,
             }

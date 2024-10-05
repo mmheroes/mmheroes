@@ -10,7 +10,7 @@ pub(super) fn handle_action(
         Action::Exam(Subject::ComputerScience) => todo!(),
         Action::GoFromPunkToDorm => {
             state.location = Location::Dorm;
-            run_sync(game, state)
+            legacy::scene_router_run(game, &state)
         }
         Action::LeaveComputerClass => {
             state.location = Location::PUNK;
@@ -18,7 +18,7 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_small_penalty(),
                 state,
                 CauseOfDeath::CouldntLeaveTheComputer,
-                run_sync,
+                |g, state| legacy::scene_router_run(g, state),
             )
         }
         Action::GoToPDMI => train::go_to_pdmi(game, state),
@@ -28,7 +28,7 @@ pub(super) fn handle_action(
                 HealthLevel::location_change_small_penalty(),
                 state,
                 CauseOfDeath::OnTheWayToMausoleum,
-                run_sync,
+                |g, state| legacy::scene_router_run(g, state),
             )
         }
         Action::SurfInternet => surf_internet(game, state),
@@ -43,6 +43,15 @@ pub(super) fn handle_action(
         Action::IAmDone => scene_router::game_end(game, state),
         _ => illegal_action!(action),
     }
+}
+
+pub(in crate::logic) async fn handle_router_action(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+    action: Action,
+) {
+    let available_actions = handle_action(g, state.clone(), action);
+    g.set_available_actions_from_vec(available_actions);
 }
 
 fn surf_internet(game: &mut InternalGameState, state: GameState) -> ActionVec {
