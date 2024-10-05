@@ -1,7 +1,7 @@
 use super::*;
 
 pub(super) fn handle_action(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     action: Action,
 ) -> ActionVec {
@@ -37,7 +37,7 @@ pub(super) fn handle_action(
 }
 
 pub(in crate::logic) fn choose_subject_to_study(
-    game: &mut Game,
+    game: &mut InternalGameState,
     state: GameState,
 ) -> ActionVec {
     let mut available_actions = SUBJECTS
@@ -51,12 +51,12 @@ pub(in crate::logic) fn choose_subject_to_study(
         })
         .collect::<ActionVec>();
     available_actions.push(Action::DontStudy);
-    game.screen = GameScreen::Study(state);
+    game.set_screen(GameScreen::Study(state));
     available_actions
 }
 
 pub(in crate::logic) fn choose_use_lecture_notes(
-    game: &mut Game,
+    game: &mut InternalGameState,
     state: GameState,
     action: Action,
 ) -> ActionVec {
@@ -70,7 +70,7 @@ pub(in crate::logic) fn choose_use_lecture_notes(
                 lecture_notes_available
             );
             if lecture_notes_available {
-                game.screen = GameScreen::PromptUseLectureNotes(state);
+                game.set_screen(GameScreen::PromptUseLectureNotes(state));
                 ActionVec::from([
                     Action::UseLectureNotes(subject),
                     Action::DontUseLectureNotes(subject),
@@ -85,7 +85,7 @@ pub(in crate::logic) fn choose_use_lecture_notes(
 }
 
 pub(in crate::logic) fn study(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     subject: Subject,
     use_lecture_notes: bool,
@@ -151,44 +151,47 @@ pub(in crate::logic) fn study(
     )
 }
 
-fn rest(game: &mut Game, mut state: GameState) -> ActionVec {
+fn rest(game: &mut InternalGameState, mut state: GameState) -> ActionVec {
     state.player.health += game.rng.random_in_range(7..15);
     game.hour_pass(state)
 }
 
-fn try_to_sleep(game: &mut Game, state: GameState) -> ActionVec {
+fn try_to_sleep(game: &mut InternalGameState, state: GameState) -> ActionVec {
     assert_eq!(state.location, Location::Dorm);
     if state.current_time > Time(3) && state.current_time < Time(20) {
-        game.screen = GameScreen::Sleep(state);
+        game.set_screen(GameScreen::Sleep(state));
         wait_for_any_key()
     } else {
         go_to_sleep(game, state)
     }
 }
 
-pub(in crate::logic) fn go_to_sleep(_game: &mut Game, _state: GameState) -> ActionVec {
+pub(in crate::logic) fn go_to_sleep(
+    _game: &mut InternalGameState,
+    _state: GameState,
+) -> ActionVec {
     todo!()
 }
 
 pub(in crate::logic) fn handle_sleeping(
-    game: &mut Game,
+    game: &mut InternalGameState,
     state: GameState,
     action: Action,
 ) -> ActionVec {
     // TODO: Реализовать что-то помимо неудавшегося сна
-    assert_matches!(game.screen, GameScreen::Sleep(_));
+    assert_matches!(&*game.screen(), GameScreen::Sleep(_));
     assert_eq!(action, Action::AnyKey);
     scene_router::run(game, state)
 }
 
 pub(in crate::logic) fn handle_what_to_do(
-    game: &mut Game,
+    game: &mut InternalGameState,
     state: GameState,
     action: Action,
 ) -> ActionVec {
     use GameScreen::*;
     assert_eq!(state.location(), Location::Dorm);
-    game.screen = match action {
+    game.set_screen(match action {
         Action::WhatToDoAtAll => WhatToDo(state),
         Action::AboutScreen => AboutScreen(state),
         Action::WhereToGoAndWhy => WhereToGoAndWhy(state),
@@ -199,7 +202,7 @@ pub(in crate::logic) fn handle_what_to_do(
             return scene_router::run(game, state);
         }
         _ => illegal_action!(action),
-    };
+    });
     ActionVec::from([
         Action::WhatToDoAtAll,
         Action::AboutScreen,

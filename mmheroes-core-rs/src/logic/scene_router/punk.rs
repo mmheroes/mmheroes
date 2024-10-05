@@ -1,7 +1,7 @@
 use super::*;
 
 pub(super) fn handle_action(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     action: Action,
 ) -> ActionVec {
@@ -9,7 +9,7 @@ pub(super) fn handle_action(
     match action {
         Action::GoToProfessor => actions::go_to_professor(game, state),
         Action::LookAtBaobab => {
-            game.screen = GameScreen::HighScores(state);
+            game.set_screen(GameScreen::HighScores(state));
             wait_for_any_key()
         }
         Action::GoFromPunkToDorm => {
@@ -52,7 +52,7 @@ pub(super) fn handle_action(
             }
             available_actions.push(Action::RestInCafePUNK);
             available_actions.push(Action::ShouldntHaveComeToCafePUNK);
-            game.screen = GameScreen::CafePUNK(state);
+            game.set_screen(GameScreen::CafePUNK(state));
             available_actions
         }
         Action::InteractWithClassmate(classmate) => {
@@ -72,14 +72,14 @@ pub(super) fn handle_action(
 }
 
 pub(in crate::logic) fn handle_cafe_punk_action(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     action: Action,
 ) -> ActionVec {
     // TODO: Логику можно переиспользовать в кафе ПОМИ
     assert_eq!(state.location, Location::PUNK);
     assert!(state.current_time.is_cafe_open());
-    assert_matches!(game.screen, GameScreen::CafePUNK(_));
+    assert_matches!(&*game.screen(), GameScreen::CafePUNK(_));
     let money = &mut state.player.money;
     let health = &mut state.player.health;
     let charisma_dependent_health_gain =

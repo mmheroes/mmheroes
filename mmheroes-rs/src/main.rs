@@ -1,5 +1,6 @@
+use mmheroes_core::logic::{create_game, ObservableGameState};
 use mmheroes_core::{
-    logic::{Game, GameMode},
+    logic::GameMode,
     ui::{
         self, recording,
         renderer::{RendererRequest, RendererRequestConsumer},
@@ -9,6 +10,7 @@ use mmheroes_core::{
 use pancurses::*;
 use std::cell::RefCell;
 use std::collections::HashMap;
+use std::pin::pin;
 use std::str::FromStr;
 use std::sync::Mutex;
 
@@ -231,14 +233,21 @@ fn main() {
             .as_millis() as u64
     });
 
-    let mut game = Game::new(mode, seed);
+    let observable_game_state = RefCell::new(ObservableGameState::new(mode));
+    let game = create_game(seed, &observable_game_state);
+    let game = pin!(game);
 
     let renderer_request_evaluator = RendererRequestEvaluator {
         window: &window,
         color_pairs_map: &color_pairs_map,
     };
 
-    let mut game_ui = GameUI::new(&mut game, high_scores::load(), renderer_request_evaluator);
+    let mut game_ui = GameUI::new(
+        &observable_game_state,
+        game,
+        high_scores::load(),
+        renderer_request_evaluator,
+    );
 
     let default_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |panic_info| {

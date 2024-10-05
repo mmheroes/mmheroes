@@ -1,7 +1,7 @@
 use super::*;
 
 pub(super) fn handle_action(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     action: Action,
 ) -> ActionVec {
@@ -45,7 +45,7 @@ pub(super) fn handle_action(
     }
 }
 
-fn surf_internet(game: &mut Game, state: GameState) -> ActionVec {
+fn surf_internet(game: &mut InternalGameState, state: GameState) -> ActionVec {
     let player = &state.player;
     let cs_problems_done = player
         .status_for_subject(Subject::ComputerScience)
@@ -54,12 +54,12 @@ fn surf_internet(game: &mut Game, state: GameState) -> ActionVec {
     let found_program = player.is_god_mode()
         || (game.rng.random(player.brain) > BrainLevel(6)
             && cs_problems_done < cs_problems_required);
-    game.screen = GameScreen::SurfInternet(state, found_program);
+    game.set_screen(GameScreen::SurfInternet(state, found_program));
     wait_for_any_key()
 }
 
 pub(in crate::logic) fn proceed_with_internet(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     action: Action,
     found_program: bool,

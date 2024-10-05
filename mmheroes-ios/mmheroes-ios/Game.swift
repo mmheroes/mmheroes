@@ -20,14 +20,45 @@ struct HighScore {
 
 final class Game {
 
+    private(set) var requests: [RendererRequest] = [.clearScreen, .flush]
+
+    private static let rendererRequestCallback: MMHEROES_RendererRequestCallback =
+        { context, request in
+            Unmanaged<Game>.fromOpaque(context!).takeUnretainedValue()
+                .requests
+                .append(RendererRequest(request))
+        }
+
     let mode: MMHEROES_GameMode
     let seed: UInt64
-    fileprivate let handle: OpaquePointer
+    fileprivate var handle: UnsafeMutableRawPointer! = nil
 
-    init(mode: MMHEROES_GameMode, seed: UInt64) {
+    init(mode: MMHEROES_GameMode, seed: UInt64, highScores: [HighScore]? = nil) {
         self.mode = mode
         self.seed = seed
-        handle = mmheroes_game_create(mode, seed, nil, allocator)
+        if let highScores = highScores {
+            handle = convertHighScoresToFFIFriendlyPointer(highScores) { buffer in
+                mmheroes_game_create(
+                    mode,
+                    seed,
+                    buffer.baseAddress,
+                    nil,
+                    allocator,
+                    Unmanaged.passUnretained(self).toOpaque(),
+                    Self.rendererRequestCallback
+                )
+            }
+        } else {
+            handle = mmheroes_game_create(
+                mode,
+                seed,
+                nil,
+                nil,
+                allocator,
+                Unmanaged.passUnretained(self).toOpaque(),
+                Self.rendererRequestCallback
+            )
+        }
     }
 
     var dayAndTime: (Int, Time)? {
@@ -37,6 +68,46 @@ final class Game {
             return (Int(day), time)
         }
         return nil
+    }
+
+    var highScores: [HighScore] {
+        get {
+            withExtendedLifetime(self) {
+                var result = [MMHEROES_HighScore](repeating: MMHEROES_HighScore(),
+                                                  count: Int(MMHEROES_SCORE_COUNT))
+                mmheroes_game_get_high_scores(handle, &result)
+
+                return result.map { ffiHighScore in
+                    let nameBuf = UnsafeBufferPointer(start: ffiHighScore.name,
+                                                      count: Int(ffiHighScore.name_len))
+                    let name = String(decoding: nameBuf, as: UTF8.self)
+                    return HighScore(name: name, money: ffiHighScore.score)
+                }
+            }
+        }
+        set {
+            withExtendedLifetime(self) {
+                convertHighScoresToFFIFriendlyPointer(newValue) { buffer in
+                    mmheroes_game_set_high_scores(handle, buffer.baseAddress)
+                }
+            }
+        }
+    }
+
+    @discardableResult
+    func replay(recordedInput: String) -> Bool {
+        withExtendedLifetime(self) {
+            recordedInput.withCString(encodedAs: UTF8.self) { buf in
+                mmheroes_replay(handle, buf, UInt(recordedInput.utf8.count))
+            }
+        }
+    }
+
+    func continueGame(input: MMHEROES_Input) -> Bool {
+        requests.removeAll()
+        return withExtendedLifetime(self) {
+            mmheroes_continue(handle, input)
+        }
     }
 
     deinit {
@@ -68,91 +139,6 @@ private func convertHighScoresToFFIFriendlyPointer<R>(
     }
 
     return doTheWork(highScores.makeIterator())
-}
-
-final class GameUI {
-
-    private var handle: OpaquePointer!
-
-    let game: Game
-
-    private(set) var requests: [RendererRequest] = [.clearScreen, .flush]
-
-    private static let rendererRequestCallback: MMHEROES_RendererRequestCallback =
-        { context, request in
-            Unmanaged<GameUI>.fromOpaque(context!).takeUnretainedValue()
-                .requests
-                .append(RendererRequest(request))
-        }
-
-    init(game: Game, highScores: [HighScore]? = nil) {
-        self.game = game
-        if let highScores = highScores {
-            handle = convertHighScoresToFFIFriendlyPointer(highScores) { buffer in
-                mmheroes_game_ui_create(
-                    game.handle,
-                    buffer.baseAddress,
-                    nil,
-                    allocator,
-                    Unmanaged.passUnretained(self).toOpaque(),
-                    GameUI.rendererRequestCallback
-                )
-            }
-        } else {
-            handle = mmheroes_game_ui_create(
-                game.handle,
-                nil,
-                nil,
-                allocator,
-                Unmanaged.passUnretained(self).toOpaque(),
-                GameUI.rendererRequestCallback
-            )
-        }
-    }
-
-    deinit {
-        mmheroes_game_ui_destroy(handle, nil, deallocator)
-    }
-
-    var highScores: [HighScore] {
-        get {
-            withExtendedLifetime(self) {
-                var result = [MMHEROES_HighScore](repeating: MMHEROES_HighScore(),
-                                                  count: Int(MMHEROES_SCORE_COUNT))
-                mmheroes_game_ui_get_high_scores(handle, &result)
-
-                return result.map { ffiHighScore in
-                    let nameBuf = UnsafeBufferPointer(start: ffiHighScore.name,
-                                                      count: Int(ffiHighScore.name_len))
-                    let name = String(decoding: nameBuf, as: UTF8.self)
-                    return HighScore(name: name, money: ffiHighScore.score)
-                }
-            }
-        }
-        set {
-            withExtendedLifetime(self) {
-                convertHighScoresToFFIFriendlyPointer(newValue) { buffer in
-                    mmheroes_game_ui_set_high_scores(handle, buffer.baseAddress)
-                }
-            }
-        }
-    }
-
-    @discardableResult
-    func replay(recordedInput: String) -> Bool {
-        withExtendedLifetime(self) {
-            recordedInput.withCString(encodedAs: UTF8.self) { buf in
-                mmheroes_replay(handle, buf, UInt(recordedInput.utf8.count))
-            }
-        }
-    }
-
-    func continueGame(input: MMHEROES_Input) -> Bool {
-        requests.removeAll()
-        return withExtendedLifetime(self) {
-            mmheroes_continue(handle, input)
-        }
-    }
 }
 
 enum RendererRequest {

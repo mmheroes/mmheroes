@@ -22,10 +22,10 @@ pub enum TrainToPDMI {
 use crate::random::Rng;
 use TrainToPDMI::*;
 
-pub(super) fn go_to_pdmi(game: &mut Game, state: GameState) -> ActionVec {
+pub(super) fn go_to_pdmi(game: &mut InternalGameState, state: GameState) -> ActionVec {
     assert_ne!(state.location, Location::PDMI);
     if state.current_time > Time(20) {
-        game.screen = GameScreen::TrainToPDMI(state, NoPointToGoToPDMI);
+        game.set_screen(GameScreen::TrainToPDMI(state, NoPointToGoToPDMI));
         return wait_for_any_key();
     }
 
@@ -39,7 +39,7 @@ pub(super) fn go_to_pdmi(game: &mut Game, state: GameState) -> ActionVec {
             if state.player.money < Money::roundtrip_train_ticket_cost() {
                 no_money(game, state)
             } else {
-                game.screen = GameScreen::TrainToPDMI(state, PromptToBuyTickets);
+                game.set_screen(GameScreen::TrainToPDMI(state, PromptToBuyTickets));
                 ActionVec::from([Action::GatecrashTrain, Action::BuyRoundtripTrainTicket])
             }
         },
@@ -50,16 +50,16 @@ fn inspectors(rng: &mut Rng, state: &GameState) -> bool {
     state.player.charisma < CharismaLevel(rng.random(10))
 }
 
-fn no_money(game: &mut Game, mut state: GameState) -> ActionVec {
+fn no_money(game: &mut InternalGameState, mut state: GameState) -> ActionVec {
     let caught_by_inspectors = inspectors(&mut game.rng, &state);
 
-    let gatecrash_because_no_money = |game: &mut Game, state: GameState| {
-        game.screen = GameScreen::TrainToPDMI(
+    let gatecrash_because_no_money = |game: &mut InternalGameState, state: GameState| {
+        game.set_screen(GameScreen::TrainToPDMI(
             state,
             GatecrashBecauseNoMoney {
                 caught_by_inspectors,
             },
-        );
+        ));
         wait_for_any_key()
     };
 
@@ -83,7 +83,7 @@ fn no_money(game: &mut Game, mut state: GameState) -> ActionVec {
 }
 
 pub(in crate::logic) fn proceed_with_train(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     action: Action,
     interaction: TrainToPDMI,
@@ -112,17 +112,17 @@ pub(in crate::logic) fn proceed_with_train(
         Action::GatecrashTrain => {
             assert_eq!(interaction, PromptToBuyTickets);
             let caught_by_inspectors = inspectors(&mut game.rng, &state);
-            game.screen = GameScreen::TrainToPDMI(
+            game.set_screen(GameScreen::TrainToPDMI(
                 state,
                 GatecrashByChoice {
                     caught_by_inspectors,
                 },
-            );
+            ));
             wait_for_any_key()
         }
         Action::BuyRoundtripTrainTicket => {
             assert_eq!(interaction, PromptToBuyTickets);
-            game.screen = GameScreen::TrainToPDMI(state, BoughtRoundtripTicket);
+            game.set_screen(GameScreen::TrainToPDMI(state, BoughtRoundtripTicket));
             wait_for_any_key()
         }
         _ => illegal_action!(action),

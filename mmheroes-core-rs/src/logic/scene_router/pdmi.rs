@@ -1,7 +1,7 @@
 use super::*;
 
 pub(super) fn handle_action(
-    game: &mut Game,
+    game: &mut InternalGameState,
     state: GameState,
     action: Action,
 ) -> ActionVec {
@@ -9,7 +9,7 @@ pub(super) fn handle_action(
     match action {
         Action::GoToProfessor => actions::go_to_professor(game, state),
         Action::LookAtBulletinBoard => {
-            game.screen = GameScreen::HighScores(state);
+            game.set_screen(GameScreen::HighScores(state));
             wait_for_any_key()
         }
         Action::RestInCafePDMI => todo!("Пойти в кафе"),

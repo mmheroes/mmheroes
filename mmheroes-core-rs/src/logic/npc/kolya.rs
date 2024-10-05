@@ -49,7 +49,10 @@ fn kolya_maybe_solve_algebra_problems(
     }
 }
 
-pub(in crate::logic) fn interact(game: &mut Game, mut state: GameState) -> ActionVec {
+pub(in crate::logic) fn interact(
+    game: &mut InternalGameState,
+    mut state: GameState,
+) -> ActionVec {
     assert_eq!(state.location, Location::Mausoleum);
     let player = &mut state.player;
     let (available_actions, interaction) = if let Some(available_actions) =
@@ -67,18 +70,18 @@ pub(in crate::logic) fn interact(game: &mut Game, mut state: GameState) -> Actio
             PromptOatTincture,
         )
     };
-    game.screen = GameScreen::KolyaInteraction(state, interaction);
+    game.set_screen(GameScreen::KolyaInteraction(state, interaction));
     available_actions
 }
 
 pub(in crate::logic) fn proceed(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     action: Action,
     interaction: KolyaInteraction,
 ) -> ActionVec {
     assert_eq!(state.location, Location::Mausoleum);
-    assert_matches!(game.screen, GameScreen::KolyaInteraction(_, _));
+    assert_matches!(&*game.screen(), GameScreen::KolyaInteraction(_, _));
     let player = &mut state.player;
     match action {
         Action::AnyKey => {
@@ -120,14 +123,14 @@ pub(in crate::logic) fn proceed(
                 kolya_maybe_solve_algebra_problems(&mut game.rng, player)
             {
                 // "Коля решил тебе ещё 2 задачи по алгебре!"
-                game.screen = GameScreen::KolyaInteraction(
+                game.set_screen(GameScreen::KolyaInteraction(
                     state,
                     SolvedAlgebraProblemsForOatTincture,
-                );
+                ));
                 num_actions
             } else {
                 // "Твой альтруизм навсегда останется в памяти потомков."
-                game.screen = GameScreen::KolyaInteraction(state, Altruism);
+                game.set_screen(GameScreen::KolyaInteraction(state, Altruism));
                 wait_for_any_key()
             }
         }
@@ -135,7 +138,10 @@ pub(in crate::logic) fn proceed(
             assert_eq!(interaction, PromptOatTincture);
             // "Зря, ой, зря ..."
             // "Коля достает тормозную жидкость, и вы распиваете еще по стакану."
-            game.screen = GameScreen::KolyaInteraction(state, BrakeFluidBecauseRefused);
+            game.set_screen(GameScreen::KolyaInteraction(
+                state,
+                BrakeFluidBecauseRefused,
+            ));
             wait_for_any_key()
         }
         _ => illegal_action!(action),

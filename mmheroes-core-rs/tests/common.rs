@@ -1,3 +1,4 @@
+use mmheroes_core::logic::Game;
 use mmheroes_core::ui::recording::{InputRecordingParser, InputRecordingParserError};
 use mmheroes_core::ui::renderer::RendererRequestConsumer;
 use mmheroes_core::ui::*;
@@ -59,9 +60,9 @@ impl RendererRequestConsumer for TestRendererRequestConsumer {
     }
 }
 
-pub type TestGameUI<'game> = GameUI<'game, TestRendererRequestConsumer>;
+pub type TestGameUI<'game, G> = GameUI<'game, G, TestRendererRequestConsumer>;
 
-pub fn replay_game(game_ui: &mut TestGameUI, steps: &str) {
+pub fn replay_game<G: Game>(game_ui: &mut TestGameUI<G>, steps: &str) {
     let mut parser = InputRecordingParser::new(steps);
     match parser.parse_all(|input| game_ui.continue_game(input)) {
         Ok(()) => {}

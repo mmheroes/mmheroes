@@ -33,7 +33,11 @@ pub mod scene_router;
 
 use crate::random;
 
+use crate::util::async_support::*;
 use assert_matches::*;
+use core::cell::{Ref, RefCell};
+use core::future::Future;
+use core::pin::Pin;
 
 /// Максимальное число возможных вариантов на главном экране.
 pub const MAX_OPTIONS_IN_SCENE_ROUTER: usize = 12;
@@ -60,69 +64,111 @@ pub enum GameMode {
     God,
 }
 
-pub struct Game {
-    screen: GameScreen,
-    rng: random::Rng,
+pub struct ObservableGameState {
     mode: GameMode,
+    screen: GameScreen,
     available_actions: ActionVec,
 }
 
-impl Game {
-    pub fn new(mode: GameMode, seed: u64) -> Game {
-        let rng = random::Rng::new(seed);
-        Game {
-            screen: GameScreen::Intro,
-            rng,
+impl ObservableGameState {
+    pub fn new(mode: GameMode) -> Self {
+        Self {
             mode,
-            available_actions: wait_for_any_key(),
+            screen: GameScreen::Intro,
+            available_actions: ActionVec::new(),
         }
     }
 
-    pub fn screen(&self) -> &GameScreen {
-        &self.screen
+    fn reset(&mut self) {
+        self.screen = GameScreen::Intro;
+        self.available_actions.clear();
     }
 
     pub fn mode(&self) -> GameMode {
         self.mode
     }
 
-    pub fn available_actions(&self) -> &[Action] {
-        &*self.available_actions
+    pub fn screen(&self) -> &GameScreen {
+        &self.screen
     }
 
-    pub fn perform_action(&mut self, action: Action) {
-        self.available_actions = self._perform_action(action)
+    pub fn available_actions(&self) -> &[Action] {
+        &self.available_actions
+    }
+}
+
+struct InternalGameState<'a> {
+    observable_state: &'a RefCell<ObservableGameState>,
+    rng: random::Rng,
+}
+
+impl<'a: 'b, 'b> InternalGameState<'a> {
+    fn new(
+        seed: u64,
+        observable_state: &'a RefCell<ObservableGameState>,
+    ) -> InternalGameState<'a> {
+        let rng = random::Rng::new(seed);
+        observable_state.borrow_mut().reset();
+        InternalGameState {
+            observable_state,
+            rng,
+        }
+    }
+
+    fn screen(&self) -> Ref<'b, GameScreen> {
+        Ref::map(self.observable_state.borrow(), ObservableGameState::screen)
+    }
+
+    fn set_screen(&self, new_screen: GameScreen) {
+        self.observable_state.borrow_mut().screen = new_screen;
+    }
+
+    fn perform_action(&mut self, action: Action) {
+        let new_action = self._perform_action(action);
+        self.observable_state.borrow_mut().available_actions = new_action;
     }
 
     /// Accepts an action, returns the number of actions available in the updated state.
     fn _perform_action(&mut self, action: Action) -> ActionVec {
         use GameScreen::*;
-        match &self.screen {
+        let borrowed_screen = self.screen();
+        match &*borrowed_screen {
             Terminal => panic!("Attempted to perform an action in terminal state"),
-            Intro => self.start_game(),
-            InitialParameters => self.ding(action),
+            Intro => {
+                drop(borrowed_screen);
+                self.start_game()
+            }
+            InitialParameters => {
+                drop(borrowed_screen);
+                self.ding(action)
+            }
             Ding(player) => {
                 let state = GameState::new(
                     player.clone(),
                     timetable::Timetable::random(&mut self.rng),
                     Location::Dorm,
                 );
+                drop(borrowed_screen);
                 self.view_timetable(state)
             }
             Timetable(state) => {
                 let state = state.clone();
+                drop(borrowed_screen);
                 scene_router::run(self, state)
             }
             SceneRouter(state) => {
                 let state = state.clone();
+                drop(borrowed_screen);
                 scene_router::handle_action(self, state, action)
             }
             Study(state) => {
                 let state = state.clone();
+                drop(borrowed_screen);
                 scene_router::dorm::choose_use_lecture_notes(self, state, action)
             }
             PromptUseLectureNotes(state) => {
                 let state = state.clone();
+                drop(borrowed_screen);
                 let (subject, use_lecture_notes) = match action {
                     Action::UseLectureNotes(subject) => (subject, true),
                     Action::DontUseLectureNotes(subject) => (subject, false),
@@ -132,60 +178,72 @@ impl Game {
             }
             Sleep(state) => {
                 let state = state.clone();
+                drop(borrowed_screen);
                 scene_router::dorm::handle_sleeping(self, state, action)
             }
             HighScores(state) => match action {
                 Action::AnyKey => {
                     let state = state.clone();
+                    drop(borrowed_screen);
                     scene_router::run(self, state)
                 }
                 _ => illegal_action!(action),
             },
             RestInMausoleum(state) => {
                 let state = state.clone();
+                drop(borrowed_screen);
                 scene_router::mausoleum::handle_rest(self, state, action)
             }
             CafePUNK(state) => {
                 let state = state.clone();
+                drop(borrowed_screen);
                 scene_router::punk::handle_cafe_punk_action(self, state, action)
             }
             TrainToPDMI(state, interaction) => {
                 let state = state.clone();
                 let interaction = *interaction;
+                drop(borrowed_screen);
                 scene_router::train::proceed_with_train(self, state, action, interaction)
             }
             KolyaInteraction(state, interaction) => {
                 let state = state.clone();
                 let interaction = *interaction;
+                drop(borrowed_screen);
                 npc::kolya::proceed(self, state, action, interaction)
             }
             PashaInteraction(state, interaction) => {
                 let state = state.clone();
                 let interaction = *interaction;
+                drop(borrowed_screen);
                 npc::pasha::proceed(self, state, action, interaction)
             }
             GrishaInteraction(state, interaction) => {
                 let state = state.clone();
                 let interaction = *interaction;
+                drop(borrowed_screen);
                 npc::grisha::proceed(self, state, action, interaction)
             }
             SashaInteraction(state, interaction) => {
                 let state = state.clone();
                 let interaction = *interaction;
+                drop(borrowed_screen);
                 npc::sasha::proceed(self, state, action, interaction)
             }
             KuzmenkoInteraction(state, _) => {
                 assert_eq!(action, Action::AnyKey);
                 let state = state.clone();
+                drop(borrowed_screen);
                 scene_router::run(self, state)
             }
             GoToProfessor(state) => match action {
                 Action::Exam(subject) => {
                     let state = state.clone();
+                    drop(borrowed_screen);
                     self.enter_exam(state, subject)
                 }
                 Action::DontGoToProfessor => {
                     let state = state.clone();
+                    drop(borrowed_screen);
                     scene_router::run(self, state)
                 }
                 _ => illegal_action!(action),
@@ -196,6 +254,7 @@ impl Game {
             SurfInternet(state, found_program) => {
                 let state = state.clone();
                 let found_program = *found_program;
+                drop(borrowed_screen);
                 scene_router::computer_class::proceed_with_internet(
                     self,
                     state,
@@ -205,12 +264,20 @@ impl Game {
             }
             IAmDone(state) => {
                 let state = state.clone();
+                drop(borrowed_screen);
                 scene_router::handle_i_am_done(self, state, action)
             }
-            GameEnd(_) => scene_router::wanna_try_again(self),
-            WannaTryAgain => scene_router::handle_wanna_try_again(self, action),
+            GameEnd(_) => {
+                drop(borrowed_screen);
+                scene_router::wanna_try_again(self)
+            }
+            WannaTryAgain => {
+                drop(borrowed_screen);
+                scene_router::handle_wanna_try_again(self, action)
+            }
             Disclaimer => {
-                self.screen = Terminal;
+                drop(borrowed_screen);
+                self.set_screen(Terminal);
                 ActionVec::new()
             }
             WhatToDo(state)
@@ -220,15 +287,17 @@ impl Game {
             | AboutCharacters(state)
             | AboutThisProgram(state) => {
                 let state = state.clone();
+                drop(borrowed_screen);
                 scene_router::dorm::handle_what_to_do(self, state, action)
             }
         }
     }
 
     fn start_game(&mut self) -> ActionVec {
-        match self.mode {
+        let mode = self.observable_state.borrow().mode;
+        match mode {
             GameMode::SelectInitialParameters => {
-                self.screen = GameScreen::InitialParameters;
+                self.set_screen(GameScreen::InitialParameters);
                 // Можно выбрать 4 стиля игры:
                 // - Случайный студент
                 // - Шибко умный
@@ -242,7 +311,7 @@ impl Game {
                 ])
             }
             GameMode::God => {
-                self.screen = GameScreen::InitialParameters;
+                self.set_screen(GameScreen::InitialParameters);
                 // Можно выбрать 5 стилей игры:
                 // - Случайный студент
                 // - Шибко умный
@@ -262,7 +331,8 @@ impl Game {
     }
 
     fn ding(&mut self, action: Action) -> ActionVec {
-        self.screen = GameScreen::Ding(self.initialize_player(action));
+        let player = self.initialize_player(action);
+        self.set_screen(GameScreen::Ding(player));
         wait_for_any_key()
     }
 
@@ -310,11 +380,11 @@ impl Game {
     }
 
     fn view_timetable(&mut self, state: GameState) -> ActionVec {
-        self.screen = GameScreen::Timetable(state);
+        self.set_screen(GameScreen::Timetable(state));
         wait_for_any_key()
     }
 
-    fn decrease_health<F: FnOnce(&mut Game, GameState) -> ActionVec>(
+    fn decrease_health<F: FnOnce(&mut InternalGameState, GameState) -> ActionVec>(
         &mut self,
         delta: HealthLevel,
         mut state: GameState,
@@ -372,13 +442,47 @@ impl Game {
 
         scene_router::run(self, state)
     }
+
+    async fn wait_for_action(&self) -> Action {
+        prompt(()).await
+    }
+
+    async fn run_game(&mut self) {
+        let mut action = Action::AnyKey;
+        loop {
+            self.perform_action(action);
+            action = self.wait_for_action().await;
+        }
+    }
+}
+
+pub trait Game {
+    fn perform_action(self: Pin<&mut Self>, action: Action);
+}
+
+pub(in crate::logic) type GameExecutor<F> = PromptingExecutor<F, Action, ()>;
+
+impl<'a, F: Future> Game for GameExecutor<F> {
+    fn perform_action(self: Pin<&mut Self>, action: Action) {
+        // FIXME: The result is ignored, we probably don't want that
+        self.resume_with_input(action);
+    }
+}
+
+pub fn create_game(seed: u64, state: &RefCell<ObservableGameState>) -> impl Game + '_ {
+    let mut game = InternalGameState::new(seed, state);
+    GameExecutor::new(async move { game.run_game().await })
 }
 
 #[test]
 fn memory() {
-    use core::mem::size_of;
-
-    assert_eq!(size_of::<Game>(), 352);
+    let observable_game_state = ObservableGameState::new(GameMode::Normal);
+    assert_eq!(size_of_val(&observable_game_state), 344);
     assert_eq!(size_of::<Player>(), 40);
     assert_eq!(size_of::<Action>(), 2);
+    assert_eq!(size_of::<GameScreen>(), 296);
+
+    let observable_game_state = RefCell::new(observable_game_state);
+    let game = create_game(0, &observable_game_state);
+    assert_eq!(size_of_val(&game), 64);
 }

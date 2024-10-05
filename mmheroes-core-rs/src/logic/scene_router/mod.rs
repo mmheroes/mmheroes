@@ -7,7 +7,7 @@ pub mod train;
 
 use super::*;
 
-pub(super) fn run(game: &mut Game, state: GameState) -> ActionVec {
+pub(super) fn run(game: &mut InternalGameState, state: GameState) -> ActionVec {
     // TODO: assert that no exam is in progress
     let location = state.location;
 
@@ -106,12 +106,12 @@ pub(super) fn run(game: &mut Game, state: GameState) -> ActionVec {
             available_actions
         }
     };
-    game.screen = GameScreen::SceneRouter(state);
+    game.set_screen(GameScreen::SceneRouter(state));
     available_actions
 }
 
 pub(super) fn handle_action(
-    game: &mut Game,
+    game: &mut InternalGameState,
     state: GameState,
     action: Action,
 ) -> ActionVec {
@@ -124,13 +124,13 @@ pub(super) fn handle_action(
     }
 }
 
-pub(super) fn i_am_done(game: &mut Game, state: GameState) -> ActionVec {
-    game.screen = GameScreen::IAmDone(state);
+pub(super) fn i_am_done(game: &mut InternalGameState, state: GameState) -> ActionVec {
+    game.set_screen(GameScreen::IAmDone(state));
     ActionVec::from([Action::NoIAmNotDone, Action::IAmCertainlyDone])
 }
 
 pub(super) fn handle_i_am_done(
-    game: &mut Game,
+    game: &mut InternalGameState,
     state: GameState,
     action: Action,
 ) -> ActionVec {
@@ -141,22 +141,25 @@ pub(super) fn handle_i_am_done(
     }
 }
 
-pub(super) fn game_end(game: &mut Game, state: GameState) -> ActionVec {
-    game.screen = GameScreen::GameEnd(state);
+pub(super) fn game_end(game: &mut InternalGameState, state: GameState) -> ActionVec {
+    game.set_screen(GameScreen::GameEnd(state));
     wait_for_any_key()
 }
 
-pub(super) fn wanna_try_again(game: &mut Game) -> ActionVec {
-    game.screen = GameScreen::WannaTryAgain;
+pub(super) fn wanna_try_again(game: &mut InternalGameState) -> ActionVec {
+    game.set_screen(GameScreen::WannaTryAgain);
     // Хочешь попробовать снова? Да или нет.
     ActionVec::from([Action::WantToTryAgain, Action::DontWantToTryAgain])
 }
 
-pub(super) fn handle_wanna_try_again(game: &mut Game, action: Action) -> ActionVec {
+pub(super) fn handle_wanna_try_again(
+    game: &mut InternalGameState,
+    action: Action,
+) -> ActionVec {
     match action {
         Action::WantToTryAgain => game.start_game(),
         Action::DontWantToTryAgain => {
-            game.screen = GameScreen::Disclaimer;
+            game.set_screen(GameScreen::Disclaimer);
             wait_for_any_key()
         }
         _ => illegal_action!(action),

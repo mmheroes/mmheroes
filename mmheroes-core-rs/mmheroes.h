@@ -77,27 +77,7 @@ typedef enum MMHEROES_Input {
   MMHEROES_Input_Other,
 } MMHEROES_Input;
 
-typedef struct MMHEROES_Game MMHEROES_Game;
-
-typedef struct MMHEROES_GameUI_FfiRendererRequestConsumer MMHEROES_GameUI_FfiRendererRequestConsumer;
-
 typedef struct MMHEROES_InputRecorder_InputRecorderSink MMHEROES_InputRecorder_InputRecorderSink;
-
-typedef void *MMHEROES_AllocatorContext;
-
-/**
- * Функция, принимающая в качестве первого аргумента некоторый контекст,
- * в качестве второго аргумента размер выделяемого блока памяти,
- * а в качестве третьего — выравнивание.
- */
-typedef void *(*MMHEROES_Allocator)(MMHEROES_AllocatorContext, uintptr_t, uintptr_t);
-
-/**
- * Функция, принимающая в качестве первого аргумента некоторый контекст,
- * в качестве второго — указатель на освобождаемый блок памяти,
- * а в качестве третьего — размер освобождаемого блока.
- */
-typedef void (*MMHEROES_Deallocator)(MMHEROES_AllocatorContext, void*, uintptr_t);
 
 /**
  * Количество часов, прошедших с полуночи. Имеет семантику таймстэмпа, то есть,
@@ -113,6 +93,15 @@ typedef struct MMHEROES_HighScore {
   uintptr_t name_len;
   MMHEROES_Money score;
 } MMHEROES_HighScore;
+
+typedef void *MMHEROES_AllocatorContext;
+
+/**
+ * Функция, принимающая в качестве первого аргумента некоторый контекст,
+ * в качестве второго аргумента размер выделяемого блока памяти,
+ * а в качестве третьего — выравнивание.
+ */
+typedef void *(*MMHEROES_Allocator)(MMHEROES_AllocatorContext, uintptr_t, uintptr_t);
 
 typedef int32_t MMHEROES_Milliseconds;
 
@@ -156,6 +145,13 @@ typedef struct MMHEROES_RendererRequest {
 
 typedef void (*MMHEROES_RendererRequestCallback)(void*, struct MMHEROES_RendererRequest);
 
+/**
+ * Функция, принимающая в качестве первого аргумента некоторый контекст,
+ * в качестве второго — указатель на освобождаемый блок памяти,
+ * а в качестве третьего — размер освобождаемого блока.
+ */
+typedef void (*MMHEROES_Deallocator)(MMHEROES_AllocatorContext, void*, uintptr_t);
+
 typedef struct MMHEROES_InputRecorderSink {
   void *context;
   bool (*sink)(void*, const uint8_t*, uintptr_t);
@@ -170,31 +166,13 @@ extern "C" {
 #endif // __cplusplus
 
 /**
- * Выделяет память для объекта, используя переданный аллокатор,
- * а затем инициализирует объект и возвращает на него указатель.
- *
- * Аллокатор должен возвращать корректно выровненный указатель на блок памяти
- * достаточного размера. Нарушение любого из этих условий — неопределённое поведение.
- *
- * Размер и выравнивание передаются в качестве аргументов аллокатору.
- */
-struct MMHEROES_Game *mmheroes_game_create(enum MMHEROES_GameMode mode,
-                                           uint64_t seed,
-                                           MMHEROES_AllocatorContext allocator_context,
-                                           MMHEROES_Allocator allocator);
-
-void mmheroes_game_destroy(struct MMHEROES_Game *game,
-                           MMHEROES_AllocatorContext deallocator_context,
-                           MMHEROES_Deallocator deallocator);
-
-/**
  * Записывает текущий игровой день и время в аргументы `out_day` и `out_time`
  * и возвращает `true` если они доступны, иначе не трогает аргументы и возвращает
  * `false`.
  *
  * Игровой день и время могут быть недоступны, например, если игра ещё не началась.
  */
-bool mmheroes_game_get_current_time(struct MMHEROES_Game *game,
+bool mmheroes_game_get_current_time(const void *game,
                                     uint8_t *out_day,
                                     MMHEROES_Time *out_time);
 
@@ -210,16 +188,17 @@ bool mmheroes_game_get_current_time(struct MMHEROES_Game *game,
  * Параметр `high_scores` — указатель (возможно нулевой) на массив из
  * `MMHEROES_SCORE_COUNT` элементов.
  */
-struct MMHEROES_GameUI_FfiRendererRequestConsumer *mmheroes_game_ui_create(struct MMHEROES_Game *game,
-                                                                           const struct MMHEROES_HighScore *high_scores,
-                                                                           MMHEROES_AllocatorContext allocator_context,
-                                                                           MMHEROES_Allocator allocator,
-                                                                           void *renderer_request_callback_context,
-                                                                           MMHEROES_RendererRequestCallback renderer_request_callback);
+void *mmheroes_game_create(enum MMHEROES_GameMode mode,
+                           uint64_t seed,
+                           const struct MMHEROES_HighScore *high_scores,
+                           MMHEROES_AllocatorContext allocator_context,
+                           MMHEROES_Allocator allocator,
+                           void *renderer_request_callback_context,
+                           MMHEROES_RendererRequestCallback renderer_request_callback);
 
-void mmheroes_game_ui_destroy(struct MMHEROES_GameUI_FfiRendererRequestConsumer *game_ui,
-                              MMHEROES_AllocatorContext deallocator_context,
-                              MMHEROES_Deallocator deallocator);
+void mmheroes_game_destroy(void *game,
+                           MMHEROES_AllocatorContext allocator_context,
+                           MMHEROES_Deallocator deallocator);
 
 /**
  * Записывает в аргумент `out` `MMHEROES_SCORE_COUNT` элементов.
@@ -227,14 +206,14 @@ void mmheroes_game_ui_destroy(struct MMHEROES_GameUI_FfiRendererRequestConsumer 
  * Результат, записанный в `out`, не должен жить дольше, чем экземпляр
  * соответствующего `GameUI`.
  */
-void mmheroes_game_ui_get_high_scores(const struct MMHEROES_GameUI_FfiRendererRequestConsumer *game_ui,
-                                      struct MMHEROES_HighScore *out);
+void mmheroes_game_get_high_scores(const void *game,
+                                   struct MMHEROES_HighScore *out);
 
 /**
  * `new_high_scores` — ненулевой указатель на массив из `MMHEROES_SCORE_COUNT` элементов.
  */
-void mmheroes_game_ui_set_high_scores(struct MMHEROES_GameUI_FfiRendererRequestConsumer *game_ui,
-                                      const struct MMHEROES_HighScore *new_high_scores);
+void mmheroes_game_set_high_scores(void *game,
+                                   const struct MMHEROES_HighScore *new_high_scores);
 
 /**
  * Воспроизводит игру с помощью входных данных, записанных ранее с помощью
@@ -242,7 +221,7 @@ void mmheroes_game_ui_set_high_scores(struct MMHEROES_GameUI_FfiRendererRequestC
  *
  * В случае ошибки возвращает `false`, иначе — `true`.
  */
-bool mmheroes_replay(struct MMHEROES_GameUI_FfiRendererRequestConsumer *game_ui,
+bool mmheroes_replay(void *game,
                      const uint8_t *recorded_input,
                      uintptr_t recorded_input_len);
 
@@ -251,18 +230,9 @@ bool mmheroes_replay(struct MMHEROES_GameUI_FfiRendererRequestConsumer *game_ui,
  *
  * При первом вызове этой функции неважно, что передаётся в параметре `input`.
  */
-bool mmheroes_continue(struct MMHEROES_GameUI_FfiRendererRequestConsumer *game_ui,
+bool mmheroes_continue(void *game,
                        enum MMHEROES_Input input);
 
-/**
- * Выделяет память для объекта, используя переданный аллокатор,
- * а затем инициализирует объект и возвращает на него указатель.
- *
- * Аллокатор должен возвращать корректно выровненный указатель на блок памяти
- * достаточного размера. Нарушение любого из этих условий — неопределённое поведение.
- *
- * Размер и выравнивание передаются в качестве аргументов аллокатору.
- */
 struct MMHEROES_InputRecorder_InputRecorderSink *mmheroes_input_recorder_create(struct MMHEROES_InputRecorderSink *sink,
                                                                                 MMHEROES_AllocatorContext allocator_context,
                                                                                 MMHEROES_Allocator allocator);

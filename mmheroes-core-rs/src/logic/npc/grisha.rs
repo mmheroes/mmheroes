@@ -63,7 +63,10 @@ pub enum GrishaInteraction {
 
 use GrishaInteraction::*;
 
-pub(in crate::logic) fn interact(game: &mut Game, state: GameState) -> ActionVec {
+pub(in crate::logic) fn interact(
+    game: &mut InternalGameState,
+    state: GameState,
+) -> ActionVec {
     assert_eq!(state.location, Location::Mausoleum);
     let player = &state.player;
     let has_enough_charisma = player.charisma > game.rng.random(CharismaLevel(20));
@@ -145,17 +148,17 @@ pub(in crate::logic) fn interact(game: &mut Game, state: GameState) -> ActionVec
         ];
         (wait_for_any_key(), *game.rng.random_element(&replies[..]))
     };
-    game.screen = GameScreen::GrishaInteraction(state, interaction);
+    game.set_screen(GameScreen::GrishaInteraction(state, interaction));
     actions
 }
 
 pub(in crate::logic) fn proceed(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     action: Action,
     interaction: GrishaInteraction,
 ) -> ActionVec {
-    assert_matches!(game.screen, GameScreen::GrishaInteraction(_, _));
+    assert_matches!(&*game.screen(), GameScreen::GrishaInteraction(_, _));
     let player = &mut state.player;
     match action {
         Action::AnyKey => match interaction {
@@ -248,14 +251,19 @@ pub(in crate::logic) fn proceed(
             assert_eq!(interaction, PromptEmploymentAtTerkom);
             assert!(!player.is_employed_at_terkom());
             player.set_employed_at_terkom();
-            game.screen =
-                GameScreen::GrishaInteraction(state, CongratulationsYouAreNowEmployed);
+            game.set_screen(GameScreen::GrishaInteraction(
+                state,
+                CongratulationsYouAreNowEmployed,
+            ));
             wait_for_any_key()
         }
         Action::DeclineEmploymentAtTerkom => {
             assert_eq!(interaction, PromptEmploymentAtTerkom);
             assert!(!player.is_employed_at_terkom());
-            game.screen = GameScreen::GrishaInteraction(state, AsYouWantButDontOverstudy);
+            game.set_screen(GameScreen::GrishaInteraction(
+                state,
+                AsYouWantButDontOverstudy,
+            ));
             wait_for_any_key()
         }
         _ => illegal_action!(action),

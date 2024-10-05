@@ -23,6 +23,7 @@ prefix = "MMHEROES_"
 "FfiRendererRequest" = "RendererRequest"
 "FfiRendererRequestIterator" = "RendererRequestIterator"
 "FfiHighScore" = "HighScore"
+"FfiGame" = "Game"
 
 [enum]
 prefix_with_name = true

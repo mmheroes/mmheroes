@@ -44,7 +44,10 @@ pub enum KuzmenkoInteraction {
 
 use KuzmenkoInteraction::*;
 
-pub(in crate::logic) fn interact(game: &mut Game, mut state: GameState) -> ActionVec {
+pub(in crate::logic) fn interact(
+    game: &mut InternalGameState,
+    mut state: GameState,
+) -> ActionVec {
     let tomorrow = state.current_day_index + 1;
     let saturday = 5;
     let mut additional_exam_day_idx: Option<usize> = None;
@@ -70,7 +73,7 @@ pub(in crate::logic) fn interact(game: &mut Game, mut state: GameState) -> Actio
         }
     }
 
-    game.screen = match additional_exam_day_idx {
+    let new_screen = match additional_exam_day_idx {
         // Проверка на `state.additional_computer_science_exams() < 2` должна быть
         // раньше — до модификации расписания.
         // Иначе получается, что при достаточной харизме Кузьменко может
@@ -106,6 +109,7 @@ pub(in crate::logic) fn interact(game: &mut Game, mut state: GameState) -> Actio
             GameScreen::KuzmenkoInteraction(state, *game.rng.random_element(&replies))
         }
     };
+    game.set_screen(new_screen);
 
     wait_for_any_key()
 }

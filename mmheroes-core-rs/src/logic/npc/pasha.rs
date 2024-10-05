@@ -11,26 +11,29 @@ pub enum PashaInteraction {
 
 use PashaInteraction::*;
 
-pub(in crate::logic) fn interact(game: &mut Game, state: GameState) -> ActionVec {
+pub(in crate::logic) fn interact(
+    game: &mut InternalGameState,
+    state: GameState,
+) -> ActionVec {
     assert_eq!(state.location, Location::PUNK);
     let interaction = if state.player.got_stipend() {
         Inspiration
     } else {
         Stipend
     };
-    game.screen = GameScreen::PashaInteraction(state, interaction);
+    game.set_screen(GameScreen::PashaInteraction(state, interaction));
     wait_for_any_key()
 }
 
 pub(in crate::logic) fn proceed(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     action: Action,
     interaction: PashaInteraction,
 ) -> ActionVec {
     assert_eq!(action, Action::AnyKey);
     assert_eq!(state.location, Location::PUNK);
-    assert_matches!(game.screen, GameScreen::PashaInteraction(_, _));
+    assert_matches!(&*game.screen(), GameScreen::PashaInteraction(_, _));
     let player = &mut state.player;
     match interaction {
         Stipend => {

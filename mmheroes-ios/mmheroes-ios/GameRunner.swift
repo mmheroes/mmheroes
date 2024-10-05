@@ -40,7 +40,7 @@ final class GameRunner {
     private var inputState = InputState.waitingForInput
 
     private let worker: DispatchQueue
-    var gameUI: GameUI
+    var game: Game
     private let font: UIFont
     private let requestDrawingRenderedContent: (NSAttributedString, Caret) -> Void
 
@@ -61,8 +61,7 @@ final class GameRunner {
         }
 
         self.worker = worker
-        let game = Game(mode: mode, seed: .random(in: 0 ... .max))
-        self.gameUI = GameUI(game: game)
+        self.game = Game(mode: mode, seed: .random(in: 0 ... .max), highScores: nil)
         self.font = font
         self.requestDrawingRenderedContent = requestDrawingRenderedContent
     }
@@ -82,7 +81,7 @@ final class GameRunner {
         }
         inputState = .ignoringInput
         inputRecorder.record(input)
-        guard gameUI.continueGame(input: input) else {
+        guard game.continueGame(input: input) else {
             worker.async { completion(.gameEnded) }
             return
         }
@@ -90,7 +89,7 @@ final class GameRunner {
     }
 
     func render(completion: @escaping (GameStatus) -> Void) {
-        var requests = gameUI.requests.makeIterator()
+        var requests = game.requests.makeIterator()
 
         // По очереди выполняем все запросы. Запрос 'sleep' — особый случай.
         // Он асинхронный. Если встречаем его, то прерываем цикл и продолжаем его
@@ -234,10 +233,9 @@ extension GameRunner {
         currentPriority = restorableState.currentPriority
         foregroundColor = restorableState.foregroundColor
         backgroundColor = restorableState.backgorundColor
-        let game = Game(mode: restorableState.mode, seed: restorableState.seed)
-        gameUI = GameUI(game: game)
+        game = Game(mode: restorableState.mode, seed: restorableState.seed)
         inputRecorder.recording = restorableState.recordedInput
-        gameUI.replay(recordedInput: restorableState.recordedInput)
+        game.replay(recordedInput: restorableState.recordedInput)
     }
 
     func encodeGameState(to coder: NSCoder) throws {
@@ -248,8 +246,8 @@ extension GameRunner {
                                               currentPriority: currentPriority,
                                               foregroundColor: foregroundColor,
                                               backgorundColor: backgroundColor,
-                                              seed: gameUI.game.seed,
-                                              mode: gameUI.game.mode,
+                                              seed: game.seed,
+                                              mode: game.mode,
                                               recordedInput: inputRecorder.recording)
         try coder.encodeEncodable(
             restorableState,

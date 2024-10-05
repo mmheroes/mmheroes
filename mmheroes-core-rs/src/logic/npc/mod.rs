@@ -272,7 +272,7 @@ impl core::ops::DerefMut for Classmates {
 }
 
 pub(in crate::logic) fn interact_with_classmate(
-    game: &mut Game,
+    game: &mut InternalGameState,
     state: GameState,
     classmate: Classmate,
 ) -> ActionVec {

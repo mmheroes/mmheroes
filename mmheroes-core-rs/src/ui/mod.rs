@@ -111,28 +111,27 @@ enum WaitingState {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Milliseconds(pub i32);
 
-pub struct GameUI<'game, C: RendererRequestConsumer> {
+pub struct GameUI<'game, G, C: RendererRequestConsumer> {
     renderer: Renderer<C>,
-    game: &'game mut Game,
+    state: &'game core::cell::RefCell<ObservableGameState>,
+    game: core::pin::Pin<&'game mut G>,
     pub high_scores: [HighScore; high_scores::SCORE_COUNT],
 }
 
-impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
+impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
     pub fn new(
-        game: &'game mut Game,
+        state: &'game core::cell::RefCell<ObservableGameState>,
+        game: core::pin::Pin<&'game mut G>,
         high_scores: Option<[HighScore; high_scores::SCORE_COUNT]>,
         renderer_request_consumer: C,
     ) -> Self {
         let default_high_scores = high_scores::default_high_scores();
         GameUI {
             renderer: Renderer::new(renderer_request_consumer),
+            state,
             game,
             high_scores: high_scores.unwrap_or(default_high_scores),
         }
-    }
-
-    pub fn game(&self) -> &Game {
-        self.game
     }
 
     pub fn continue_game(&mut self, input: Input) -> bool {
@@ -147,7 +146,8 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                     current_choice,
                     start,
                 } => {
-                    let actions = self.game.available_actions();
+                    let borrowed_state = self.state.borrow();
+                    let actions = borrowed_state.available_actions();
                     let option_count = actions.len() as u8;
                     match input {
                         Input::KeyUp => {
@@ -189,15 +189,15 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                 }
             };
 
-            self.game.perform_action(action);
+            self.game.as_mut().perform_action(action);
         }
 
-        let new_waiting_state = match self.game.screen() {
+        let new_waiting_state = match self.state.borrow().screen() {
             Intro => screens::initial::display_intro(&mut self.renderer),
             InitialParameters => screens::initial::display_initial_parameters(
                 &mut self.renderer,
-                self.game.available_actions(),
-                self.game.mode(),
+                self.state.borrow().available_actions(),
+                self.state.borrow().mode(),
             ),
             Ding(_) => screens::initial::display_ding(&mut self.renderer),
             GameScreen::Timetable(state) => {
@@ -205,18 +205,18 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
             }
             SceneRouter(state) => screens::scene_router::display_scene_router(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
                 state,
             ),
             Study(state) => screens::scene_router::display_study_options(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
                 state,
             ),
             PromptUseLectureNotes(_state) => {
                 screens::scene_router::display_prompt_use_lecture_notes(
                     &mut self.renderer,
-                    self.game.available_actions(),
+                    self.state.borrow().available_actions(),
                 )
             }
             Sleep(state) => {
@@ -228,17 +228,17 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
             ),
             RestInMausoleum(state) => screens::rest::display_rest_in_mausoleum(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
                 state,
             ),
             CafePUNK(state) => screens::rest::display_cafe(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
                 state,
             ),
             TrainToPDMI(state, interaction) => screens::train::display_train_to_pdmi(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
                 state,
                 *interaction,
             ),
@@ -246,7 +246,7 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                 screens::npc::display_kolya_interaction(
                     &mut self.renderer,
                     state,
-                    self.game.available_actions(),
+                    self.state.borrow().available_actions(),
                     *interaction,
                 )
             }
@@ -261,7 +261,7 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                 screens::npc::display_grisha_interaction(
                     &mut self.renderer,
                     state,
-                    self.game.available_actions(),
+                    self.state.borrow().available_actions(),
                     *interaction,
                 )
             }
@@ -269,7 +269,7 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
                 screens::npc::display_sasha_interaction(
                     &mut self.renderer,
                     state,
-                    self.game.available_actions(),
+                    self.state.borrow().available_actions(),
                     *interaction,
                 )
             }
@@ -283,7 +283,7 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
             GoToProfessor(state) => screens::scene_router::display_available_professors(
                 &mut self.renderer,
                 state,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
             ),
             Exam(_state, _subject) => todo!(),
             SurfInternet(state, found_program) => {
@@ -295,39 +295,39 @@ impl<'game, C: RendererRequestConsumer> GameUI<'game, C> {
             }
             IAmDone(_) => screens::game_end::display_i_am_done(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
             ),
             GameEnd(state) => {
                 screens::game_end::display_game_end(&mut self.renderer, state)
             }
             WannaTryAgain => screens::game_end::display_wanna_try_again(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
             ),
             Disclaimer => screens::game_end::display_disclaimer(&mut self.renderer),
             WhatToDo(_) => screens::help::display_what_to_do(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
             ),
             AboutScreen(_) => screens::help::display_about_screen(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
             ),
             WhereToGoAndWhy(_) => screens::help::display_where_to_go_and_why(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
             ),
             AboutProfessors(_) => screens::help::display_about_professors(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
             ),
             AboutCharacters(_) => screens::help::display_about_characters(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
             ),
             AboutThisProgram(_) => screens::help::display_about_this_program(
                 &mut self.renderer,
-                self.game.available_actions(),
+                self.state.borrow().available_actions(),
             ),
             Terminal => {
                 self.renderer.waiting_state = None;

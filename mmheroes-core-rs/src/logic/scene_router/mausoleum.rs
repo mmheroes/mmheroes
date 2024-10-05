@@ -1,7 +1,7 @@
 use super::*;
 
 pub(super) fn handle_action(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     action: Action,
 ) -> ActionVec {
@@ -23,7 +23,7 @@ pub(super) fn handle_action(
         }
         Action::Rest => {
             let money = state.player.money;
-            game.screen = GameScreen::RestInMausoleum(state);
+            game.set_screen(GameScreen::RestInMausoleum(state));
             let mut available_actions = ActionVec::new();
             if money >= Money::cola_cost() {
                 available_actions.push(Action::OrderCola);
@@ -51,7 +51,7 @@ pub(super) fn handle_action(
 }
 
 pub(in crate::logic) fn handle_rest(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     action: Action,
 ) -> ActionVec {

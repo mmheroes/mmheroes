@@ -17,7 +17,10 @@ pub enum SashaInteraction {
 
 use SashaInteraction::*;
 
-pub(in crate::logic) fn interact(game: &mut Game, state: GameState) -> ActionVec {
+pub(in crate::logic) fn interact(
+    game: &mut InternalGameState,
+    state: GameState,
+) -> ActionVec {
     assert_eq!(state.location, Location::PUNK);
     let mut available_actions = SUBJECTS_WITH_LECTURE_NOTES
         .into_iter()
@@ -30,18 +33,18 @@ pub(in crate::logic) fn interact(game: &mut Game, state: GameState) -> ActionVec
         .map(Action::RequestLectureNotesFromSasha)
         .collect::<ActionVec>();
     available_actions.push(Action::DontNeedAnythingFromSasha);
-    game.screen = GameScreen::SashaInteraction(state, ChooseSubject);
+    game.set_screen(GameScreen::SashaInteraction(state, ChooseSubject));
     available_actions
 }
 
 pub(in crate::logic) fn proceed(
-    game: &mut Game,
+    game: &mut InternalGameState,
     mut state: GameState,
     action: Action,
     interaction: SashaInteraction,
 ) -> ActionVec {
     assert_eq!(state.location, Location::PUNK);
-    assert_matches!(game.screen, GameScreen::SashaInteraction(_, _));
+    assert_matches!(&*game.screen(), GameScreen::SashaInteraction(_, _));
     match action {
         Action::RequestLectureNotesFromSasha(subject) => {
             assert_eq!(interaction, ChooseSubject);
@@ -58,18 +61,18 @@ pub(in crate::logic) fn proceed(
                 state.set_sasha_has_lecture_notes(subject, false);
                 SorryGaveToSomeoneElse
             };
-            game.screen = GameScreen::SashaInteraction(state, new_interaction);
+            game.set_screen(GameScreen::SashaInteraction(state, new_interaction));
             wait_for_any_key()
         }
         Action::DontNeedAnythingFromSasha => {
             assert_eq!(interaction, ChooseSubject);
-            game.screen = GameScreen::SashaInteraction(state, SuitYourself);
+            game.set_screen(GameScreen::SashaInteraction(state, SuitYourself));
             wait_for_any_key()
         }
         Action::AnyKey => {
             assert_ne!(interaction, ChooseSubject);
             scene_router::run(game, state)
         }
-        _ => crate::logic::actions::illegal_action!(action),
+        _ => illegal_action!(action),
     }
 }

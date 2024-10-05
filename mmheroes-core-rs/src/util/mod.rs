@@ -1,5 +1,5 @@
 pub mod tiny_vec;
-pub use tiny_vec::*;
+pub(crate) use tiny_vec::*;
 
 pub mod tiny_string;
 pub use tiny_string::*;
