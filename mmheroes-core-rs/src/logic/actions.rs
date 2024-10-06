@@ -11,6 +11,17 @@ pub enum PlayStyle {
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum HelpAction {
+    WhatToDoAtAll,
+    AboutScreen,
+    WhereToGoAndWhy,
+    AboutProfessors,
+    AboutCharacters,
+    AboutThisProgram,
+    ThanksButNothing,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     AnyKey,
     Yes,
@@ -67,15 +78,9 @@ pub enum Action {
     NoIAmNotDone,
     IAmCertainlyDone,
     WhatToDo,
-    WhatToDoAtAll,
+    Help(HelpAction),
     WantToTryAgain,
     DontWantToTryAgain,
-    AboutScreen,
-    WhereToGoAndWhy,
-    AboutProfessors,
-    AboutCharacters,
-    AboutThisProgram,
-    ThanksButNothing,
 }
 
 pub(in crate::logic) type ActionVec = TinyVec<Action, 16>;

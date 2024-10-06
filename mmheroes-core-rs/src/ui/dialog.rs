@@ -164,13 +164,13 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
             write!(r, "ЧТО ДЕЛАТЬ ???");
             return;
         }
-        Action::WhatToDoAtAll => " А что вообще делать? ",
-        Action::AboutScreen => " Об экране            ",
-        Action::WhereToGoAndWhy => " Куда и зачем ходить? ",
-        Action::AboutProfessors => " О преподавателях     ",
-        Action::AboutCharacters => " О персонажах         ",
-        Action::AboutThisProgram => " Об этой программе    ",
-        Action::ThanksButNothing => " Спасибо, ничего      ",
+        Action::Help(actions::HelpAction::WhatToDoAtAll) => " А что вообще делать? ",
+        Action::Help(actions::HelpAction::AboutScreen) => " Об экране            ",
+        Action::Help(actions::HelpAction::WhereToGoAndWhy) => " Куда и зачем ходить? ",
+        Action::Help(actions::HelpAction::AboutProfessors) => " О преподавателях     ",
+        Action::Help(actions::HelpAction::AboutCharacters) => " О персонажах         ",
+        Action::Help(actions::HelpAction::AboutThisProgram) => " Об этой программе    ",
+        Action::Help(actions::HelpAction::ThanksButNothing) => " Спасибо, ничего      ",
         Action::AnyKey => panic!("Action {:?} cannot be used in a dialog", action),
     };
     set_color(r, Color::CyanBright);

@@ -1,4 +1,5 @@
 use super::*;
+use crate::logic::actions::HelpAction;
 
 pub(in crate::logic) async fn handle_router_action(
     g: &mut InternalGameState<'_>,
@@ -33,7 +34,9 @@ pub(in crate::logic) async fn handle_router_action(
                 |g, state| legacy::scene_router_run(g, state),
             )
         }
-        Action::WhatToDo => handle_what_to_do(g, state.clone(), Action::WhatToDoAtAll),
+        Action::WhatToDo => {
+            handle_what_to_do(g, state.clone(), HelpAction::WhatToDoAtAll)
+        }
         _ => illegal_action!(action),
     };
 
@@ -203,29 +206,28 @@ pub(in crate::logic) fn handle_sleeping(
 pub(in crate::logic) fn handle_what_to_do(
     game: &mut InternalGameState,
     state: GameState,
-    action: Action,
+    action: HelpAction,
 ) -> ActionVec {
     use GameScreen::*;
     assert_eq!(state.location(), Location::Dorm);
     game.set_screen(match action {
-        Action::WhatToDoAtAll => WhatToDo(state),
-        Action::AboutScreen => AboutScreen(state),
-        Action::WhereToGoAndWhy => WhereToGoAndWhy(state),
-        Action::AboutProfessors => AboutProfessors(state),
-        Action::AboutCharacters => AboutCharacters(state),
-        Action::AboutThisProgram => AboutThisProgram(state),
-        Action::ThanksButNothing => {
+        HelpAction::WhatToDoAtAll => WhatToDo(state),
+        HelpAction::AboutScreen => AboutScreen(state),
+        HelpAction::WhereToGoAndWhy => WhereToGoAndWhy(state),
+        HelpAction::AboutProfessors => AboutProfessors(state),
+        HelpAction::AboutCharacters => AboutCharacters(state),
+        HelpAction::AboutThisProgram => AboutThisProgram(state),
+        HelpAction::ThanksButNothing => {
             return legacy::scene_router_run(game, &state);
         }
-        _ => illegal_action!(action),
     });
     ActionVec::from([
-        Action::WhatToDoAtAll,
-        Action::AboutScreen,
-        Action::WhereToGoAndWhy,
-        Action::AboutProfessors,
-        Action::AboutCharacters,
-        Action::AboutThisProgram,
-        Action::ThanksButNothing,
+        Action::Help(HelpAction::WhatToDoAtAll),
+        Action::Help(HelpAction::AboutScreen),
+        Action::Help(HelpAction::WhereToGoAndWhy),
+        Action::Help(HelpAction::AboutProfessors),
+        Action::Help(HelpAction::AboutCharacters),
+        Action::Help(HelpAction::AboutThisProgram),
+        Action::Help(HelpAction::ThanksButNothing),
     ])
 }

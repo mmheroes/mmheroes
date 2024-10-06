@@ -6,7 +6,7 @@
 
 #![allow(deprecated)]
 
-use crate::logic::actions::{wait_for_any_key, ActionVec};
+use crate::logic::actions::{wait_for_any_key, ActionVec, HelpAction};
 use crate::logic::*;
 
 #[deprecated]
@@ -131,7 +131,7 @@ pub(in crate::logic) fn handle_dorm_action(
             )
         }
         Action::WhatToDo => {
-            scene_router::dorm::handle_what_to_do(game, state, Action::WhatToDoAtAll)
+            scene_router::dorm::handle_what_to_do(game, state, HelpAction::WhatToDoAtAll)
         }
         _ => illegal_action!(action),
     }
