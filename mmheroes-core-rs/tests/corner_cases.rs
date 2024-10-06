@@ -4,12 +4,10 @@ use assert_matches::*;
 use common::*;
 use core::pin::pin;
 use mmheroes_core::logic::*;
-use mmheroes_core::ui::Input;
 
 #[test]
 fn overstudy_to_zero_health() {
     initialize_game!((1641333345581, GameMode::Normal) => state, game_ui);
-    game_ui.continue_game(Input::Enter);
     replay_game(&mut game_ui, "13r");
     assert_matches!(
           state.borrow().screen(),
@@ -23,7 +21,6 @@ fn overstudy_to_zero_health() {
 #[test]
 fn study_with_negative_brain_level() {
     initialize_game!((1641336778475, GameMode::Normal) => state, game_ui);
-    game_ui.continue_game(Input::Enter);
     replay_game(&mut game_ui, "3r2↓r2↓r4↓r2↑2r4↓r3↑r↓2r3↑r↓2r4↓r↓2r3↑r↑2r3↑r↑2r3↑r↑2r3↑2r3↑2r2↑2r3↑2r3↑2r2↑r↓3r2↓2r");
     match state.borrow().screen() {
         GameScreen::Study(state) => {
@@ -61,9 +58,9 @@ fn study_with_negative_brain_level() {
 #[test]
 fn initial_parameters_screen_shown_when_rerunning() {
     initialize_game!((0, GameMode::SelectInitialParameters) => state, game_ui);
-    replay_game(&mut game_ui, "2r");
+    replay_game(&mut game_ui, "r");
     assert_matches!(state.borrow().screen(), GameScreen::InitialParameters);
-    replay_game(&mut game_ui, "2r↓2r2↑r↓3r");
+    replay_game(&mut game_ui, "↓3r2↑r↓3r");
     assert_matches!(state.borrow().screen(), GameScreen::InitialParameters);
     replay_game(&mut game_ui, "r");
     assert_matches!(state.borrow().screen(), GameScreen::Ding(_));
@@ -73,7 +70,7 @@ fn initial_parameters_screen_shown_when_rerunning() {
 #[test]
 fn game_end() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_game(&mut game_ui, "4r2↑2r");
+    replay_game(&mut game_ui, "3r2↑2r");
     assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
     replay_game(&mut game_ui, "2↑r↓r");
     assert_matches!(state.borrow().screen(), GameScreen::GameEnd(_));

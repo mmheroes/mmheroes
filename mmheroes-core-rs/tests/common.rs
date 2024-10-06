@@ -87,5 +87,6 @@ macro_rules! initialize_game {
             None,
             TestRendererRequestConsumer::new(),
         );
+        $game_ui.continue_game(mmheroes_core::ui::Input::Enter)
     };
 }
