@@ -112,7 +112,7 @@ pub(in crate::logic) fn handle_dorm_action(
             scene_router::dorm::subjects_to_study(&state)
         }
         Action::ViewTimetable => view_timetable(game, state),
-        Action::Rest => scene_router::dorm::rest(game, state),
+        Action::Rest => rest(game, state),
         Action::GoToBed => scene_router::dorm::try_to_sleep(game, state),
         Action::GoFromDormToPunk => {
             state.location = Location::PUNK;
@@ -263,4 +263,10 @@ pub(in crate::logic) fn choose_use_lecture_notes(
         Action::DontStudy => scene_router_run(game, &state),
         _ => illegal_action!(action),
     }
+}
+
+#[deprecated]
+fn rest(game: &mut InternalGameState, mut state: GameState) -> ActionVec {
+    state.player.health += game.rng.random_in_range(7..15);
+    game.hour_pass(state)
 }

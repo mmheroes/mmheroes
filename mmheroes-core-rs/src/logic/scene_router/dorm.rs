@@ -1,5 +1,6 @@
 use super::*;
 use crate::logic::actions::HelpAction;
+use crate::logic::legacy;
 
 pub(in crate::logic) async fn handle_router_action(
     g: &mut InternalGameState<'_>,
@@ -13,7 +14,7 @@ pub(in crate::logic) async fn handle_router_action(
             timetable::show(g, state).await;
             return RouterResult::ReturnToRouter;
         }
-        Action::Rest => rest(g, state.clone()),
+        Action::Rest => return rest(g, state).await,
         Action::GoToBed => try_to_sleep(g, state.clone()),
         Action::GoFromDormToPunk => {
             state.location = Location::PUNK;
@@ -154,12 +155,10 @@ async fn study_subject(
     RouterResult::ReturnToRouter
 }
 
-pub(in crate::logic) fn rest(
-    game: &mut InternalGameState,
-    mut state: GameState,
-) -> ActionVec {
-    state.player.health += game.rng.random_in_range(7..15);
-    game.hour_pass(state)
+async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterResult {
+    state.player.health += g.rng.random_in_range(7..15);
+    misc::hour_pass(g, state).await; // TODO: Обработать возможную смерть
+    RouterResult::ReturnToRouter
 }
 
 pub(in crate::logic) fn try_to_sleep(
