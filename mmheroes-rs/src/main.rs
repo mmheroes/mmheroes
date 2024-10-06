@@ -1,4 +1,5 @@
 use mmheroes_core::logic::{create_game, ObservableGameState};
+use mmheroes_core::ui::recording::{InputRecordingParser, InputRecordingParserError};
 use mmheroes_core::{
     logic::GameMode,
     ui::{
@@ -19,6 +20,18 @@ fn env_seed() -> Option<u64> {
         std::env::var("MMHEROES_SEED")
             .ok()
             .and_then(|s| u64::from_str(&s).ok())
+    } else {
+        None
+    }
+}
+
+/// Удобно для тестирования.
+///
+/// Позволяет передать шаги до нужного экрана в переменной окружения, чтобы не тратить
+/// время на прохождение руками.
+fn env_steps() -> Option<String> {
+    if cfg!(debug_assertions) {
+        std::env::var("MMHEROES_STEPS").ok()
     } else {
         None
     }
@@ -233,6 +246,8 @@ fn main() {
             .as_millis() as u64
     });
 
+    let steps = env_steps();
+
     let observable_game_state = RefCell::new(ObservableGameState::new(mode));
     let game = create_game(seed, &observable_game_state);
     let game = pin!(game);
@@ -264,7 +279,20 @@ fn main() {
         pause();
     }));
 
-    let mut input = ui::Input::Enter;
+    let mut input = if let Some(steps) = steps {
+        let mut steps_parser = InputRecordingParser::new(&steps);
+        match steps_parser.parse_all(|input| {
+            napms(300);
+            game_ui.continue_game(input)
+        }) {
+            Ok(()) => {}
+            Err(error) => panic!("Parsing steps failed: {:?}", error),
+        }
+        getch(&window, logger)
+    } else {
+        ui::Input::Enter
+    };
+
     while game_ui.continue_game(input) {
         input = getch(&window, logger);
     }
