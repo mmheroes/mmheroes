@@ -163,8 +163,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 unreachable!()
             }
             InitialParameters => {
-                drop(borrowed_screen);
-                legacy::ding(self, action)
+                unreachable!()
             }
             Ding(player) => {
                 // TODO: Remove player
@@ -287,10 +286,8 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                     found_program,
                 )
             }
-            IAmDone(state) => {
-                let state = state.clone();
-                drop(borrowed_screen);
-                legacy::handle_i_am_done(self, state, action)
+            IAmDone(_) => {
+                unreachable!()
             }
             GameEnd(_) => {
                 drop(borrowed_screen);
@@ -467,5 +464,5 @@ fn memory() {
 
     let observable_game_state = RefCell::new(observable_game_state);
     let game = create_game(0, &observable_game_state);
-    assert_eq!(size_of_val(&game), 1416);
+    assert_eq!(size_of_val(&game), 1408);
 }

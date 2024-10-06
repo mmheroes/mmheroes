@@ -129,6 +129,10 @@ async fn handle_router_action(
     state: &mut GameState,
     action: Action,
 ) -> Option<entry_point::GameEnd> {
+    if action == Action::IAmDone {
+        return i_am_done(g, state).await;
+    }
+
     use Location::*;
     match state.location() {
         PUNK => punk::handle_router_action(g, state, action).await,
@@ -141,9 +145,6 @@ async fn handle_router_action(
     // LEGACY
     loop {
         let action = g.wait_for_action().await;
-        if action == Action::IAmDone {
-            return i_am_done(g, state).await;
-        }
         let new_actions = g.perform_action(action);
         g.set_available_actions_from_vec(new_actions);
     }

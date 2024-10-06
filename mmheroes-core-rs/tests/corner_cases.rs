@@ -14,6 +14,8 @@ fn overstudy_to_zero_health() {
           GameScreen::GameEnd(state)
             if matches!(state.player().cause_of_death(), Some(CauseOfDeath::Overstudied))
     );
+    replay_game(&mut game_ui, "2r");
+    assert_matches!(state.borrow().screen(), GameScreen::Ding(_));
 }
 
 /// Проверяем, что в случае отрицательного brain level попытка подготовиться к зачёту

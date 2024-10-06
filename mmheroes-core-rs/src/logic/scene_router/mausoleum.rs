@@ -45,7 +45,6 @@ pub(in crate::logic) fn handle_action(
             );
             npc::interact_with_classmate(game, state, classmate)
         }
-        Action::IAmDone => legacy::i_am_done(game, state),
         _ => illegal_action!(action),
     }
 }

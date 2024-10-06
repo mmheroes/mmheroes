@@ -62,34 +62,12 @@ pub(in crate::logic) fn handle_action_sync(
 }
 
 #[deprecated]
-pub(in crate::logic) fn i_am_done(
-    game: &mut InternalGameState,
-    state: GameState,
-) -> ActionVec {
-    game.set_screen(GameScreen::IAmDone(state));
-    ActionVec::from([Action::NoIAmNotDone, Action::IAmCertainlyDone])
-}
-
-#[deprecated]
 pub(in crate::logic) fn game_end(
     game: &mut InternalGameState,
     state: GameState,
 ) -> ActionVec {
     game.set_screen(GameScreen::GameEnd(state));
     wait_for_any_key()
-}
-
-#[deprecated]
-pub(in crate::logic) fn handle_i_am_done(
-    game: &mut InternalGameState,
-    state: GameState,
-    action: Action,
-) -> ActionVec {
-    match action {
-        Action::NoIAmNotDone => scene_router_run(game, &state),
-        Action::IAmCertainlyDone => game_end(game, state),
-        _ => illegal_action!(action),
-    }
 }
 
 #[deprecated]
