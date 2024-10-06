@@ -468,5 +468,5 @@ fn memory() {
 
     let observable_game_state = RefCell::new(observable_game_state);
     let game = create_game(0, &observable_game_state);
-    assert_eq!(size_of_val(&game), 1408);
+    assert_eq!(size_of_val(&game), 1456);
 }
