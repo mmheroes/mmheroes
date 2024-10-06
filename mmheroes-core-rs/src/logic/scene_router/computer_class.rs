@@ -1,4 +1,5 @@
 use super::*;
+use crate::logic::legacy;
 
 pub(in crate::logic) fn handle_action(
     game: &mut InternalGameState,
@@ -21,7 +22,7 @@ pub(in crate::logic) fn handle_action(
                 |g, state| legacy::scene_router_run(g, state),
             )
         }
-        Action::GoToPDMI => train::go_to_pdmi(game, state),
+        Action::GoToPDMI => legacy::go_to_pdmi(game, state),
         Action::GoToMausoleum => {
             state.location = Location::Mausoleum;
             game.decrease_health(

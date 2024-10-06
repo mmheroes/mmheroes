@@ -7,51 +7,40 @@ pub(in crate::logic) async fn handle_router_action(
     action: Action,
 ) -> RouterResult {
     assert_eq!(state.location, Location::Dorm);
-    let available_actions = match action {
-        Action::Study => return study(g, state).await,
+    match action {
+        Action::Study => study(g, state).await,
         Action::ViewTimetable => {
             timetable::show(g, state).await;
-            return Ok(());
+            Ok(())
         }
-        Action::Rest => return rest(g, state).await,
-        Action::GoToBed => return sleep(g, state).await,
+        Action::Rest => rest(g, state).await,
+        Action::GoToBed => sleep(g, state).await,
         Action::GoFromDormToPunk => {
             state.location = Location::PUNK;
-            return misc::decrease_health(
+            misc::decrease_health(
                 g,
                 HealthLevel::location_change_large_penalty(),
                 state,
                 CauseOfDeath::OnTheWayToPUNK,
             )
-            .await;
+            .await
         }
-        Action::GoToPDMI => train::go_to_pdmi(g, state.clone()),
+        Action::GoToPDMI => train::go_to_pdmi_async(g, state).await,
         Action::GoToMausoleum => {
             state.location = Location::Mausoleum;
-            return misc::decrease_health(
+            misc::decrease_health(
                 g,
                 HealthLevel::location_change_large_penalty(),
                 state,
                 CauseOfDeath::OnTheWayToMausoleum,
             )
-            .await;
+            .await
         }
         Action::WhatToDo => {
             show_help(g, state).await;
-            return Ok(());
+            Ok(())
         }
         _ => illegal_action!(action),
-    };
-
-    // LEGACY
-    g.set_available_actions_from_vec(available_actions);
-    loop {
-        let action = g.wait_for_action().await;
-        if action == Action::IAmDone {
-            return i_am_done(g, state).await;
-        }
-        let new_actions = g.perform_action(action);
-        g.set_available_actions_from_vec(new_actions);
     }
 }
 

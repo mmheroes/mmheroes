@@ -21,115 +21,97 @@ pub enum TrainToPDMI {
     BoughtRoundtripTicket,
 }
 
-pub(in crate::logic) fn go_to_pdmi(
-    game: &mut InternalGameState,
-    state: GameState,
-) -> ActionVec {
+pub(super) async fn go_to_pdmi_async(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+) -> RouterResult {
     assert_ne!(state.location, Location::PDMI);
     if state.current_time > Time(20) {
-        game.set_screen(GameScreen::TrainToPDMI(state, NoPointToGoToPDMI));
-        return wait_for_any_key();
+        g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+            state.clone(),
+            NoPointToGoToPDMI,
+        ))
+        .await;
+        return Ok(());
     }
-
-    let health_penalty = HealthLevel(game.rng.random(10));
-    game.decrease_health(
+    let health_penalty = HealthLevel(g.rng.random(10));
+    misc::decrease_health(
+        g,
         health_penalty,
         state,
         CauseOfDeath::CorpseFoundInTheTrain,
-        |game, state| {
-            state.location = Location::PDMI;
-            if state.player.money < Money::roundtrip_train_ticket_cost() {
-                no_money(game, state.clone())
-            } else {
-                game.set_screen(GameScreen::TrainToPDMI(
-                    state.clone(),
-                    PromptToBuyTickets,
-                ));
-                ActionVec::from([Action::GatecrashTrain, Action::BuyRoundtripTrainTicket])
-            }
-        },
     )
-}
-
-fn inspectors(rng: &mut Rng, state: &GameState) -> bool {
-    state.player.charisma < CharismaLevel(rng.random(10))
-}
-
-fn no_money(game: &mut InternalGameState, mut state: GameState) -> ActionVec {
-    let caught_by_inspectors = inspectors(&mut game.rng, &state);
-
-    let gatecrash_because_no_money = |game: &mut InternalGameState, state: GameState| {
-        game.set_screen(GameScreen::TrainToPDMI(
-            state,
-            GatecrashBecauseNoMoney {
-                caught_by_inspectors,
-            },
-        ));
-        wait_for_any_key()
-    };
-
-    let health_penalty = HealthLevel(10);
-    if caught_by_inspectors {
-        if state.location != Location::Dorm {
-            return game.decrease_health(
-                health_penalty,
-                state,
-                CauseOfDeath::KilledByInspectors,
-                |g, state| gatecrash_because_no_money(g, state.clone()),
-            );
-        }
-        // При попытке поехать в ПОМИ из общежития здоровье уменьшается, но смерть
-        // не наступает, даже если здоровье стало отрицательным.
-        // Баг в оригинальной реализации. Возможно, стоит исправить, но пока не буду.
-        state.player.health -= health_penalty;
-    }
-
-    gatecrash_because_no_money(game, state)
-}
-
-pub(in crate::logic) fn proceed_with_train(
-    game: &mut InternalGameState,
-    mut state: GameState,
-    action: Action,
-    interaction: TrainToPDMI,
-) -> ActionVec {
-    match action {
-        Action::AnyKey => match interaction {
-            NoPointToGoToPDMI => legacy::scene_router_run(game, &state),
-            GatecrashBecauseNoMoney {
-                caught_by_inspectors,
-            }
-            | GatecrashByChoice {
-                caught_by_inspectors,
-            } => {
+    .await?;
+    state.location = Location::PDMI;
+    if state.player.money < Money::roundtrip_train_ticket_cost() {
+        no_money(g, state).await
+    } else {
+        g.set_screen_and_available_actions(
+            GameScreen::TrainToPDMI(state.clone(), PromptToBuyTickets),
+            [Action::GatecrashTrain, Action::BuyRoundtripTrainTicket],
+        );
+        match g.wait_for_action().await {
+            Action::GatecrashTrain => {
+                let caught_by_inspectors = inspectors(&mut g.rng, state);
+                g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+                    state.clone(),
+                    GatecrashByChoice {
+                        caught_by_inspectors,
+                    },
+                ))
+                .await;
                 if caught_by_inspectors {
                     todo!("Если поймали контролёры, должно пройти два часа!")
                 }
-                game.hour_pass(state)
+                misc::hour_pass(g, state).await
             }
-            PromptToBuyTickets => illegal_action!(action),
-            BoughtRoundtripTicket => {
+            Action::BuyRoundtripTrainTicket => {
+                g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+                    state.clone(),
+                    BoughtRoundtripTicket,
+                ))
+                .await;
                 state.player.money -= Money::roundtrip_train_ticket_cost();
                 state.player.set_has_roundtrip_train_ticket();
-                game.hour_pass(state)
+                misc::hour_pass(g, state).await
             }
-        },
-        Action::GatecrashTrain => {
-            assert_eq!(interaction, PromptToBuyTickets);
-            let caught_by_inspectors = inspectors(&mut game.rng, &state);
-            game.set_screen(GameScreen::TrainToPDMI(
-                state,
-                GatecrashByChoice {
-                    caught_by_inspectors,
-                },
-            ));
-            wait_for_any_key()
+            action => illegal_action!(action),
         }
-        Action::BuyRoundtripTrainTicket => {
-            assert_eq!(interaction, PromptToBuyTickets);
-            game.set_screen(GameScreen::TrainToPDMI(state, BoughtRoundtripTicket));
-            wait_for_any_key()
-        }
-        _ => illegal_action!(action),
     }
+}
+
+pub(in crate::logic) fn inspectors(rng: &mut Rng, state: &GameState) -> bool {
+    state.player.charisma < CharismaLevel(rng.random(10))
+}
+
+async fn no_money(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterResult {
+    let caught_by_inspectors = inspectors(&mut g.rng, &state);
+    let health_penalty = HealthLevel(10);
+    if caught_by_inspectors {
+        if state.location == Location::Dorm {
+            // При попытке поехать в ПОМИ из общежития здоровье уменьшается, но смерть
+            // не наступает, даже если здоровье стало отрицательным.
+            // Баг в оригинальной реализации. Возможно, стоит исправить, но пока не буду.
+            state.player.health -= health_penalty;
+            if state.player.health.0 < 0 {
+                panic!("Отрицательное здоровье! Нужно сохранить зерно и шаги, чтобы написать на это тест, после чего убрать эту панику.")
+            }
+        } else {
+            misc::decrease_health(
+                g,
+                health_penalty,
+                state,
+                CauseOfDeath::KilledByInspectors,
+            )
+            .await?;
+        }
+    }
+    g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+        state.clone(),
+        GatecrashBecauseNoMoney {
+            caught_by_inspectors,
+        },
+    ))
+    .await;
+    Ok(())
 }

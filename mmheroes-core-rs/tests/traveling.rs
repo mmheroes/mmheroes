@@ -3,7 +3,10 @@ mod common;
 use assert_matches::assert_matches;
 use common::*;
 use mmheroes_core::logic::actions::PlayStyle;
-use mmheroes_core::logic::{CauseOfDeath, GameMode, GameScreen, HealthLevel, Location};
+use mmheroes_core::logic::scene_router::train::TrainToPDMI;
+use mmheroes_core::logic::{
+    CauseOfDeath, GameMode, GameScreen, HealthLevel, Location, Money,
+};
 
 #[test]
 fn go_from_dorm_to_punk() {
@@ -63,4 +66,248 @@ fn death_on_the_way_from_dorm_to_mausoleum() {
     assert_matches!(state.borrow().screen(), GameScreen::GameEnd(state) => {
         assert_matches!(state.player().cause_of_death(), Some(CauseOfDeath::OnTheWayToMausoleum));
     });
+}
+
+#[test]
+fn no_point_to_go_to_pdmi() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+
+    // Отдыхаем до 22:00
+    for _ in 0..13 {
+        replay_game(&mut game_ui, "2↓r");
+    }
+
+    // Едем в ПОМИ
+    replay_game(&mut game_ui, "5↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::TrainToPDMI(_, TrainToPDMI::NoPointToGoToPDMI)
+    );
+
+    replay_game(&mut game_ui, "r");
+    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
+}
+
+#[test]
+fn go_to_pdmi_from_dorm_without_money_not_caught_by_inspectors() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    assert_matches!(state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.player().health(), HealthLevel(44))
+        }
+    );
+    replay_game(&mut game_ui, "5↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::TrainToPDMI(
+            state,
+            TrainToPDMI::GatecrashBecauseNoMoney {
+                caught_by_inspectors: false
+            }
+        ) => {
+            assert_eq!(state.player().health(), HealthLevel(43))
+        }
+    );
+
+    replay_game(&mut game_ui, "r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+        assert_eq!(state.location(), Location::PDMI)
+    });
+}
+
+#[test]
+fn go_to_pdmi_from_dorm_without_money_caught_by_inspectors() {
+    initialize_game!((1, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    assert_matches!(state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.player().health(), HealthLevel(45))
+        }
+    );
+    replay_game(&mut game_ui, "5↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::TrainToPDMI(
+            state,
+            TrainToPDMI::GatecrashBecauseNoMoney {
+                caught_by_inspectors: true
+            }
+        ) => {
+            assert_eq!(state.player().health(), HealthLevel(26))
+        }
+    );
+
+    // TODO: Проверить что оказались в ПОМИ + уровень здоровья
+}
+
+#[test]
+fn death_on_the_way_to_pdmi() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+
+    // Учим алгебру пока уровень здоровья не упадёт до почти нуля
+    replay_game(&mut game_ui, "10r");
+
+    // Едем в ПОМИ
+    replay_game(&mut game_ui, "5↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::GameEnd(state,) => {
+            assert_matches!(
+                state.player().cause_of_death(),
+                Some(CauseOfDeath::CorpseFoundInTheTrain)
+            );
+        }
+    );
+}
+
+#[test]
+fn killed_by_inspectors_no_money_from_dorm_to_pdmi() {
+    initialize_game!((1, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+
+    // Учим алгебру пока уровень здоровья не упадёт до почти нуля
+    replay_game(&mut game_ui, "8r");
+
+    // Едем в ПОМИ
+    replay_game(&mut game_ui, "5↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::GameEnd(state) => {
+            assert_matches!(
+                state.player().cause_of_death(),
+                Some(CauseOfDeath::KilledByInspectors)
+            );
+
+            assert_eq!(state.location(), Location::PDMI)
+        }
+    );
+}
+
+#[test]
+fn go_to_pdmi_with_money_but_without_ticket_not_caught_by_inspectors() {
+    initialize_game!((2, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+
+    // Отдыхаем пока на факультет не придёт Паша
+    replay_game(&mut game_ui, "2↓r2↓r");
+
+    // Получаем у Паши стипендию
+    replay_game(&mut game_ui, "4↓r3↑2r");
+
+    // Едем в ПОМИ
+    replay_game(&mut game_ui, "3↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::TrainToPDMI(_, TrainToPDMI::PromptToBuyTickets)
+    );
+
+    // Едем зайцем
+    replay_game(&mut game_ui, "r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::TrainToPDMI(
+            state,
+            TrainToPDMI::GatecrashByChoice {
+                caught_by_inspectors: false
+            }
+        ) => {
+            assert_eq!(state.player().health(), HealthLevel(52))
+        }
+    );
+
+    replay_game(&mut game_ui, "r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::PDMI);
+            assert_eq!(state.player().health(), HealthLevel(52));
+            assert_eq!(state.player().money(), Money(50));
+            assert!(!state.player().has_roundtrip_train_ticket());
+        }
+    );
+}
+
+#[test]
+fn go_to_pdmi_with_money_but_without_ticket_caught_by_inspectors() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+
+    // Отдыхаем пока на факультет не придёт Паша
+    replay_game(&mut game_ui, "2↓r2↓r");
+
+    // Получаем у Паши стипендию
+    replay_game(&mut game_ui, "4↓r3↑2r");
+
+    // Едем в ПОМИ
+    replay_game(&mut game_ui, "3↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::TrainToPDMI(_, TrainToPDMI::PromptToBuyTickets)
+    );
+
+    // Едем зайцем
+    replay_game(&mut game_ui, "r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::TrainToPDMI(
+            state,
+            TrainToPDMI::GatecrashByChoice {
+                caught_by_inspectors: true
+            }
+        ) => {
+            assert_eq!(state.player().health(), HealthLevel(59))
+        }
+    );
+
+    // TODO: Проверить что оказались в ПОМИ + уровень здоровья
+}
+
+#[test]
+fn go_to_pdmi_with_ticket() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+
+    // Отдыхаем пока на факультет не придёт Паша
+    replay_game(&mut game_ui, "2↓r2↓r");
+
+    // Получаем у Паши стипендию
+    replay_game(&mut game_ui, "4↓r3↑2r");
+
+    // Едем в ПОМИ
+    replay_game(&mut game_ui, "3↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::TrainToPDMI(_, TrainToPDMI::PromptToBuyTickets)
+    );
+
+    // Покупаем билет
+    replay_game(&mut game_ui, "↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::TrainToPDMI(
+            state,
+            TrainToPDMI::BoughtRoundtripTicket
+        ) => {
+            assert_eq!(state.location(), Location::PDMI);
+            assert_eq!(state.player().health(), HealthLevel(59));
+            assert_eq!(state.player().money(), Money(50));
+            assert!(!state.player().has_roundtrip_train_ticket());
+        }
+    );
+
+    replay_game(&mut game_ui, "r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::PDMI);
+            assert_eq!(state.player().health(), HealthLevel(59));
+            assert_eq!(state.player().money(), Money(40));
+            assert!(state.player().has_roundtrip_train_ticket());
+        }
+    );
 }

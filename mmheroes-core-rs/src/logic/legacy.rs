@@ -7,6 +7,12 @@
 #![allow(deprecated)]
 
 use crate::logic::actions::{wait_for_any_key, ActionVec, HelpAction};
+use crate::logic::scene_router::train;
+use crate::logic::scene_router::train::TrainToPDMI;
+use crate::logic::scene_router::train::TrainToPDMI::{
+    BoughtRoundtripTicket, GatecrashBecauseNoMoney, GatecrashByChoice, NoPointToGoToPDMI,
+    PromptToBuyTickets,
+};
 use crate::logic::*;
 
 #[deprecated]
@@ -123,7 +129,7 @@ pub(in crate::logic) fn handle_dorm_action(
                 |g, state| scene_router_run(g, state),
             )
         }
-        Action::GoToPDMI => scene_router::train::go_to_pdmi(game, state),
+        Action::GoToPDMI => go_to_pdmi(game, state),
         Action::GoToMausoleum => {
             state.location = Location::Mausoleum;
             game.decrease_health(
@@ -271,6 +277,7 @@ fn rest(game: &mut InternalGameState, mut state: GameState) -> ActionVec {
     game.hour_pass(state)
 }
 
+#[deprecated]
 pub(in crate::logic) fn try_to_sleep(
     game: &mut InternalGameState,
     state: GameState,
@@ -284,6 +291,7 @@ pub(in crate::logic) fn try_to_sleep(
     }
 }
 
+#[deprecated]
 pub(in crate::logic) fn go_to_sleep(
     _game: &mut InternalGameState,
     _state: GameState,
@@ -291,6 +299,7 @@ pub(in crate::logic) fn go_to_sleep(
     todo!()
 }
 
+#[deprecated]
 pub(in crate::logic) fn handle_sleeping(
     game: &mut InternalGameState,
     state: GameState,
@@ -300,4 +309,116 @@ pub(in crate::logic) fn handle_sleeping(
     assert_matches!(&*game.screen(), GameScreen::Sleep(_));
     assert_eq!(action, Action::AnyKey);
     scene_router_run(game, &state)
+}
+
+#[deprecated]
+pub(in crate::logic) fn go_to_pdmi(
+    game: &mut InternalGameState,
+    state: GameState,
+) -> ActionVec {
+    assert_ne!(state.location, Location::PDMI);
+    if state.current_time > Time(20) {
+        game.set_screen(GameScreen::TrainToPDMI(state, NoPointToGoToPDMI));
+        return wait_for_any_key();
+    }
+
+    let health_penalty = HealthLevel(game.rng.random(10));
+    game.decrease_health(
+        health_penalty,
+        state,
+        CauseOfDeath::CorpseFoundInTheTrain,
+        |game, state| {
+            state.location = Location::PDMI;
+            if state.player.money < Money::roundtrip_train_ticket_cost() {
+                no_money(game, state.clone())
+            } else {
+                game.set_screen(GameScreen::TrainToPDMI(
+                    state.clone(),
+                    PromptToBuyTickets,
+                ));
+                ActionVec::from([Action::GatecrashTrain, Action::BuyRoundtripTrainTicket])
+            }
+        },
+    )
+}
+
+#[deprecated]
+fn no_money(game: &mut InternalGameState, mut state: GameState) -> ActionVec {
+    let caught_by_inspectors = train::inspectors(&mut game.rng, &state);
+
+    let gatecrash_because_no_money = |game: &mut InternalGameState, state: GameState| {
+        game.set_screen(GameScreen::TrainToPDMI(
+            state,
+            GatecrashBecauseNoMoney {
+                caught_by_inspectors,
+            },
+        ));
+        wait_for_any_key()
+    };
+
+    let health_penalty = HealthLevel(10);
+    if caught_by_inspectors {
+        if state.location != Location::Dorm {
+            return game.decrease_health(
+                health_penalty,
+                state,
+                CauseOfDeath::KilledByInspectors,
+                |g, state| gatecrash_because_no_money(g, state.clone()),
+            );
+        }
+        // При попытке поехать в ПОМИ из общежития здоровье уменьшается, но смерть
+        // не наступает, даже если здоровье стало отрицательным.
+        // Баг в оригинальной реализации. Возможно, стоит исправить, но пока не буду.
+        state.player.health -= health_penalty;
+    }
+
+    gatecrash_because_no_money(game, state)
+}
+
+#[deprecated]
+pub(in crate::logic) fn proceed_with_train(
+    game: &mut InternalGameState,
+    mut state: GameState,
+    action: Action,
+    interaction: TrainToPDMI,
+) -> ActionVec {
+    match action {
+        Action::AnyKey => match interaction {
+            NoPointToGoToPDMI => scene_router_run(game, &state),
+            GatecrashBecauseNoMoney {
+                caught_by_inspectors,
+            }
+            | GatecrashByChoice {
+                caught_by_inspectors,
+            } => {
+                if caught_by_inspectors {
+                    todo!("Если поймали контролёры, должно пройти два часа!")
+                }
+                game.hour_pass(state)
+            }
+            PromptToBuyTickets => illegal_action!(action),
+            BoughtRoundtripTicket => {
+                state.player.money -= Money::roundtrip_train_ticket_cost();
+                state.player.set_has_roundtrip_train_ticket();
+                game.hour_pass(state)
+            }
+        },
+        Action::GatecrashTrain => {
+            assert_eq!(interaction, PromptToBuyTickets);
+            let caught_by_inspectors = train::inspectors(&mut game.rng, &state);
+            game.set_screen(GameScreen::TrainToPDMI(
+                state,
+                GatecrashByChoice {
+                    caught_by_inspectors,
+                },
+            ));
+            wait_for_any_key()
+        }
+        Action::BuyRoundtripTrainTicket => {
+            assert_eq!(interaction, PromptToBuyTickets);
+            game.set_screen(GameScreen::TrainToPDMI(state, BoughtRoundtripTicket));
+            wait_for_any_key()
+        }
+        _ => illegal_action!(action),
+    }
 }

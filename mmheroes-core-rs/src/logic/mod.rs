@@ -229,7 +229,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 let state = state.clone();
                 let interaction = *interaction;
                 drop(borrowed_screen);
-                scene_router::train::proceed_with_train(self, state, action, interaction)
+                legacy::proceed_with_train(self, state, action, interaction)
             }
             KolyaInteraction(state, interaction) => {
                 let state = state.clone();
@@ -473,5 +473,5 @@ fn memory() {
 
     let observable_game_state = RefCell::new(observable_game_state);
     let game = create_game(0, &observable_game_state);
-    assert_eq!(size_of_val(&game), 1536);
+    assert_eq!(size_of_val(&game), 1520);
 }
