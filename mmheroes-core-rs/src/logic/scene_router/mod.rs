@@ -7,6 +7,11 @@ pub mod train;
 
 use super::*;
 
+pub(in crate::logic) enum RouterResult {
+    ReturnToRouter,
+    GameEnd(entry_point::GameEnd),
+}
+
 pub(super) fn available_actions(state: &GameState) -> ActionVec {
     // TODO: assert that no exam is in progress
     let location = state.location;
@@ -118,8 +123,9 @@ pub(super) async fn run(
             available_actions(&state),
         );
         let router_action = g.wait_for_action().await;
-        if let Some(game_end) = handle_router_action(g, &mut state, router_action).await {
-            return game_end;
+        match handle_router_action(g, &mut state, router_action).await {
+            RouterResult::ReturnToRouter => continue,
+            RouterResult::GameEnd(game_end) => return game_end,
         }
     }
 }
@@ -128,7 +134,7 @@ async fn handle_router_action(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     action: Action,
-) -> Option<entry_point::GameEnd> {
+) -> RouterResult {
     if action == Action::IAmDone {
         return i_am_done(g, state).await;
     }
@@ -150,17 +156,14 @@ async fn handle_router_action(
     }
 }
 
-async fn i_am_done(
-    g: &mut InternalGameState<'_>,
-    state: &GameState,
-) -> Option<entry_point::GameEnd> {
+async fn i_am_done(g: &mut InternalGameState<'_>, state: &GameState) -> RouterResult {
     g.set_screen_and_available_actions(
         GameScreen::IAmDone(state.clone()),
         [Action::NoIAmNotDone, Action::IAmCertainlyDone],
     );
     match g.wait_for_action().await {
-        Action::NoIAmNotDone => None,
-        Action::IAmCertainlyDone => Some(game_end(g, state).await),
+        Action::NoIAmNotDone => RouterResult::ReturnToRouter,
+        Action::IAmCertainlyDone => RouterResult::GameEnd(game_end(g, state).await),
         action => illegal_action!(action),
     }
 }
