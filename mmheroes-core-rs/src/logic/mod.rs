@@ -126,8 +126,27 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         self.observable_state.borrow_mut().screen = new_screen;
     }
 
+    async fn set_screen_and_wait_for_any_key(&self, new_screen: GameScreen) {
+        self.set_screen(new_screen);
+        self.wait_for_any_key().await;
+    }
+
+    fn set_screen_and_action_vec(&self, new_screen: GameScreen, actions: ActionVec) {
+        let mut state = self.observable_state.borrow_mut();
+        state.screen = new_screen;
+        state.available_actions = actions;
+    }
+
     fn set_available_actions_from_vec(&self, actions: ActionVec) {
         self.observable_state.borrow_mut().available_actions = actions
+    }
+
+    fn set_screen_and_available_actions<const N: usize>(
+        &self,
+        new_screen: GameScreen,
+        actions: [Action; N],
+    ) {
+        self.set_screen_and_action_vec(new_screen, ActionVec::from(actions))
     }
 
     fn set_available_actions<const N: usize>(&self, actions: [Action; N]) {
@@ -271,7 +290,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             IAmDone(state) => {
                 let state = state.clone();
                 drop(borrowed_screen);
-                scene_router::handle_i_am_done(self, state, action)
+                legacy::handle_i_am_done(self, state, action)
             }
             GameEnd(_) => {
                 drop(borrowed_screen);
@@ -351,7 +370,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
     ) -> ActionVec {
         if state.player.health <= delta {
             state.player.cause_of_death = Some(cause_of_death);
-            scene_router::game_end(self, state)
+            legacy::game_end(self, state)
         } else {
             state.player.health -= delta;
             if_alive(self, &mut state)
@@ -448,5 +467,5 @@ fn memory() {
 
     let observable_game_state = RefCell::new(observable_game_state);
     let game = create_game(0, &observable_game_state);
-    assert_eq!(size_of_val(&game), 1008);
+    assert_eq!(size_of_val(&game), 1416);
 }

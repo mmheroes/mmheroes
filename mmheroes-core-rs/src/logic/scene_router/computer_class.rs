@@ -40,7 +40,7 @@ pub(in crate::logic) fn handle_action(
             npc::interact_with_classmate(game, state, classmate)
         }
         Action::PlayMMHEROES => todo!(),
-        Action::IAmDone => scene_router::game_end(game, state),
+        Action::IAmDone => legacy::game_end(game, state),
         _ => illegal_action!(action),
     }
 }

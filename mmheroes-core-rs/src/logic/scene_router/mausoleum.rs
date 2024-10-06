@@ -45,7 +45,7 @@ pub(in crate::logic) fn handle_action(
             );
             npc::interact_with_classmate(game, state, classmate)
         }
-        Action::IAmDone => scene_router::i_am_done(game, state),
+        Action::IAmDone => legacy::i_am_done(game, state),
         _ => illegal_action!(action),
     }
 }
@@ -92,7 +92,7 @@ pub(in crate::logic) fn handle_rest(
             if player.brain <= BrainLevel(0) {
                 player.health = HealthLevel(0);
                 player.cause_of_death = Some(CauseOfDeath::BeerAlcoholism);
-                return scene_router::game_end(game, state);
+                return legacy::game_end(game, state);
             }
         }
         Action::RestByOurselvesInMausoleum => {

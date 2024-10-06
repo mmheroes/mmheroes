@@ -108,19 +108,27 @@ pub(super) fn available_actions(state: &GameState) -> ActionVec {
     }
 }
 
-pub(super) async fn run(g: &mut InternalGameState<'_>, mut state: GameState) {
-    let available_actions = available_actions(&state);
-    g.set_screen(GameScreen::SceneRouter(state.clone()));
-    g.set_available_actions_from_vec(available_actions);
-    let router_action = g.wait_for_action().await;
-    handle_router_action(g, &mut state, router_action).await;
+pub(super) async fn run(
+    g: &mut InternalGameState<'_>,
+    mut state: GameState,
+) -> entry_point::GameEnd {
+    loop {
+        g.set_screen_and_action_vec(
+            GameScreen::SceneRouter(state.clone()),
+            available_actions(&state),
+        );
+        let router_action = g.wait_for_action().await;
+        if let Some(game_end) = handle_router_action(g, &mut state, router_action).await {
+            return game_end;
+        }
+    }
 }
 
 async fn handle_router_action(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     action: Action,
-) {
+) -> Option<entry_point::GameEnd> {
     use Location::*;
     match state.location() {
         PUNK => punk::handle_router_action(g, state, action).await,
@@ -133,31 +141,50 @@ async fn handle_router_action(
     // LEGACY
     loop {
         let action = g.wait_for_action().await;
+        if action == Action::IAmDone {
+            return i_am_done(g, state).await;
+        }
         let new_actions = g.perform_action(action);
         g.set_available_actions_from_vec(new_actions);
     }
 }
 
-pub(super) fn i_am_done(game: &mut InternalGameState, state: GameState) -> ActionVec {
-    game.set_screen(GameScreen::IAmDone(state));
-    ActionVec::from([Action::NoIAmNotDone, Action::IAmCertainlyDone])
-}
-
-pub(super) fn handle_i_am_done(
-    game: &mut InternalGameState,
-    state: GameState,
-    action: Action,
-) -> ActionVec {
-    match action {
-        Action::NoIAmNotDone => legacy::scene_router_run(game, &state),
-        Action::IAmCertainlyDone => game_end(game, state),
-        _ => illegal_action!(action),
+async fn i_am_done(
+    g: &mut InternalGameState<'_>,
+    state: &GameState,
+) -> Option<entry_point::GameEnd> {
+    g.set_screen_and_available_actions(
+        GameScreen::IAmDone(state.clone()),
+        [Action::NoIAmNotDone, Action::IAmCertainlyDone],
+    );
+    match g.wait_for_action().await {
+        Action::NoIAmNotDone => None,
+        Action::IAmCertainlyDone => Some(game_end(g, state).await),
+        action => illegal_action!(action),
     }
 }
 
-pub(super) fn game_end(game: &mut InternalGameState, state: GameState) -> ActionVec {
-    game.set_screen(GameScreen::GameEnd(state));
-    wait_for_any_key()
+async fn game_end(
+    g: &mut InternalGameState<'_>,
+    state: &GameState,
+) -> entry_point::GameEnd {
+    g.set_screen(GameScreen::GameEnd(state.clone()));
+    g.wait_for_any_key().await;
+    // Хочешь попробовать снова? Да или нет.
+    g.set_screen_and_available_actions(
+        GameScreen::WannaTryAgain,
+        [Action::WantToTryAgain, Action::DontWantToTryAgain],
+    );
+    match g.wait_for_action().await {
+        Action::WantToTryAgain => entry_point::GameEnd::Restart,
+        Action::DontWantToTryAgain => {
+            g.set_screen_and_wait_for_any_key(GameScreen::Disclaimer)
+                .await;
+            g.set_screen_and_available_actions(GameScreen::Terminal, []);
+            entry_point::GameEnd::Exit
+        }
+        action => illegal_action!(action),
+    }
 }
 
 pub(super) fn wanna_try_again(game: &mut InternalGameState) -> ActionVec {

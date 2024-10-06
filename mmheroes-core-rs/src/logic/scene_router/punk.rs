@@ -66,7 +66,7 @@ pub(in crate::logic) fn handle_action(
             assert!(state.player.is_employed_at_terkom());
             todo!()
         }
-        Action::IAmDone => scene_router::i_am_done(game, state),
+        Action::IAmDone => legacy::i_am_done(game, state),
         _ => illegal_action!(action),
     }
 }

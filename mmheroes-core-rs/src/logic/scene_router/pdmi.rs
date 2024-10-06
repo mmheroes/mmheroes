@@ -14,7 +14,7 @@ pub(in crate::logic) fn handle_action(
         }
         Action::RestInCafePDMI => todo!("Пойти в кафе"),
         Action::GoToPUNKFromPDMI => todo!("Поехать в ПУНК"),
-        Action::IAmDone => scene_router::i_am_done(game, state),
+        Action::IAmDone => legacy::i_am_done(game, state),
         Action::InteractWithClassmate(classmate) => {
             assert_matches!(
                 state.classmates[classmate].current_location(),

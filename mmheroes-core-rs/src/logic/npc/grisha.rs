@@ -236,7 +236,7 @@ pub(in crate::logic) fn proceed(
                     if player.brain <= BrainLevel(0) {
                         player.health = HealthLevel(0);
                         player.cause_of_death = Some(CauseOfDeath::DrankTooMuchBeer);
-                        return scene_router::game_end(game, state);
+                        return legacy::game_end(game, state);
                     }
                     player.charisma += game.rng.random(2);
                 }

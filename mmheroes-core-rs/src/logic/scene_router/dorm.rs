@@ -30,7 +30,7 @@ pub(in crate::logic) fn handle_action(
                 |g, state| legacy::scene_router_run(g, state),
             )
         }
-        Action::IAmDone => scene_router::i_am_done(game, state),
+        Action::IAmDone => legacy::i_am_done(game, state),
         Action::WhatToDo => handle_what_to_do(game, state, Action::WhatToDoAtAll),
         _ => illegal_action!(action),
     }
