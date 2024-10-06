@@ -380,6 +380,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         }
     }
 
+    #[deprecated]
     fn midnight(&mut self, state: GameState) -> ActionVec {
         match state.location {
             Location::PUNK => todo!("sub_1E907"),
@@ -471,5 +472,5 @@ fn memory() {
 
     let observable_game_state = RefCell::new(observable_game_state);
     let game = create_game(0, &observable_game_state);
-    assert_eq!(size_of_val(&game), 1520);
+    assert_eq!(size_of_val(&game), 1536);
 }

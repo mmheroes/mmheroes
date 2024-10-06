@@ -166,7 +166,10 @@ async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterRes
     misc::hour_pass(g, state).await
 }
 
-async fn sleep(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterResult {
+pub(in crate::logic) async fn sleep(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+) -> RouterResult {
     if state.current_time > Time(3) && state.current_time < Time(20) {
         g.set_screen_and_wait_for_any_key(GameScreen::Sleep(state.clone()))
             .await;

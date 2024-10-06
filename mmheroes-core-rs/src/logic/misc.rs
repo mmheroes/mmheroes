@@ -2,8 +2,8 @@ use crate::logic::actions::illegal_action;
 use crate::logic::entry_point::GameEnd;
 use crate::logic::scene_router::RouterResult;
 use crate::logic::{
-    Action, CauseOfDeath, CharismaLevel, Duration, GameScreen, GameState, HealthLevel,
-    InternalGameState, Time,
+    scene_router, Action, CauseOfDeath, CharismaLevel, Duration, GameScreen, GameState,
+    HealthLevel, InternalGameState, Location, Time,
 };
 
 pub(in crate::logic) async fn decrease_health(
@@ -39,9 +39,25 @@ pub(in crate::logic) async fn hour_pass(
     if state.current_time.is_midnight() {
         state.current_day_index += 1;
         state.current_time = Time(0);
-        todo!("g.midnight(state.clone())");
+        midnight(g, state).await
+    } else {
+        Ok(())
     }
-    Ok(())
+}
+
+pub(in crate::logic) async fn midnight(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+) -> RouterResult {
+    match state.location {
+        Location::PUNK => todo!("sub_1E907"),
+        Location::PDMI => todo!("sub_1E7F8"),
+        Location::ComputerClass => {
+            unreachable!("Компьютерный класс уже должен быть закрыт в полночь!")
+        }
+        Location::Dorm => scene_router::dorm::sleep(g, state).await,
+        Location::Mausoleum => todo!("sub_1E993"),
+    }
 }
 
 pub(in crate::logic) async fn game_end(
