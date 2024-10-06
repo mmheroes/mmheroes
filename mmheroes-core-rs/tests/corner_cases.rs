@@ -17,6 +17,8 @@ fn overstudy_to_zero_health() {
     );
     replay_game(&mut game_ui, "2r");
     assert_matches!(state.borrow().screen(), GameScreen::Ding(_));
+    replay_game(&mut game_ui, "2r");
+    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
 }
 
 /// Проверяем, что в случае отрицательного brain level попытка подготовиться к зачёту
