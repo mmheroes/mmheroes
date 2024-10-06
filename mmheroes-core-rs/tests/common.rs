@@ -1,4 +1,6 @@
-use mmheroes_core::logic::Game;
+use assert_matches::assert_matches;
+use mmheroes_core::logic::actions::PlayStyle;
+use mmheroes_core::logic::{Game, GameMode, GameScreen, ObservableGameState};
 use mmheroes_core::ui::recording::{InputRecordingParser, InputRecordingParserError};
 use mmheroes_core::ui::renderer::RendererRequestConsumer;
 use mmheroes_core::ui::*;
@@ -71,6 +73,38 @@ pub fn replay_game<G: Game>(game_ui: &mut TestGameUI<G>, steps: &str) -> bool {
         Err(InputRecordingParserError::Interrupted) => true,
         Err(error) => panic!("{:?}", error),
     }
+}
+
+pub fn replay_until_dorm<G: Game>(
+    state: &core::cell::RefCell<ObservableGameState>,
+    game_ui: &mut TestGameUI<G>,
+    style: PlayStyle,
+) {
+    replay_game(game_ui, "r");
+    let mode = state.borrow().mode();
+    if mode != GameMode::Normal {
+        match style {
+            PlayStyle::RandomStudent => {}
+            PlayStyle::CleverStudent => {
+                replay_game(game_ui, "↓");
+            }
+            PlayStyle::ImpudentStudent => {
+                replay_game(game_ui, "2↓");
+            }
+            PlayStyle::SociableStudent => {
+                replay_game(game_ui, "3↓");
+            }
+            PlayStyle::GodMode => {
+                if (mode == GameMode::God) {
+                    replay_game(game_ui, "4↓");
+                }
+            }
+        };
+        replay_game(game_ui, "r");
+    }
+    // Дзинь!
+    replay_game(game_ui, "2r");
+    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
 }
 
 #[macro_export]

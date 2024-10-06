@@ -3,6 +3,7 @@ mod common;
 use assert_matches::*;
 use common::*;
 use core::pin::pin;
+use mmheroes_core::logic::actions::PlayStyle;
 use mmheroes_core::logic::*;
 
 #[test]
@@ -84,4 +85,16 @@ fn game_end() {
     assert_matches!(state.borrow().screen(), GameScreen::Disclaimer);
     assert!(replay_game(&mut game_ui, "r"));
     assert_matches!(state.borrow().screen(), GameScreen::Terminal);
+}
+
+#[test]
+fn show_timetable_in_dorm() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_game(&mut game_ui, "↓r");
+    assert_matches!(state.borrow().screen(), GameScreen::Timetable(_));
+    replay_game(&mut game_ui, "r↓r");
+    assert_matches!(state.borrow().screen(), GameScreen::Timetable(_));
+    replay_game(&mut game_ui, "r");
+    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
 }
