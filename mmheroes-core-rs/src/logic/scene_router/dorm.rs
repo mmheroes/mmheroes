@@ -39,9 +39,46 @@ pub(in crate::logic) async fn handle_router_action(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     action: Action,
-) {
-    let available_actions = handle_action(g, state.clone(), action);
+) -> RouterResult {
+    assert_eq!(state.location, Location::Dorm);
+    let available_actions = match action {
+        Action::Study => choose_subject_to_study(g, state.clone()),
+        Action::ViewTimetable => {
+            timetable::show(g, state).await;
+            return RouterResult::ReturnToRouter;
+        }
+        Action::Rest => rest(g, state.clone()),
+        Action::GoToBed => try_to_sleep(g, state.clone()),
+        Action::GoFromDormToPunk => {
+            state.location = Location::PUNK;
+            g.decrease_health(
+                HealthLevel::location_change_large_penalty(),
+                state.clone(),
+                CauseOfDeath::OnTheWayToPUNK,
+                |g, state| legacy::scene_router_run(g, state),
+            )
+        }
+        Action::GoToPDMI => train::go_to_pdmi(g, state.clone()),
+        Action::GoToMausoleum => {
+            state.location = Location::Mausoleum;
+            g.decrease_health(
+                HealthLevel::location_change_large_penalty(),
+                state.clone(),
+                CauseOfDeath::OnTheWayToMausoleum,
+                |g, state| legacy::scene_router_run(g, state),
+            )
+        }
+        Action::WhatToDo => handle_what_to_do(g, state.clone(), Action::WhatToDoAtAll),
+        _ => illegal_action!(action),
+    };
+
+    // LEGACY
     g.set_available_actions_from_vec(available_actions);
+    loop {
+        let action = g.wait_for_action().await;
+        let new_actions = g.perform_action(action);
+        g.set_available_actions_from_vec(new_actions);
+    }
 }
 
 pub(in crate::logic) fn choose_subject_to_study(

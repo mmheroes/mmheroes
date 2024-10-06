@@ -18,7 +18,7 @@ pub(super) async fn run(g: &mut InternalGameState<'_>) {
             Timetable::random(&mut g.rng),
             Location::Dorm,
         );
-        timetable::show(g, state.clone()).await;
+        timetable::show(g, &state).await;
         if let GameEnd::Exit = scene_router::run(g, state.clone()).await {
             return;
         }

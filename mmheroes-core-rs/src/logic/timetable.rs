@@ -242,8 +242,8 @@ impl Timetable {
     }
 }
 
-pub(in crate::logic) async fn show(g: &mut InternalGameState<'_>, state: GameState) {
-    g.set_screen(GameScreen::Timetable(state));
+pub(in crate::logic) async fn show(g: &mut InternalGameState<'_>, state: &GameState) {
+    g.set_screen(GameScreen::Timetable(state.clone()));
     g.wait_for_any_key().await;
 }
 
