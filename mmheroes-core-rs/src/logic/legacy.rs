@@ -107,7 +107,10 @@ pub(in crate::logic) fn handle_dorm_action(
 ) -> ActionVec {
     assert_eq!(state.location, Location::Dorm);
     match action {
-        Action::Study => scene_router::dorm::choose_subject_to_study(game, state),
+        Action::Study => {
+            game.set_screen(GameScreen::Study(state.clone()));
+            scene_router::dorm::subjects_to_study(&state)
+        }
         Action::ViewTimetable => view_timetable(game, state),
         Action::Rest => scene_router::dorm::rest(game, state),
         Action::GoToBed => scene_router::dorm::try_to_sleep(game, state),
@@ -163,4 +166,101 @@ pub(in crate::logic) fn handle_what_to_do(
         Action::Help(HelpAction::AboutThisProgram),
         Action::Help(HelpAction::ThanksButNothing),
     ])
+}
+
+#[deprecated]
+pub(in crate::logic) fn study(
+    game: &mut InternalGameState,
+    mut state: GameState,
+    subject: Subject,
+    use_lecture_notes: bool,
+) -> ActionVec {
+    // Импликация "использовать конспект => у игрока есть конспект"
+    // должна быть истинной
+    assert!(
+        !use_lecture_notes
+            || state.player.status_for_subject(subject).has_lecture_notes(),
+        "Нельзя воспользоваться конспектом, так как его на самом деле нет"
+    );
+    let brain_or_stamina = if subject == Subject::PhysicalEducation {
+        state.player.stamina.0
+    } else {
+        state.player.brain.0
+    };
+    if brain_or_stamina <= 0 {
+        return scene_router_run(game, &state);
+    }
+    let health = state.player.health;
+    let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
+    *knowledge += if state.current_time.is_optimal_study_time() {
+        brain_or_stamina
+    } else {
+        brain_or_stamina * 2 / 3
+    };
+    *knowledge -= game.rng.random(brain_or_stamina / 2);
+    *knowledge += game.rng.random(health.0 / 18);
+    if use_lecture_notes {
+        *knowledge += 10
+    }
+    assert!(*knowledge >= BrainLevel(0));
+    assert!(state.player.stamina >= StaminaLevel(0));
+    let mut health_penalty = 10 - game.rng.random(state.player.stamina.0);
+    if health_penalty < 0 || use_lecture_notes {
+        health_penalty = 0;
+    }
+    if state.current_time.is_suboptimal_study_time() {
+        health_penalty += 12;
+    }
+
+    game.decrease_health(
+        HealthLevel(health_penalty),
+        state,
+        CauseOfDeath::Overstudied,
+        |game, state| {
+            if state
+                .player
+                .status_for_subject(subject)
+                .knowledge
+                .is_lethal()
+            {
+                game.decrease_health(
+                    HealthLevel(10),
+                    state.clone(),
+                    CauseOfDeath::StudiedTooWell,
+                    |game, state| game.hour_pass(state.clone()),
+                )
+            } else {
+                game.hour_pass(state.clone())
+            }
+        },
+    )
+}
+
+pub(in crate::logic) fn choose_use_lecture_notes(
+    game: &mut InternalGameState,
+    state: GameState,
+    action: Action,
+) -> ActionVec {
+    match action {
+        Action::DoStudy {
+            subject,
+            lecture_notes_available,
+        } => {
+            assert_eq!(
+                state.player.status_for_subject(subject).has_lecture_notes(),
+                lecture_notes_available
+            );
+            if lecture_notes_available {
+                game.set_screen(GameScreen::PromptUseLectureNotes(state));
+                ActionVec::from([
+                    Action::UseLectureNotes(subject),
+                    Action::DontUseLectureNotes(subject),
+                ])
+            } else {
+                study(game, state, subject, false)
+            }
+        }
+        Action::DontStudy => scene_router_run(game, &state),
+        _ => illegal_action!(action),
+    }
 }

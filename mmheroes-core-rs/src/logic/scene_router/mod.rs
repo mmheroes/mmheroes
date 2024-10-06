@@ -166,30 +166,7 @@ async fn i_am_done(g: &mut InternalGameState<'_>, state: &GameState) -> RouterRe
     );
     match g.wait_for_action().await {
         Action::NoIAmNotDone => RouterResult::ReturnToRouter,
-        Action::IAmCertainlyDone => RouterResult::GameEnd(game_end(g, state).await),
-        action => illegal_action!(action),
-    }
-}
-
-async fn game_end(
-    g: &mut InternalGameState<'_>,
-    state: &GameState,
-) -> entry_point::GameEnd {
-    g.set_screen(GameScreen::GameEnd(state.clone()));
-    g.wait_for_any_key().await;
-    // Хочешь попробовать снова? Да или нет.
-    g.set_screen_and_available_actions(
-        GameScreen::WannaTryAgain,
-        [Action::WantToTryAgain, Action::DontWantToTryAgain],
-    );
-    match g.wait_for_action().await {
-        Action::WantToTryAgain => entry_point::GameEnd::Restart,
-        Action::DontWantToTryAgain => {
-            g.set_screen_and_wait_for_any_key(GameScreen::Disclaimer)
-                .await;
-            g.set_screen_and_available_actions(GameScreen::Terminal, []);
-            entry_point::GameEnd::Exit
-        }
+        Action::IAmCertainlyDone => RouterResult::GameEnd(misc::game_end(g, state).await),
         action => illegal_action!(action),
     }
 }

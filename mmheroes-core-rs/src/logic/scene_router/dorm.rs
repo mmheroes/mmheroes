@@ -8,7 +8,7 @@ pub(in crate::logic) async fn handle_router_action(
 ) -> RouterResult {
     assert_eq!(state.location, Location::Dorm);
     let available_actions = match action {
-        Action::Study => choose_subject_to_study(g, state.clone()),
+        Action::Study => return study(g, state).await,
         Action::ViewTimetable => {
             timetable::show(g, state).await;
             return RouterResult::ReturnToRouter;
@@ -53,10 +53,7 @@ pub(in crate::logic) async fn handle_router_action(
     }
 }
 
-pub(in crate::logic) fn choose_subject_to_study(
-    game: &mut InternalGameState,
-    state: GameState,
-) -> ActionVec {
+pub(in crate::logic) fn subjects_to_study(state: &GameState) -> ActionVec {
     let mut available_actions = SUBJECTS
         .iter()
         .map(|(subject, _)| Action::DoStudy {
@@ -68,45 +65,46 @@ pub(in crate::logic) fn choose_subject_to_study(
         })
         .collect::<ActionVec>();
     available_actions.push(Action::DontStudy);
-    game.set_screen(GameScreen::Study(state));
     available_actions
 }
 
-pub(in crate::logic) fn choose_use_lecture_notes(
-    game: &mut InternalGameState,
-    state: GameState,
-    action: Action,
-) -> ActionVec {
-    match action {
-        Action::DoStudy {
-            subject,
-            lecture_notes_available,
-        } => {
-            assert_eq!(
-                state.player.status_for_subject(subject).has_lecture_notes(),
-                lecture_notes_available
-            );
-            if lecture_notes_available {
-                game.set_screen(GameScreen::PromptUseLectureNotes(state));
-                ActionVec::from([
-                    Action::UseLectureNotes(subject),
-                    Action::DontUseLectureNotes(subject),
-                ])
-            } else {
-                study(game, state, subject, false)
-            }
+async fn study(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterResult {
+    let available_subjects = subjects_to_study(state);
+    g.set_screen_and_action_vec(GameScreen::Study(state.clone()), available_subjects);
+    let subject_to_study = match g.wait_for_action().await {
+        Action::DoStudy { subject, .. } => subject,
+        Action::DontStudy {} => return RouterResult::ReturnToRouter,
+        action => illegal_action!(action),
+    };
+    let lecture_notes_available = state
+        .player
+        .status_for_subject(subject_to_study)
+        .has_lecture_notes();
+    let use_lecture_notes = if lecture_notes_available {
+        g.set_screen_and_available_actions(
+            GameScreen::PromptUseLectureNotes(state.clone()),
+            [
+                Action::UseLectureNotes(subject_to_study),
+                Action::DontUseLectureNotes(subject_to_study),
+            ],
+        );
+        match g.wait_for_action().await {
+            Action::UseLectureNotes(_) => true,
+            Action::DontUseLectureNotes(_) => false,
+            action => illegal_action!(action),
         }
-        Action::DontStudy => legacy::scene_router_run(game, &state),
-        _ => illegal_action!(action),
-    }
+    } else {
+        false
+    };
+    study_subject(g, state, subject_to_study, use_lecture_notes).await
 }
 
-pub(in crate::logic) fn study(
-    game: &mut InternalGameState,
-    mut state: GameState,
+async fn study_subject(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
     subject: Subject,
     use_lecture_notes: bool,
-) -> ActionVec {
+) -> RouterResult {
     // Импликация "использовать конспект => у игрока есть конспект"
     // должна быть истинной
     assert!(
@@ -120,7 +118,7 @@ pub(in crate::logic) fn study(
         state.player.brain.0
     };
     if brain_or_stamina <= 0 {
-        return legacy::scene_router_run(game, &state);
+        return RouterResult::ReturnToRouter;
     }
     let health = state.player.health;
     let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
@@ -129,43 +127,31 @@ pub(in crate::logic) fn study(
     } else {
         brain_or_stamina * 2 / 3
     };
-    *knowledge -= game.rng.random(brain_or_stamina / 2);
-    *knowledge += game.rng.random(health.0 / 18);
+    *knowledge -= g.rng.random(brain_or_stamina / 2);
+    *knowledge += g.rng.random(health.0 / 18);
     if use_lecture_notes {
         *knowledge += 10
     }
     assert!(*knowledge >= BrainLevel(0));
     assert!(state.player.stamina >= StaminaLevel(0));
-    let mut health_penalty = 10 - game.rng.random(state.player.stamina.0);
+    let mut health_penalty = 10 - g.rng.random(state.player.stamina.0);
     if health_penalty < 0 || use_lecture_notes {
         health_penalty = 0;
     }
     if state.current_time.is_suboptimal_study_time() {
         health_penalty += 12;
     }
-
-    game.decrease_health(
-        HealthLevel(health_penalty),
-        state,
-        CauseOfDeath::Overstudied,
-        |game, state| {
-            if state
-                .player
-                .status_for_subject(subject)
-                .knowledge
-                .is_lethal()
-            {
-                game.decrease_health(
-                    HealthLevel(10),
-                    state.clone(),
-                    CauseOfDeath::StudiedTooWell,
-                    |game, state| game.hour_pass(state.clone()),
-                )
-            } else {
-                game.hour_pass(state.clone())
-            }
-        },
-    )
+    misc::decrease_health!(g, HealthLevel(health_penalty), state, Overstudied);
+    if state
+        .player
+        .status_for_subject(subject)
+        .knowledge
+        .is_lethal()
+    {
+        misc::decrease_health!(g, HealthLevel(10), state, StudiedTooWell);
+    }
+    misc::hour_pass(g, state).await; // TODO: Обработать возможную смерть
+    RouterResult::ReturnToRouter
 }
 
 pub(in crate::logic) fn rest(

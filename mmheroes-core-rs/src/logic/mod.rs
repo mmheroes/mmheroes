@@ -33,9 +33,11 @@ pub mod scene_router;
 
 mod entry_point;
 mod legacy;
+mod misc;
 
 use crate::random;
 
+use crate::logic::scene_router::RouterResult;
 use crate::util::async_support::*;
 use assert_matches::*;
 use core::cell::{Ref, RefCell};
@@ -188,7 +190,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             Study(state) => {
                 let state = state.clone();
                 drop(borrowed_screen);
-                scene_router::dorm::choose_use_lecture_notes(self, state, action)
+                legacy::choose_use_lecture_notes(self, state, action)
             }
             PromptUseLectureNotes(state) => {
                 let state = state.clone();
@@ -198,7 +200,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                     Action::DontUseLectureNotes(subject) => (subject, false),
                     _ => illegal_action!(action),
                 };
-                scene_router::dorm::study(self, state, subject, use_lecture_notes)
+                legacy::study(self, state, subject, use_lecture_notes)
             }
             Sleep(state) => {
                 let state = state.clone();
@@ -400,6 +402,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         }
     }
 
+    #[deprecated]
     fn hour_pass(&mut self, mut state: GameState) -> ActionVec {
         // TODO: Lot of stuff going on here
 
@@ -468,5 +471,5 @@ fn memory() {
 
     let observable_game_state = RefCell::new(observable_game_state);
     let game = create_game(0, &observable_game_state);
-    assert_eq!(size_of_val(&game), 1456);
+    assert_eq!(size_of_val(&game), 1520);
 }
