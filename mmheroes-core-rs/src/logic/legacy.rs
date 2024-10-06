@@ -63,7 +63,7 @@ pub(in crate::logic) fn handle_action_sync(
         PUNK => punk::handle_action(game, state, action),
         PDMI => pdmi::handle_action(game, state, action),
         ComputerClass => computer_class::handle_action(game, state, action),
-        Dorm => dorm::handle_action(game, state, action),
+        Dorm => handle_dorm_action(game, state, action),
         Mausoleum => mausoleum::handle_action(game, state, action),
     }
 }
@@ -94,6 +94,44 @@ pub(in crate::logic) fn handle_wanna_try_again(
         Action::DontWantToTryAgain => {
             game.set_screen(GameScreen::Disclaimer);
             wait_for_any_key()
+        }
+        _ => illegal_action!(action),
+    }
+}
+
+#[deprecated]
+pub(in crate::logic) fn handle_dorm_action(
+    game: &mut InternalGameState,
+    mut state: GameState,
+    action: Action,
+) -> ActionVec {
+    assert_eq!(state.location, Location::Dorm);
+    match action {
+        Action::Study => scene_router::dorm::choose_subject_to_study(game, state),
+        Action::ViewTimetable => view_timetable(game, state),
+        Action::Rest => scene_router::dorm::rest(game, state),
+        Action::GoToBed => scene_router::dorm::try_to_sleep(game, state),
+        Action::GoFromDormToPunk => {
+            state.location = Location::PUNK;
+            game.decrease_health(
+                HealthLevel::location_change_large_penalty(),
+                state,
+                CauseOfDeath::OnTheWayToPUNK,
+                |g, state| scene_router_run(g, state),
+            )
+        }
+        Action::GoToPDMI => scene_router::train::go_to_pdmi(game, state),
+        Action::GoToMausoleum => {
+            state.location = Location::Mausoleum;
+            game.decrease_health(
+                HealthLevel::location_change_large_penalty(),
+                state,
+                CauseOfDeath::OnTheWayToMausoleum,
+                |g, state| scene_router_run(g, state),
+            )
+        }
+        Action::WhatToDo => {
+            scene_router::dorm::handle_what_to_do(game, state, Action::WhatToDoAtAll)
         }
         _ => illegal_action!(action),
     }

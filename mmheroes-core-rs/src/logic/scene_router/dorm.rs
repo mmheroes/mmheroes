@@ -1,40 +1,5 @@
 use super::*;
 
-pub(in crate::logic) fn handle_action(
-    game: &mut InternalGameState,
-    mut state: GameState,
-    action: Action,
-) -> ActionVec {
-    assert_eq!(state.location, Location::Dorm);
-    match action {
-        Action::Study => choose_subject_to_study(game, state),
-        Action::ViewTimetable => legacy::view_timetable(game, state),
-        Action::Rest => rest(game, state),
-        Action::GoToBed => try_to_sleep(game, state),
-        Action::GoFromDormToPunk => {
-            state.location = Location::PUNK;
-            game.decrease_health(
-                HealthLevel::location_change_large_penalty(),
-                state,
-                CauseOfDeath::OnTheWayToPUNK,
-                |g, state| legacy::scene_router_run(g, state),
-            )
-        }
-        Action::GoToPDMI => train::go_to_pdmi(game, state),
-        Action::GoToMausoleum => {
-            state.location = Location::Mausoleum;
-            game.decrease_health(
-                HealthLevel::location_change_large_penalty(),
-                state,
-                CauseOfDeath::OnTheWayToMausoleum,
-                |g, state| legacy::scene_router_run(g, state),
-            )
-        }
-        Action::WhatToDo => handle_what_to_do(game, state, Action::WhatToDoAtAll),
-        _ => illegal_action!(action),
-    }
-}
-
 pub(in crate::logic) async fn handle_router_action(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
@@ -196,12 +161,18 @@ pub(in crate::logic) fn study(
     )
 }
 
-fn rest(game: &mut InternalGameState, mut state: GameState) -> ActionVec {
+pub(in crate::logic) fn rest(
+    game: &mut InternalGameState,
+    mut state: GameState,
+) -> ActionVec {
     state.player.health += game.rng.random_in_range(7..15);
     game.hour_pass(state)
 }
 
-fn try_to_sleep(game: &mut InternalGameState, state: GameState) -> ActionVec {
+pub(in crate::logic) fn try_to_sleep(
+    game: &mut InternalGameState,
+    state: GameState,
+) -> ActionVec {
     assert_eq!(state.location, Location::Dorm);
     if state.current_time > Time(3) && state.current_time < Time(20) {
         game.set_screen(GameScreen::Sleep(state));

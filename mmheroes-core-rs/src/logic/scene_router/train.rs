@@ -21,7 +21,10 @@ pub enum TrainToPDMI {
     BoughtRoundtripTicket,
 }
 
-pub(super) fn go_to_pdmi(game: &mut InternalGameState, state: GameState) -> ActionVec {
+pub(in crate::logic) fn go_to_pdmi(
+    game: &mut InternalGameState,
+    state: GameState,
+) -> ActionVec {
     assert_ne!(state.location, Location::PDMI);
     if state.current_time > Time(20) {
         game.set_screen(GameScreen::TrainToPDMI(state, NoPointToGoToPDMI));
