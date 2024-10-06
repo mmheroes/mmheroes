@@ -130,9 +130,37 @@ pub(in crate::logic) fn handle_dorm_action(
                 |g, state| scene_router_run(g, state),
             )
         }
-        Action::WhatToDo => {
-            scene_router::dorm::handle_what_to_do(game, state, HelpAction::WhatToDoAtAll)
-        }
+        Action::WhatToDo => handle_what_to_do(game, state, HelpAction::WhatToDoAtAll),
         _ => illegal_action!(action),
     }
+}
+
+#[deprecated]
+pub(in crate::logic) fn handle_what_to_do(
+    game: &mut InternalGameState,
+    state: GameState,
+    action: HelpAction,
+) -> ActionVec {
+    use crate::logic::GameScreen::*;
+    assert_eq!(state.location(), Location::Dorm);
+    game.set_screen(match action {
+        HelpAction::WhatToDoAtAll => WhatToDo(state),
+        HelpAction::AboutScreen => AboutScreen(state),
+        HelpAction::WhereToGoAndWhy => WhereToGoAndWhy(state),
+        HelpAction::AboutProfessors => AboutProfessors(state),
+        HelpAction::AboutCharacters => AboutCharacters(state),
+        HelpAction::AboutThisProgram => AboutThisProgram(state),
+        HelpAction::ThanksButNothing => {
+            return scene_router_run(game, &state);
+        }
+    });
+    ActionVec::from([
+        Action::Help(HelpAction::WhatToDoAtAll),
+        Action::Help(HelpAction::AboutScreen),
+        Action::Help(HelpAction::WhereToGoAndWhy),
+        Action::Help(HelpAction::AboutProfessors),
+        Action::Help(HelpAction::AboutCharacters),
+        Action::Help(HelpAction::AboutThisProgram),
+        Action::Help(HelpAction::ThanksButNothing),
+    ])
 }

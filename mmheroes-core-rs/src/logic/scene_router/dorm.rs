@@ -35,7 +35,8 @@ pub(in crate::logic) async fn handle_router_action(
             )
         }
         Action::WhatToDo => {
-            handle_what_to_do(g, state.clone(), HelpAction::WhatToDoAtAll)
+            show_help(g, state).await;
+            return RouterResult::ReturnToRouter;
         }
         _ => illegal_action!(action),
     };
@@ -203,31 +204,33 @@ pub(in crate::logic) fn handle_sleeping(
     legacy::scene_router_run(game, &state)
 }
 
-pub(in crate::logic) fn handle_what_to_do(
-    game: &mut InternalGameState,
-    state: GameState,
-    action: HelpAction,
-) -> ActionVec {
-    use GameScreen::*;
-    assert_eq!(state.location(), Location::Dorm);
-    game.set_screen(match action {
-        HelpAction::WhatToDoAtAll => WhatToDo(state),
-        HelpAction::AboutScreen => AboutScreen(state),
-        HelpAction::WhereToGoAndWhy => WhereToGoAndWhy(state),
-        HelpAction::AboutProfessors => AboutProfessors(state),
-        HelpAction::AboutCharacters => AboutCharacters(state),
-        HelpAction::AboutThisProgram => AboutThisProgram(state),
-        HelpAction::ThanksButNothing => {
-            return legacy::scene_router_run(game, &state);
+async fn show_help(g: &mut InternalGameState<'_>, state: &GameState) {
+    let mut help_action = HelpAction::WhatToDoAtAll;
+    loop {
+        let help_screen = match help_action {
+            HelpAction::WhatToDoAtAll => GameScreen::WhatToDo(state.clone()),
+            HelpAction::AboutScreen => GameScreen::AboutScreen(state.clone()),
+            HelpAction::WhereToGoAndWhy => GameScreen::WhereToGoAndWhy(state.clone()),
+            HelpAction::AboutProfessors => GameScreen::AboutProfessors(state.clone()),
+            HelpAction::AboutCharacters => GameScreen::AboutCharacters(state.clone()),
+            HelpAction::AboutThisProgram => GameScreen::AboutThisProgram(state.clone()),
+            HelpAction::ThanksButNothing => return,
+        };
+        g.set_screen_and_available_actions(
+            help_screen,
+            [
+                Action::Help(HelpAction::WhatToDoAtAll),
+                Action::Help(HelpAction::AboutScreen),
+                Action::Help(HelpAction::WhereToGoAndWhy),
+                Action::Help(HelpAction::AboutProfessors),
+                Action::Help(HelpAction::AboutCharacters),
+                Action::Help(HelpAction::AboutThisProgram),
+                Action::Help(HelpAction::ThanksButNothing),
+            ],
+        );
+        help_action = match g.wait_for_action().await {
+            Action::Help(help_action) => help_action,
+            action => illegal_action!(action),
         }
-    });
-    ActionVec::from([
-        Action::Help(HelpAction::WhatToDoAtAll),
-        Action::Help(HelpAction::AboutScreen),
-        Action::Help(HelpAction::WhereToGoAndWhy),
-        Action::Help(HelpAction::AboutProfessors),
-        Action::Help(HelpAction::AboutCharacters),
-        Action::Help(HelpAction::AboutThisProgram),
-        Action::Help(HelpAction::ThanksButNothing),
-    ])
+    }
 }

@@ -312,7 +312,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 drop(borrowed_screen);
                 match action {
                     Action::Help(help_action) => {
-                        scene_router::dorm::handle_what_to_do(self, state, help_action)
+                        legacy::handle_what_to_do(self, state, help_action)
                     }
                     _ => illegal_action!(action),
                 }
