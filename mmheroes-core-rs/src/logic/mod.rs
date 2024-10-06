@@ -315,36 +315,35 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         }
     }
 
-    fn initialize_player(&mut self, parameters: Action) -> Player {
-        let (god_mode, brain, stamina, charisma) = match parameters {
-            Action::RandomStudent => (
+    fn initialize_player(&mut self, style: actions::PlayStyle) -> Player {
+        let (god_mode, brain, stamina, charisma) = match style {
+            actions::PlayStyle::RandomStudent => (
                 false,
                 BrainLevel(self.rng.random_in_range(4..7)),
                 StaminaLevel(self.rng.random_in_range(4..7)),
                 CharismaLevel(self.rng.random_in_range(4..7)),
             ),
-            Action::CleverStudent => (
+            actions::PlayStyle::CleverStudent => (
                 false,
                 BrainLevel(self.rng.random_in_range(5..10)),
                 StaminaLevel(self.rng.random_in_range(2..5)),
                 CharismaLevel(self.rng.random_in_range(2..5)),
             ),
-            Action::ImpudentStudent => (
+            actions::PlayStyle::ImpudentStudent => (
                 false,
                 BrainLevel(self.rng.random_in_range(2..5)),
                 StaminaLevel(self.rng.random_in_range(5..10)),
                 CharismaLevel(self.rng.random_in_range(2..5)),
             ),
-            Action::SociableStudent => (
+            actions::PlayStyle::SociableStudent => (
                 false,
                 BrainLevel(self.rng.random_in_range(2..5)),
                 StaminaLevel(self.rng.random_in_range(2..5)),
                 CharismaLevel(self.rng.random_in_range(5..10)),
             ),
-            Action::GodMode => {
+            actions::PlayStyle::GodMode => {
                 (true, BrainLevel(30), StaminaLevel(30), CharismaLevel(30))
             }
-            _ => illegal_action!(parameters),
         };
 
         let health = HealthLevel(self.rng.random(stamina.0 * 2) + 40);

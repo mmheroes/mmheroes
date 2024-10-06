@@ -14,13 +14,20 @@ pub(in crate::logic) fn start_game(g: &mut InternalGameState) -> ActionVec {
     if entry_point::should_select_game_style(g) {
         g.observable_state.borrow().available_actions.clone()
     } else {
-        ding(g, Action::RandomStudent)
+        ding(
+            g,
+            Action::SelectPlayStyle(actions::PlayStyle::RandomStudent),
+        )
     }
 }
 
 #[deprecated]
 pub(in crate::logic) fn ding(g: &mut InternalGameState, action: Action) -> ActionVec {
-    let player = g.initialize_player(action);
+    let play_style = match action {
+        Action::SelectPlayStyle(play_style) => play_style,
+        _ => illegal_action!(action),
+    };
+    let player = g.initialize_player(play_style);
     g.set_screen(GameScreen::Ding(player));
     wait_for_any_key()
 }

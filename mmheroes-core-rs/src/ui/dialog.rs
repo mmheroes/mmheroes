@@ -61,11 +61,13 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
             }
         }
         Action::DontGoToProfessor => "Ни к кому",
-        Action::RandomStudent => "Случайный студент",
-        Action::CleverStudent => "Шибко умный",
-        Action::ImpudentStudent => "Шибко наглый",
-        Action::SociableStudent => "Шибко общительный",
-        Action::GodMode => "GOD-режим",
+        Action::SelectPlayStyle(actions::PlayStyle::RandomStudent) => "Случайный студент",
+        Action::SelectPlayStyle(actions::PlayStyle::CleverStudent) => "Шибко умный",
+        Action::SelectPlayStyle(actions::PlayStyle::ImpudentStudent) => "Шибко наглый",
+        Action::SelectPlayStyle(actions::PlayStyle::SociableStudent) => {
+            "Шибко общительный"
+        }
+        Action::SelectPlayStyle(actions::PlayStyle::GodMode) => "GOD-режим",
         Action::Study => "Готовиться",
         Action::DoStudy {
             subject,

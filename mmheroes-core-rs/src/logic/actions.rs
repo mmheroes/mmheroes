@@ -2,6 +2,15 @@ use crate::logic::{Classmate, GameScreen, GameState, InternalGameState, Subject}
 use crate::util::TinyVec;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum PlayStyle {
+    RandomStudent,
+    CleverStudent,
+    ImpudentStudent,
+    SociableStudent,
+    GodMode,
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     AnyKey,
     Yes,
@@ -9,11 +18,7 @@ pub enum Action {
     InteractWithClassmate(Classmate),
     Exam(Subject),
     DontGoToProfessor,
-    RandomStudent,
-    CleverStudent,
-    ImpudentStudent,
-    SociableStudent,
-    GodMode,
+    SelectPlayStyle(PlayStyle),
     Study,
     DoStudy {
         subject: Subject,
