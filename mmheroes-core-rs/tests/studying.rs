@@ -1,6 +1,7 @@
 mod common;
 use assert_matches::assert_matches;
 use common::*;
+use mmheroes_core::logic::actions::PlayStyle;
 use mmheroes_core::logic::{
     BrainLevel, CauseOfDeath, GameMode, GameScreen, Subject, Time,
 };
@@ -53,4 +54,41 @@ fn study_with_negative_brain_level() {
         }
         _ => panic!("Unexpected screen"),
     }
+}
+
+#[test]
+fn died_of_studying_to_well() {
+    initialize_game!((0, GameMode::SelectInitialParameters) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::SociableStudent);
+
+    // Ждём когда на факультет приходит Саша
+    replay_game(&mut game_ui, "2↓r2↓r");
+
+    // Идём на факультет, обращаемся к Саше
+    replay_game(&mut game_ui, "4↓r2↑r");
+
+    // С трёх попыток Саша соглашается дать нам конспект по геометрии
+    replay_game(&mut game_ui, "2r2↑r↓2r2↑r2↓2r");
+
+    assert!(state
+        .borrow()
+        .screen()
+        .state()
+        .unwrap()
+        .player()
+        .status_for_subject(Subject::GeometryAndTopology)
+        .has_lecture_notes());
+
+    // Идём в общагу
+    replay_game(&mut game_ui, "2↓r");
+
+    // Готовимся к геометрии 9 раз
+    for _ in 0..9 {
+        replay_game(&mut game_ui, "r2↓2r");
+    }
+
+    // Умираем от зубрёжки
+    assert_matches!(state.borrow().screen(), GameScreen::GameEnd(state) => {
+        assert_matches!(state.player().cause_of_death(), Some(CauseOfDeath::StudiedTooWell))
+    });
 }
