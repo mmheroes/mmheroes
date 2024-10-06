@@ -12,7 +12,7 @@ pub(in crate::logic) async fn handle_router_action(
         Action::Study => return study(g, state).await,
         Action::ViewTimetable => {
             timetable::show(g, state).await;
-            return RouterResult::ReturnToRouter;
+            return Ok(());
         }
         Action::Rest => return rest(g, state).await,
         Action::GoToBed => try_to_sleep(g, state.clone()),
@@ -37,7 +37,7 @@ pub(in crate::logic) async fn handle_router_action(
         }
         Action::WhatToDo => {
             show_help(g, state).await;
-            return RouterResult::ReturnToRouter;
+            return Ok(());
         }
         _ => illegal_action!(action),
     };
@@ -74,7 +74,7 @@ async fn study(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterRe
     g.set_screen_and_action_vec(GameScreen::Study(state.clone()), available_subjects);
     let subject_to_study = match g.wait_for_action().await {
         Action::DoStudy { subject, .. } => subject,
-        Action::DontStudy {} => return RouterResult::ReturnToRouter,
+        Action::DontStudy {} => return Ok(()),
         action => illegal_action!(action),
     };
     let lecture_notes_available = state
@@ -119,7 +119,7 @@ async fn study_subject(
         state.player.brain.0
     };
     if brain_or_stamina <= 0 {
-        return RouterResult::ReturnToRouter;
+        return Ok(());
     }
     let health = state.player.health;
     let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
@@ -142,23 +142,28 @@ async fn study_subject(
     if state.current_time.is_suboptimal_study_time() {
         health_penalty += 12;
     }
-    misc::decrease_health!(g, HealthLevel(health_penalty), state, Overstudied);
+    misc::decrease_health(
+        g,
+        HealthLevel(health_penalty),
+        state,
+        CauseOfDeath::Overstudied,
+    )
+    .await?;
     if state
         .player
         .status_for_subject(subject)
         .knowledge
         .is_lethal()
     {
-        misc::decrease_health!(g, HealthLevel(10), state, StudiedTooWell);
+        misc::decrease_health(g, HealthLevel(10), state, CauseOfDeath::StudiedTooWell)
+            .await?;
     }
-    misc::hour_pass(g, state).await; // TODO: Обработать возможную смерть
-    RouterResult::ReturnToRouter
+    misc::hour_pass(g, state).await
 }
 
 async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterResult {
     state.player.health += g.rng.random_in_range(7..15);
-    misc::hour_pass(g, state).await; // TODO: Обработать возможную смерть
-    RouterResult::ReturnToRouter
+    misc::hour_pass(g, state).await
 }
 
 pub(in crate::logic) fn try_to_sleep(

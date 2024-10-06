@@ -7,10 +7,7 @@ pub mod train;
 
 use super::*;
 
-pub(in crate::logic) enum RouterResult {
-    ReturnToRouter,
-    GameEnd(entry_point::GameEnd),
-}
+pub(in crate::logic) type RouterResult = Result<(), entry_point::GameEnd>;
 
 pub(super) fn available_actions(state: &GameState) -> ActionVec {
     // TODO: assert that no exam is in progress
@@ -124,8 +121,8 @@ pub(super) async fn run(
         );
         let router_action = g.wait_for_action().await;
         match handle_router_action(g, &mut state, router_action).await {
-            RouterResult::ReturnToRouter => continue,
-            RouterResult::GameEnd(game_end) => return game_end,
+            Ok(()) => continue,
+            Err(game_end) => return game_end,
         }
     }
 }
@@ -165,8 +162,8 @@ async fn i_am_done(g: &mut InternalGameState<'_>, state: &GameState) -> RouterRe
         [Action::NoIAmNotDone, Action::IAmCertainlyDone],
     );
     match g.wait_for_action().await {
-        Action::NoIAmNotDone => RouterResult::ReturnToRouter,
-        Action::IAmCertainlyDone => RouterResult::GameEnd(misc::game_end(g, state).await),
+        Action::NoIAmNotDone => Ok(()),
+        Action::IAmCertainlyDone => Err(misc::game_end(g, state).await),
         action => illegal_action!(action),
     }
 }
