@@ -205,7 +205,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             Sleep(state) => {
                 let state = state.clone();
                 drop(borrowed_screen);
-                scene_router::dorm::handle_sleeping(self, state, action)
+                legacy::handle_sleeping(self, state, action)
             }
             HighScores(state) => match action {
                 Action::AnyKey => {
@@ -387,7 +387,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             Location::ComputerClass => {
                 unreachable!("Компьютерный класс уже должен быть закрыт в полночь!")
             }
-            Location::Dorm => scene_router::dorm::go_to_sleep(self, state),
+            Location::Dorm => legacy::go_to_sleep(self, state),
             Location::Mausoleum => todo!("sub_1E993"),
         }
     }

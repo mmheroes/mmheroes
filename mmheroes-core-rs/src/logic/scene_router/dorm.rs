@@ -15,7 +15,7 @@ pub(in crate::logic) async fn handle_router_action(
             return Ok(());
         }
         Action::Rest => return rest(g, state).await,
-        Action::GoToBed => try_to_sleep(g, state.clone()),
+        Action::GoToBed => return sleep(g, state).await,
         Action::GoFromDormToPunk => {
             state.location = Location::PUNK;
             g.decrease_health(
@@ -166,35 +166,14 @@ async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterRes
     misc::hour_pass(g, state).await
 }
 
-pub(in crate::logic) fn try_to_sleep(
-    game: &mut InternalGameState,
-    state: GameState,
-) -> ActionVec {
-    assert_eq!(state.location, Location::Dorm);
+async fn sleep(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterResult {
     if state.current_time > Time(3) && state.current_time < Time(20) {
-        game.set_screen(GameScreen::Sleep(state));
-        wait_for_any_key()
+        g.set_screen_and_wait_for_any_key(GameScreen::Sleep(state.clone()))
+            .await;
+        Ok(())
     } else {
-        go_to_sleep(game, state)
+        todo!("Реализовать что-то помимо неудавшегося сна")
     }
-}
-
-pub(in crate::logic) fn go_to_sleep(
-    _game: &mut InternalGameState,
-    _state: GameState,
-) -> ActionVec {
-    todo!()
-}
-
-pub(in crate::logic) fn handle_sleeping(
-    game: &mut InternalGameState,
-    state: GameState,
-    action: Action,
-) -> ActionVec {
-    // TODO: Реализовать что-то помимо неудавшегося сна
-    assert_matches!(&*game.screen(), GameScreen::Sleep(_));
-    assert_eq!(action, Action::AnyKey);
-    legacy::scene_router_run(game, &state)
 }
 
 async fn show_help(g: &mut InternalGameState<'_>, state: &GameState) {

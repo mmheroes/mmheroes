@@ -113,7 +113,7 @@ pub(in crate::logic) fn handle_dorm_action(
         }
         Action::ViewTimetable => view_timetable(game, state),
         Action::Rest => rest(game, state),
-        Action::GoToBed => scene_router::dorm::try_to_sleep(game, state),
+        Action::GoToBed => try_to_sleep(game, state),
         Action::GoFromDormToPunk => {
             state.location = Location::PUNK;
             game.decrease_health(
@@ -269,4 +269,35 @@ pub(in crate::logic) fn choose_use_lecture_notes(
 fn rest(game: &mut InternalGameState, mut state: GameState) -> ActionVec {
     state.player.health += game.rng.random_in_range(7..15);
     game.hour_pass(state)
+}
+
+pub(in crate::logic) fn try_to_sleep(
+    game: &mut InternalGameState,
+    state: GameState,
+) -> ActionVec {
+    assert_eq!(state.location, Location::Dorm);
+    if state.current_time > Time(3) && state.current_time < Time(20) {
+        game.set_screen(GameScreen::Sleep(state));
+        wait_for_any_key()
+    } else {
+        go_to_sleep(game, state)
+    }
+}
+
+pub(in crate::logic) fn go_to_sleep(
+    _game: &mut InternalGameState,
+    _state: GameState,
+) -> ActionVec {
+    todo!()
+}
+
+pub(in crate::logic) fn handle_sleeping(
+    game: &mut InternalGameState,
+    state: GameState,
+    action: Action,
+) -> ActionVec {
+    // TODO: Реализовать что-то помимо неудавшегося сна
+    assert_matches!(&*game.screen(), GameScreen::Sleep(_));
+    assert_eq!(action, Action::AnyKey);
+    scene_router_run(game, &state)
 }
