@@ -1,6 +1,5 @@
 use super::*;
 use crate::logic::actions::HelpAction;
-use crate::logic::legacy;
 
 pub(in crate::logic) async fn handle_router_action(
     g: &mut InternalGameState<'_>,
@@ -29,12 +28,13 @@ pub(in crate::logic) async fn handle_router_action(
         Action::GoToPDMI => train::go_to_pdmi(g, state.clone()),
         Action::GoToMausoleum => {
             state.location = Location::Mausoleum;
-            g.decrease_health(
+            return misc::decrease_health(
+                g,
                 HealthLevel::location_change_large_penalty(),
-                state.clone(),
+                state,
                 CauseOfDeath::OnTheWayToMausoleum,
-                |g, state| legacy::scene_router_run(g, state),
             )
+            .await;
         }
         Action::WhatToDo => {
             show_help(g, state).await;

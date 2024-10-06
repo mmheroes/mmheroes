@@ -34,3 +34,33 @@ fn death_on_the_way_from_dorm_to_punk() {
         assert_matches!(state.player().cause_of_death(), Some(CauseOfDeath::OnTheWayToPUNK));
     });
 }
+
+#[test]
+fn go_from_dorm_to_mausoleum() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_game(&mut game_ui, "6↓r");
+    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
+        assert_eq!(state.location(), Location::Mausoleum);
+    });
+}
+
+#[test]
+fn death_on_the_way_from_dorm_to_mausoleum() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+
+    // Учим алгебру пока уровень здоровья не упадёт до почти нуля
+    replay_game(&mut game_ui, "10r");
+
+    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
+        assert_eq!(state.player().health(), HealthLevel(2));
+    });
+
+    // Идём в мавзолей
+    replay_game(&mut game_ui, "6↓r");
+
+    assert_matches!(state.borrow().screen(), GameScreen::GameEnd(state) => {
+        assert_matches!(state.player().cause_of_death(), Some(CauseOfDeath::OnTheWayToMausoleum));
+    });
+}
