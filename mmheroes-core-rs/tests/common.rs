@@ -114,7 +114,7 @@ macro_rules! initialize_game {
             mmheroes_core::logic::ObservableGameState::new($mode),
         );
         let mut game = mmheroes_core::logic::create_game($seed, &$state);
-        let game = pin!(game);
+        let game = core::pin::pin!(game);
         let mut $game_ui = $crate::TestGameUI::new(
             &$state,
             game,
