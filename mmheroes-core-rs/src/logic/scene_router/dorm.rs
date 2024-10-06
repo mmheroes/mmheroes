@@ -18,12 +18,13 @@ pub(in crate::logic) async fn handle_router_action(
         Action::GoToBed => return sleep(g, state).await,
         Action::GoFromDormToPunk => {
             state.location = Location::PUNK;
-            g.decrease_health(
+            return misc::decrease_health(
+                g,
                 HealthLevel::location_change_large_penalty(),
-                state.clone(),
+                state,
                 CauseOfDeath::OnTheWayToPUNK,
-                |g, state| legacy::scene_router_run(g, state),
             )
+            .await;
         }
         Action::GoToPDMI => train::go_to_pdmi(g, state.clone()),
         Action::GoToMausoleum => {

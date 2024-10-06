@@ -364,6 +364,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         todo!()
     }
 
+    #[deprecated]
     fn decrease_health<F: FnOnce(&mut InternalGameState, &mut GameState) -> ActionVec>(
         &mut self,
         delta: HealthLevel,
