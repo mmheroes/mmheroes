@@ -98,3 +98,25 @@ fn show_timetable_in_dorm() {
     replay_game(&mut game_ui, "r");
     assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
 }
+
+#[test]
+fn show_help() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_game(&mut game_ui, "↑r");
+    assert_matches!(state.borrow().screen(), GameScreen::WhatToDo(_));
+    replay_game(&mut game_ui, "r");
+    assert_matches!(state.borrow().screen(), GameScreen::WhatToDo(_));
+    replay_game(&mut game_ui, "↓r");
+    assert_matches!(state.borrow().screen(), GameScreen::AboutScreen(_));
+    replay_game(&mut game_ui, "2↓r");
+    assert_matches!(state.borrow().screen(), GameScreen::WhereToGoAndWhy(_));
+    replay_game(&mut game_ui, "3↓r");
+    assert_matches!(state.borrow().screen(), GameScreen::AboutProfessors(_));
+    replay_game(&mut game_ui, "4↓r");
+    assert_matches!(state.borrow().screen(), GameScreen::AboutCharacters(_));
+    replay_game(&mut game_ui, "5↓r");
+    assert_matches!(state.borrow().screen(), GameScreen::AboutThisProgram(_));
+    replay_game(&mut game_ui, "6↓r");
+    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
+}
