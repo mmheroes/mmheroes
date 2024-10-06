@@ -62,11 +62,13 @@ impl RendererRequestConsumer for TestRendererRequestConsumer {
 
 pub type TestGameUI<'game, G> = GameUI<'game, G, TestRendererRequestConsumer>;
 
-pub fn replay_game<G: Game>(game_ui: &mut TestGameUI<G>, steps: &str) {
+/// Возвращает `true` как только [GameUI::continue_game] возвращает `false`,
+/// то есть, когда игра закончилась. Пока игра не закончилась, возвращает `false`.
+pub fn replay_game<G: Game>(game_ui: &mut TestGameUI<G>, steps: &str) -> bool {
     let mut parser = InputRecordingParser::new(steps);
     match parser.parse_all(|input| game_ui.continue_game(input)) {
-        Ok(()) => {}
-        Err(InputRecordingParserError::Interrupted) => {}
+        Ok(()) => false,
+        Err(InputRecordingParserError::Interrupted) => true,
         Err(error) => panic!("{:?}", error),
     }
 }

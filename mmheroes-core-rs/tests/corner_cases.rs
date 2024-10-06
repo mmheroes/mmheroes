@@ -68,3 +68,21 @@ fn initial_parameters_screen_shown_when_rerunning() {
     replay_game(&mut game_ui, "r");
     assert_matches!(state.borrow().screen(), GameScreen::Ding(_));
 }
+
+/// Проверяем что игра завершается корректно
+#[test]
+fn game_end() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_game(&mut game_ui, "4r2↑2r");
+    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
+    replay_game(&mut game_ui, "2↑r↓r");
+    assert_matches!(state.borrow().screen(), GameScreen::GameEnd(_));
+    replay_game(&mut game_ui, "r");
+    assert_matches!(state.borrow().screen(), GameScreen::WannaTryAgain);
+    replay_game(&mut game_ui, "r");
+    assert_matches!(state.borrow().screen(), GameScreen::Ding(_));
+    replay_game(&mut game_ui, "2r2↑r↓2r↓r");
+    assert_matches!(state.borrow().screen(), GameScreen::Disclaimer);
+    assert!(replay_game(&mut game_ui, "r"));
+    assert_matches!(state.borrow().screen(), GameScreen::Terminal);
+}
