@@ -18,7 +18,7 @@ fn env_seed() -> Option<u64> {
     if cfg!(debug_assertions) {
         std::env::var("MMHEROES_SEED")
             .ok()
-            .and_then(|s| u64::from_str(&*s).ok())
+            .and_then(|s| u64::from_str(&s).ok())
     } else {
         None
     }

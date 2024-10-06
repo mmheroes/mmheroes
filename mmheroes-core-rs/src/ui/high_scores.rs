@@ -50,7 +50,7 @@ pub fn encode(scores: &[HighScore; SCORE_COUNT]) -> [u8; BUFFER_SIZE] {
         let (length, rest) = buffer.split_first_mut().unwrap();
         buffer = rest;
         *length =
-            cp866_encoding::string_to_cp866_lossy(&*name, &mut buffer[..MAX_NAME_LENGTH])
+            cp866_encoding::string_to_cp866_lossy(name, &mut buffer[..MAX_NAME_LENGTH])
                 as u8;
         buffer[MAX_NAME_LENGTH..(MAX_NAME_LENGTH + 2)]
             .clone_from_slice(&score.0.to_le_bytes());

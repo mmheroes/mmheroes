@@ -36,9 +36,10 @@ use crate::logic::*;
 
 use core::fmt::Display;
 
-#[derive(Copy, Clone, Eq, PartialEq, Hash, Debug)]
+#[derive(Default, Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[repr(C)]
 pub enum Color {
+    #[default]
     Black = 0,
     Red = 1,
     Yellow = 3,
@@ -80,12 +81,6 @@ impl TryFrom<u8> for Color {
         };
         assert_eq!(color as u8, value);
         Ok(color)
-    }
-}
-
-impl Default for Color {
-    fn default() -> Self {
-        Color::White
     }
 }
 

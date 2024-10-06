@@ -41,7 +41,7 @@ fn output_remaining_exams(
     r: &mut Renderer<impl RendererRequestConsumer>,
     number_of_exams: usize,
 ) {
-    assert!(number_of_exams as usize <= NUM_SUBJECTS);
+    assert!(number_of_exams <= NUM_SUBJECTS);
 
     let mut output = |a, b| {
         r.set_color(Color::White, Color::Black);
@@ -55,7 +55,7 @@ fn output_remaining_exams(
     match number_of_exams {
         0 => {
             r.set_color(Color::WhiteBright, Color::Black);
-            return write!(r, "Все уже сдано!");
+            write!(r, "Все уже сдано!")
         }
         1 => output("Остался", "зачет!"),
         2..=4 => output("Осталось", "зачета."),

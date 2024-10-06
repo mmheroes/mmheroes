@@ -32,7 +32,7 @@ impl<const CAPACITY: usize> Deref for TinyString<CAPACITY> {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
-        unsafe { core::str::from_utf8_unchecked(&*self.v) }
+        unsafe { core::str::from_utf8_unchecked(&self.v) }
     }
 }
 
@@ -54,7 +54,7 @@ impl<const N: usize, const M: usize> PartialEq<TinyString<M>> for TinyString<N> 
 
 impl<const CAPACITY: usize> PartialEq<str> for TinyString<CAPACITY> {
     fn eq(&self, other: &str) -> bool {
-        PartialEq::eq(&self[..], &other[..])
+        PartialEq::eq(&self[..], other)
     }
 }
 

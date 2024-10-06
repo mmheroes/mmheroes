@@ -6,9 +6,11 @@ use core::ops::{Add, AddAssign, Sub};
 
 pub const NUM_DAYS: usize = 6;
 
-/// Количество часов, прошедших с полуночи. Имеет семантику таймстэмпа, то есть,
-/// экземпляры этого типа нельзя складывать, но к ним можно прибавлять экземпляры
-/// типа `Duration` и получать новый экземпляр типа `Time`.
+/// Количество часов, прошедших с полуночи.
+///
+/// Имеет семантику таймстэмпа, то есть, экземпляры этого типа нельзя складывать,
+/// но к ним можно прибавлять экземпляры типа `Duration` и получать новый экземпляр
+/// типа `Time`.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Ord, PartialOrd)]
 #[repr(transparent)]
 pub struct Time(pub u8);
@@ -207,7 +209,7 @@ impl Timetable {
             let mut day_used = [false; NUM_DAYS];
             for _ in 0..subject_info.exam_days {
                 let day_idx = loop {
-                    let day = rng.random_in_range(0..NUM_DAYS) as usize;
+                    let day = rng.random_in_range(0..NUM_DAYS);
                     if !day_used[day] {
                         day_used[day] = true;
                         break day;

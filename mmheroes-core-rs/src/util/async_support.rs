@@ -54,6 +54,7 @@ impl<Result, Input: Any + Unpin, Output: Any + Unpin, F: Future<Output = Result>
         self.resume(Some(input))
     }
 
+    #[allow(dead_code)]
     pub(crate) fn resume_without_input(self: Pin<&mut Self>) -> Prompt<Output, Result> {
         self.resume(None)
     }

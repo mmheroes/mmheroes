@@ -95,7 +95,7 @@ pub fn replay_until_dorm<G: Game>(
                 replay_game(game_ui, "3↓");
             }
             PlayStyle::GodMode => {
-                if (mode == GameMode::God) {
+                if mode == GameMode::God {
                     replay_game(game_ui, "4↓");
                 }
             }
