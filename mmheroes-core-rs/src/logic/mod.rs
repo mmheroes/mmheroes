@@ -294,11 +294,11 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             }
             GameEnd(_) => {
                 drop(borrowed_screen);
-                scene_router::wanna_try_again(self)
+                legacy::wanna_try_again(self)
             }
             WannaTryAgain => {
                 drop(borrowed_screen);
-                scene_router::handle_wanna_try_again(self, action)
+                legacy::handle_wanna_try_again(self, action)
             }
             Disclaimer => {
                 drop(borrowed_screen);

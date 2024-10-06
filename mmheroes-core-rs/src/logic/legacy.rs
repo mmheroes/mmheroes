@@ -91,3 +91,25 @@ pub(in crate::logic) fn handle_i_am_done(
         _ => illegal_action!(action),
     }
 }
+
+#[deprecated]
+pub(in crate::logic) fn wanna_try_again(game: &mut InternalGameState) -> ActionVec {
+    game.set_screen(GameScreen::WannaTryAgain);
+    // Хочешь попробовать снова? Да или нет.
+    ActionVec::from([Action::WantToTryAgain, Action::DontWantToTryAgain])
+}
+
+#[deprecated]
+pub(in crate::logic) fn handle_wanna_try_again(
+    game: &mut InternalGameState,
+    action: Action,
+) -> ActionVec {
+    match action {
+        Action::WantToTryAgain => start_game(game),
+        Action::DontWantToTryAgain => {
+            game.set_screen(GameScreen::Disclaimer);
+            wait_for_any_key()
+        }
+        _ => illegal_action!(action),
+    }
+}
