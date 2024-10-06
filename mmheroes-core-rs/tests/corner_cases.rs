@@ -36,6 +36,14 @@ fn game_end() {
 }
 
 #[test]
+fn game_end_after_visiting_punk() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_game(&mut game_ui, "4↓r↑r");
+    assert_matches!(state.borrow().screen(), GameScreen::IAmDone(_));
+}
+
+#[test]
 fn show_timetable_in_dorm() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
     replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);

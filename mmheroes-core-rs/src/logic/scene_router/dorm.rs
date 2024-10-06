@@ -45,6 +45,9 @@ pub(in crate::logic) async fn handle_router_action(
     g.set_available_actions_from_vec(available_actions);
     loop {
         let action = g.wait_for_action().await;
+        if action == Action::IAmDone {
+            return i_am_done(g, state).await;
+        }
         let new_actions = g.perform_action(action);
         g.set_available_actions_from_vec(new_actions);
     }
