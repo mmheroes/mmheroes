@@ -1,6 +1,87 @@
 use super::*;
 use crate::logic::legacy;
 
+pub(super) async fn handle_router_action(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+    action: Action,
+) -> RouterResult {
+    assert_eq!(state.location, Location::PUNK);
+    let available_actions = match action {
+        Action::GoToProfessor => return exams::go_to_professor(g, state).await,
+        Action::LookAtBaobab => {
+            g.set_screen(GameScreen::HighScores(state.clone()));
+            wait_for_any_key()
+        }
+        Action::GoFromPunkToDorm => {
+            state.location = Location::Dorm;
+            legacy::scene_router_run(g, state)
+        }
+        Action::GoToPDMI => legacy::go_to_pdmi(g, state.clone()),
+        Action::GoToMausoleum => {
+            state.location = Location::Mausoleum;
+            g.decrease_health(
+                HealthLevel::location_change_large_penalty(),
+                state.clone(),
+                CauseOfDeath::OnTheWayToMausoleum,
+                |g, state| legacy::scene_router_run(g, state),
+            )
+        }
+        Action::GoToComputerClass => {
+            assert!(state.current_time < Time::computer_class_closing());
+            state.location = Location::ComputerClass;
+            g.decrease_health(
+                HealthLevel::location_change_small_penalty(),
+                state.clone(),
+                CauseOfDeath::FellFromStairs,
+                |g, state| legacy::scene_router_run(g, state),
+            )
+        }
+        Action::GoToCafePUNK => {
+            // TODO: Логику можно переиспользовать в кафе ПОМИ
+            assert!(state.current_time.is_cafe_open());
+            let mut available_actions = ActionVec::new();
+            let available_money = state.player.money;
+            if available_money >= Money::tea_cost() {
+                available_actions.push(Action::OrderTea);
+            }
+            if available_money >= Money::cake_cost() {
+                available_actions.push(Action::OrderCake);
+            }
+            if available_money >= Money::tea_with_cake_cost() {
+                available_actions.push(Action::OrderTeaWithCake);
+            }
+            available_actions.push(Action::RestInCafePUNK);
+            available_actions.push(Action::ShouldntHaveComeToCafePUNK);
+            g.set_screen(GameScreen::CafePUNK(state.clone()));
+            available_actions
+        }
+        Action::InteractWithClassmate(classmate) => {
+            assert_matches!(
+                state.classmates[classmate].current_location(),
+                ClassmateLocation::Location(Location::PUNK)
+            );
+            npc::interact_with_classmate(g, state.clone(), classmate)
+        }
+        Action::GoToWork => {
+            assert!(state.player.is_employed_at_terkom());
+            todo!("Пойти в ТЕРКОМ, поработать")
+        }
+        _ => illegal_action!(action),
+    };
+
+    // LEGACY
+    g.set_available_actions_from_vec(available_actions);
+    loop {
+        let action = g.wait_for_action().await;
+        if action == Action::IAmDone {
+            return i_am_done(g, state).await;
+        }
+        let new_actions = g.perform_action(action);
+        g.set_available_actions_from_vec(new_actions);
+    }
+}
+
 pub(in crate::logic) fn handle_action(
     game: &mut InternalGameState,
     mut state: GameState,
@@ -8,7 +89,7 @@ pub(in crate::logic) fn handle_action(
 ) -> ActionVec {
     assert_eq!(state.location, Location::PUNK);
     match action {
-        Action::GoToProfessor => actions::go_to_professor(game, state),
+        Action::GoToProfessor => legacy::go_to_professor(game, state),
         Action::LookAtBaobab => {
             game.set_screen(GameScreen::HighScores(state));
             wait_for_any_key()
@@ -69,15 +150,6 @@ pub(in crate::logic) fn handle_action(
         }
         _ => illegal_action!(action),
     }
-}
-
-pub(in crate::logic) async fn handle_router_action(
-    g: &mut InternalGameState<'_>,
-    state: &mut GameState,
-    action: Action,
-) {
-    let available_actions = handle_action(g, state.clone(), action);
-    g.set_available_actions_from_vec(available_actions);
 }
 
 pub(in crate::logic) fn handle_cafe_punk_action(

@@ -1,7 +1,7 @@
 use super::*;
 use crate::logic::actions::HelpAction;
 
-pub(in crate::logic) async fn handle_router_action(
+pub(super) async fn handle_router_action(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     action: Action,

@@ -7,12 +7,12 @@
 #![allow(deprecated)]
 
 use crate::logic::actions::{wait_for_any_key, ActionVec, HelpAction};
-use crate::logic::scene_router::train;
 use crate::logic::scene_router::train::TrainToPDMI;
 use crate::logic::scene_router::train::TrainToPDMI::{
     BoughtRoundtripTicket, GatecrashBecauseNoMoney, GatecrashByChoice, NoPointToGoToPDMI,
     PromptToBuyTickets,
 };
+use crate::logic::scene_router::{punk, train};
 use crate::logic::*;
 
 #[deprecated]
@@ -421,4 +421,29 @@ pub(in crate::logic) fn proceed_with_train(
         }
         _ => illegal_action!(action),
     }
+}
+
+#[deprecated]
+pub(in crate::logic) async fn handle_punk_action(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+    action: Action,
+) {
+    let available_actions = punk::handle_action(g, state.clone(), action);
+    g.set_available_actions_from_vec(available_actions);
+}
+
+#[deprecated]
+pub(in crate::logic) fn go_to_professor(
+    game: &mut InternalGameState,
+    state: GameState,
+) -> ActionVec {
+    let mut available_actions = state
+        .current_day()
+        .current_exams(state.location, state.current_time)
+        .map(|exam| Action::Exam(exam.subject()))
+        .collect::<ActionVec>();
+    available_actions.push(Action::DontGoToProfessor);
+    game.set_screen(GameScreen::GoToProfessor(state));
+    available_actions
 }

@@ -360,6 +360,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         })
     }
 
+    #[deprecated]
     fn enter_exam(&mut self, _state: GameState, _subject: Subject) -> ActionVec {
         todo!()
     }

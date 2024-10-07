@@ -1,5 +1,6 @@
 pub(in crate::logic) mod computer_class;
 pub(in crate::logic) mod dorm;
+mod exams;
 pub(in crate::logic) mod mausoleum;
 pub(in crate::logic) mod pdmi;
 pub(in crate::logic) mod punk;
@@ -138,7 +139,7 @@ async fn handle_router_action(
 
     use Location::*;
     match state.location() {
-        PUNK => punk::handle_router_action(g, state, action).await,
+        PUNK => return punk::handle_router_action(g, state, action).await,
         PDMI => pdmi::handle_router_action(g, state, action).await,
         ComputerClass => computer_class::handle_router_action(g, state, action).await,
         Dorm => return dorm::handle_router_action(g, state, action).await,
