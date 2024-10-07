@@ -124,6 +124,6 @@ macro_rules! initialize_game {
         $game_ui.continue_game(mmheroes_core::ui::Input::Enter)
     };
     (($seed:expr, $mode:expr) => $state:ident, $game_ui:ident) => {
-        initialize_game!(($seed, $mode, None) => $state, $game_ui)
+        initialize_game!(($seed, $mode, None) => $state, $game_ui);
     };
 }

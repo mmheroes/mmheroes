@@ -16,27 +16,31 @@ pub(super) async fn handle_router_action(
         }
         Action::GoFromPunkToDorm => {
             state.location = Location::Dorm;
-            legacy::scene_router_run(g, state)
+            return Ok(());
         }
-        Action::GoToPDMI => legacy::go_to_pdmi(g, state.clone()),
+        Action::GoToPDMI => return train::go_to_pdmi_async(g, state).await,
         Action::GoToMausoleum => {
             state.location = Location::Mausoleum;
-            g.decrease_health(
+            misc::decrease_health(
+                g,
                 HealthLevel::location_change_large_penalty(),
-                state.clone(),
+                state,
                 CauseOfDeath::OnTheWayToMausoleum,
-                |g, state| legacy::scene_router_run(g, state),
             )
+            .await?;
+            return Ok(());
         }
         Action::GoToComputerClass => {
             assert!(state.current_time < Time::computer_class_closing());
             state.location = Location::ComputerClass;
-            g.decrease_health(
+            misc::decrease_health(
+                g,
                 HealthLevel::location_change_small_penalty(),
-                state.clone(),
+                state,
                 CauseOfDeath::FellFromStairs,
-                |g, state| legacy::scene_router_run(g, state),
             )
+            .await?;
+            return Ok(());
         }
         Action::GoToCafePUNK => {
             // TODO: Логику можно переиспользовать в кафе ПОМИ

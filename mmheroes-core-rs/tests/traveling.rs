@@ -5,7 +5,7 @@ use common::*;
 use mmheroes_core::logic::actions::PlayStyle;
 use mmheroes_core::logic::scene_router::train::TrainToPDMI;
 use mmheroes_core::logic::{
-    CauseOfDeath, GameMode, GameScreen, HealthLevel, Location, Money,
+    Action, CauseOfDeath, GameMode, GameScreen, HealthLevel, Location, Money,
 };
 
 #[test]
@@ -308,6 +308,143 @@ fn go_to_pdmi_with_ticket() {
             assert_eq!(state.player().health(), HealthLevel(59));
             assert_eq!(state.player().money(), Money(40));
             assert!(state.player().has_roundtrip_train_ticket());
+        }
+    );
+}
+
+#[test]
+fn go_from_punk_to_dorm() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+
+    // Идём на факультет
+    replay_game(&mut game_ui, "4↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::PUNK);
+            assert_eq!(state.player().health(), HealthLevel(41));
+        }
+    );
+
+    // Идём обратно в общагу факультет и проверяем что здоровье не изменилось
+    replay_game(&mut game_ui, "2↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::Dorm);
+            assert_eq!(state.player().health(), HealthLevel(41));
+        }
+    );
+}
+
+#[test]
+fn go_from_punk_to_computer_class() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+
+    // Идём на факультет
+    replay_game(&mut game_ui, "4↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::PUNK);
+            assert_eq!(state.player().health(), HealthLevel(41));
+        }
+    );
+
+    // Идём в компьютерный класс
+    replay_game(&mut game_ui, "2↑r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::ComputerClass);
+            assert_eq!(state.player().health(), HealthLevel(39));
+        }
+    );
+
+    // Возвращаемся в общагу
+    replay_game(&mut game_ui, "r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::Dorm);
+            assert_eq!(state.player().health(), HealthLevel(39));
+        }
+    );
+
+    // Отдыхаем до 19:00
+    replay_game(&mut game_ui, "2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.player().health(), HealthLevel(170));
+        }
+    );
+
+    // Снова идём в компьютерный класс
+    replay_game(&mut game_ui, "4↓r4↑r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::ComputerClass);
+            assert_eq!(state.player().health(), HealthLevel(165));
+        }
+    );
+
+    // Возвращаемся в общагу и отдыхаем до 20:00
+    replay_game(&mut game_ui, "r2↓r");
+
+    // Идём на факультет, убеждаемся что компьютерный класс уже закрыт
+    replay_game(&mut game_ui, "4↓r");
+    assert!(!state
+        .borrow()
+        .available_actions()
+        .contains(&Action::GoToComputerClass));
+}
+
+#[test]
+fn death_on_the_way_to_computer_class() {
+    initialize_game!((1, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+
+    // Учим алгебру пока уровень здоровья не упадёт до почти нуля
+    replay_game(&mut game_ui, "10r");
+
+    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
+        assert_eq!(state.player().health(), HealthLevel(4));
+    });
+
+    // Идём в компьютерный класс
+    replay_game(&mut game_ui, "4↓r5↓r");
+
+    assert_matches!(state.borrow().screen(), GameScreen::GameEnd(state) => {
+        assert_eq!(state.player().cause_of_death(), Some(CauseOfDeath::FellFromStairs));
+    });
+}
+
+#[test]
+fn go_from_punk_to_mausoleum() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+
+    // Идём на факультет
+    replay_game(&mut game_ui, "4↓r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::PUNK);
+            assert_eq!(state.player().health(), HealthLevel(41));
+        }
+    );
+
+    // Идём в мавзолей
+    replay_game(&mut game_ui, "3↑r");
+    assert_matches!(
+        state.borrow().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::Mausoleum);
+            assert_eq!(state.player().health(), HealthLevel(38));
         }
     );
 }
