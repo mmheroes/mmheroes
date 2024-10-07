@@ -83,14 +83,19 @@ fn display_character_stats(
 
     write_colored!(White, r, "Самочувствие: ");
     match player.health().assessment() {
-        HealthAssessment::LivingDead => writeln_colored!(Magenta, r, "живой труп"),
-        HealthAssessment::TimeToDie => writeln_colored!(Red, r, "пора помирать ..."),
-        HealthAssessment::Bad => writeln_colored!(Red, r, "плохое"),
-        HealthAssessment::SoSo => writeln_colored!(YellowBright, r, "так себе"),
-        HealthAssessment::Average => writeln_colored!(YellowBright, r, "среднее"),
-        HealthAssessment::Good => writeln_colored!(Green, r, "хорошее"),
-        HealthAssessment::Great => writeln_colored!(Green, r, "отличное"),
+        HealthAssessment::LivingDead => write_colored!(Magenta, r, "живой труп"),
+        HealthAssessment::TimeToDie => write_colored!(Red, r, "пора помирать ..."),
+        HealthAssessment::Bad => write_colored!(Red, r, "плохое"),
+        HealthAssessment::SoSo => write_colored!(YellowBright, r, "так себе"),
+        HealthAssessment::Average => write_colored!(YellowBright, r, "среднее"),
+        HealthAssessment::Good => write_colored!(Green, r, "хорошее"),
+        HealthAssessment::Great => write_colored!(Green, r, "отличное"),
     }
+    if cfg!(debug_assertions) {
+        // Выводим точное значение для удобства тестирования
+        write!(r, " ({})", player.health());
+    }
+    writeln!(r);
 
     write_colored!(White, r, "Финансы: ");
     if player.money() > Money::zero() {
@@ -104,80 +109,96 @@ fn display_character_stats(
 
     match player.brain().assessment() {
         BrainAssessment::ClinicalBrainDeath => {
-            writeln_colored!(Magenta, r, "Клиническая смерть мозга")
+            write_colored!(Magenta, r, "Клиническая смерть мозга")
         }
         BrainAssessment::BrainIsAlmostNonFunctioning => {
-            writeln_colored!(Magenta, r, "Голова просто никакая")
+            write_colored!(Magenta, r, "Голова просто никакая")
         }
         BrainAssessment::ThinkingIsAlmostImpossible => {
-            writeln_colored!(RedBright, r, "Думать практически невозможно")
+            write_colored!(RedBright, r, "Думать практически невозможно")
         }
         BrainAssessment::ThinkingIsDifficult => {
-            writeln_colored!(RedBright, r, "Думать трудно")
+            write_colored!(RedBright, r, "Думать трудно")
         }
         BrainAssessment::BrainIsAlmostOK => {
-            writeln_colored!(YellowBright, r, "Голова почти в норме")
+            write_colored!(YellowBright, r, "Голова почти в норме")
         }
-        BrainAssessment::BrainIsOK => writeln_colored!(YellowBright, r, "Голова в норме"),
-        BrainAssessment::BrainIsFresh => writeln_colored!(Green, r, "Голова свежая"),
+        BrainAssessment::BrainIsOK => write_colored!(YellowBright, r, "Голова в норме"),
+        BrainAssessment::BrainIsFresh => write_colored!(Green, r, "Голова свежая"),
         BrainAssessment::ExtraordinaryEaseOfThought => {
-            writeln_colored!(Green, r, "Легкость в мыслях необыкновенная")
+            write_colored!(Green, r, "Легкость в мыслях необыкновенная")
         }
         BrainAssessment::ContactTheDeveloper => {
-            writeln_colored!(CyanBright, r, "Обратитесь к разработчику ;)")
+            write_colored!(CyanBright, r, "Обратитесь к разработчику ;)")
         }
     }
+    if cfg!(debug_assertions) {
+        // Выводим точное значение для удобства тестирования
+        write!(r, " ({})", player.brain());
+    }
+    writeln!(r);
 
     match player.stamina().assessment() {
         StaminaAssessment::MamaTakeMeBack => {
-            writeln_colored!(Magenta, r, "Мама, роди меня обратно!")
+            write_colored!(Magenta, r, "Мама, роди меня обратно!")
         }
         StaminaAssessment::CompletelyOverstudied => {
-            writeln_colored!(Magenta, r, "Окончательно заучился")
+            write_colored!(Magenta, r, "Окончательно заучился")
         }
         StaminaAssessment::ICantTakeIt => {
-            writeln_colored!(RedBright, r, "Я так больше немогууу!")
+            write_colored!(RedBright, r, "Я так больше немогууу!")
         }
         StaminaAssessment::IWishItAllEndedSoon => {
-            writeln_colored!(RedBright, r, "Скорее бы все это кончилось...")
+            write_colored!(RedBright, r, "Скорее бы все это кончилось...")
         }
         StaminaAssessment::ALittleMoreAndThenRest => {
-            writeln_colored!(YellowBright, r, "Еще немного и пора отдыхать")
+            write_colored!(YellowBright, r, "Еще немного и пора отдыхать")
         }
         StaminaAssessment::ABitTired => {
-            writeln_colored!(YellowBright, r, "Немного устал")
+            write_colored!(YellowBright, r, "Немного устал")
         }
         StaminaAssessment::ReadyForEverything => {
-            writeln_colored!(Green, r, "Готов к труду и обороне")
+            write_colored!(Green, r, "Готов к труду и обороне")
         }
         StaminaAssessment::GreatThingsAwaitUs => {
-            writeln_colored!(Green, r, "Нас ждут великие дела")
+            write_colored!(Green, r, "Нас ждут великие дела")
         }
     }
+    if cfg!(debug_assertions) {
+        // Выводим точное значение для удобства тестирования
+        write!(r, " ({})", player.stamina());
+    }
+    writeln!(r);
 
     match player.charisma().assessment() {
         CharismaAssessment::VeryIntroverted => {
-            writeln_colored!(Magenta, r, "Очень замкнутый товарищ")
+            write_colored!(Magenta, r, "Очень замкнутый товарищ")
         }
         CharismaAssessment::PreferSolitariness => {
-            writeln_colored!(Magenta, r, "Предпочитаешь одиночество")
+            write_colored!(Magenta, r, "Предпочитаешь одиночество")
         }
         CharismaAssessment::VeryHardToTalkToPeople => {
-            writeln_colored!(RedBright, r, "Тебе трудно общаться с людьми")
+            write_colored!(RedBright, r, "Тебе трудно общаться с людьми")
         }
         CharismaAssessment::NotEasyToTalkToPeople => {
-            writeln_colored!(RedBright, r, "Тебе непросто общаться с людьми")
+            write_colored!(RedBright, r, "Тебе непросто общаться с людьми")
         }
         CharismaAssessment::Normal => {
-            writeln_colored!(YellowBright, r, "Ты нормально относишься к окружающим")
+            write_colored!(YellowBright, r, "Ты нормально относишься к окружающим")
         }
         CharismaAssessment::ManyFriends => {
-            writeln_colored!(Green, r, "У тебя много друзей")
+            write_colored!(Green, r, "У тебя много друзей")
         }
         CharismaAssessment::TonsOfFriends => {
-            writeln_colored!(Green, r, "У тебя очень много друзей")
+            write_colored!(Green, r, "У тебя очень много друзей")
         }
     }
+
+    if cfg!(debug_assertions) {
+        // Выводим точное значение для удобства тестирования
+        write!(r, " ({})", player.charisma());
+    }
+    writeln!(r);
 }
 
 fn color_for_assessment(assessment: KnowledgeAssessment) -> Color {
