@@ -37,7 +37,6 @@ mod misc;
 
 use crate::random;
 
-use crate::logic::scene_router::RouterResult;
 use crate::util::async_support::*;
 use assert_matches::*;
 use core::cell::{Ref, RefCell};
