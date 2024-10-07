@@ -2,6 +2,7 @@ use super::*;
 use core::fmt::{Debug, Formatter, Result as FmtResult};
 use core::ops::Deref;
 
+#[derive(Clone)]
 pub struct TinyString<const CAPACITY: usize> {
     v: TinyVec<u8, CAPACITY>,
 }

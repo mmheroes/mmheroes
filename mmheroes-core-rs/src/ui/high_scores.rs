@@ -10,13 +10,28 @@ pub const BUFFER_SIZE: usize = SCORE_COUNT * RECORD_SIZE;
 
 pub const MAX_NAME_LENGTH: usize = 32;
 
-pub(crate) fn default_high_scores() -> [HighScore; SCORE_COUNT] {
+#[macro_export]
+macro_rules! high_scores {
     [
-        (TinyString::from("Коля"), Money(400)),
-        (TinyString::from("Саша"), Money(280)),
-        (TinyString::from("Эндрю"), Money(180)),
-        (TinyString::from("Паша"), Money(100)),
-        (TinyString::from("Гриша"), Money(20)),
+        $(
+            $name:expr => $score:expr
+        ),* $(,)?
+    ] => {
+        [
+            $(
+                ($crate::util::TinyString::from($name), $crate::logic::Money($score))
+            ),*
+        ]
+    };
+}
+
+pub(crate) fn default_high_scores() -> [HighScore; SCORE_COUNT] {
+    high_scores![
+        "Коля" => 400,
+        "Саша" => 280,
+        "Эндрю" => 180,
+        "Паша" => 100,
+        "Гриша" => 20,
     ]
 }
 

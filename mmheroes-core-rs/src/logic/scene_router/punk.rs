@@ -10,8 +10,9 @@ pub(super) async fn handle_router_action(
     let available_actions = match action {
         Action::GoToProfessor => return exams::go_to_professor(g, state).await,
         Action::LookAtBaobab => {
-            g.set_screen(GameScreen::HighScores(state.clone()));
-            wait_for_any_key()
+            g.set_screen_and_wait_for_any_key(GameScreen::HighScores(state.clone()))
+                .await;
+            return Ok(());
         }
         Action::GoFromPunkToDorm => {
             state.location = Location::Dorm;
