@@ -155,7 +155,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         self.set_available_actions_from_vec(ActionVec::from(actions))
     }
 
-    /// Accepts an action, returns the number of actions available in the updated state.
+    #[deprecated]
     fn perform_action(&mut self, action: Action) -> ActionVec {
         use GameScreen::*;
         let borrowed_screen = self.screen();
