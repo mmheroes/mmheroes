@@ -16,12 +16,12 @@ fn look_at_baobab() {
         "Рита" => 120,
     ];
     initialize_game!((0, GameMode::Normal, Some(high_scores.clone())) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
-    replay_game(&mut game_ui, "4↓r↓r");
+    replay_game(game_ui, "4↓r↓r");
     assert_matches!(state.borrow().screen(), GameScreen::HighScores(_));
     assert_eq!(game_ui.high_scores, high_scores);
-    replay_game(&mut game_ui, "r");
+    replay_game(game_ui, "r");
     assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
         assert_matches!(state.location(), Location::PUNK);
     });

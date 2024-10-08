@@ -9,15 +9,15 @@ use mmheroes_core::logic::{
 #[test]
 fn overstudy_to_zero_health() {
     initialize_game!((1641333345581, GameMode::Normal) => state, game_ui);
-    replay_game(&mut game_ui, "13r");
+    replay_game(game_ui, "13r");
     assert_matches!(
           state.borrow().screen(),
           GameScreen::GameEnd(state)
             if matches!(state.player().cause_of_death(), Some(CauseOfDeath::Overstudied))
     );
-    replay_game(&mut game_ui, "2r");
+    replay_game(game_ui, "2r");
     assert_matches!(state.borrow().screen(), GameScreen::Ding(_));
-    replay_game(&mut game_ui, "2r");
+    replay_game(game_ui, "2r");
     assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
 }
 
@@ -26,7 +26,7 @@ fn overstudy_to_zero_health() {
 #[test]
 fn study_with_negative_brain_level() {
     initialize_game!((1641336778475, GameMode::Normal) => state, game_ui);
-    replay_game(&mut game_ui, "3r2↓r2↓r4↓r2↑2r4↓r3↑r↓2r3↑r↓2r4↓r↓2r3↑r↑2r3↑r↑2r3↑r↑2r3↑2r3↑2r2↑2r3↑2r3↑2r2↑r↓3r2↓2r");
+    replay_game(game_ui, "3r2↓r2↓r4↓r2↑2r4↓r3↑r↓2r3↑r↓2r4↓r↓2r3↑r↑2r3↑r↑2r3↑r↑2r3↑2r3↑2r2↑2r3↑2r3↑2r2↑r↓3r2↓2r");
     assert_matches!(state.borrow().screen(), GameScreen::Study(state) => {
         assert_eq!(state.player().brain(), BrainLevel(-1));
         assert_eq!(
@@ -38,7 +38,7 @@ fn study_with_negative_brain_level() {
         );
         assert_eq!(state.current_time(), Time(15));
     });
-    replay_game(&mut game_ui, "r");
+    replay_game(game_ui, "r");
     let borrowed_state = state.borrow();
     match borrowed_state.screen() {
         GameScreen::SceneRouter(state) => {
@@ -59,16 +59,16 @@ fn study_with_negative_brain_level() {
 #[test]
 fn died_of_studying_to_well() {
     initialize_game!((0, GameMode::SelectInitialParameters) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::SociableStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::SociableStudent);
 
     // Ждём когда на факультет приходит Саша
-    replay_game(&mut game_ui, "2↓r2↓r");
+    replay_game(game_ui, "2↓r2↓r");
 
     // Идём на факультет, обращаемся к Саше
-    replay_game(&mut game_ui, "4↓r2↑r");
+    replay_game(game_ui, "4↓r2↑r");
 
     // С трёх попыток Саша соглашается дать нам конспект по геометрии
-    replay_game(&mut game_ui, "2r2↑r↓2r2↑r2↓2r");
+    replay_game(game_ui, "2r2↑r↓2r2↑r2↓2r");
 
     assert!(state
         .borrow()
@@ -80,11 +80,11 @@ fn died_of_studying_to_well() {
         .has_lecture_notes());
 
     // Идём в общагу
-    replay_game(&mut game_ui, "2↓r");
+    replay_game(game_ui, "2↓r");
 
     // Готовимся к геометрии 9 раз
     for _ in 0..9 {
-        replay_game(&mut game_ui, "r2↓2r");
+        replay_game(game_ui, "r2↓2r");
     }
 
     // Умираем от зубрёжки

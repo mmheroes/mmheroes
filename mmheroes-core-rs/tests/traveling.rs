@@ -11,8 +11,8 @@ use mmheroes_core::logic::{
 #[test]
 fn go_from_dorm_to_punk() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
-    replay_game(&mut game_ui, "4↓r");
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
+    replay_game(game_ui, "4↓r");
     assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
         assert_eq!(state.location(), Location::PUNK);
     });
@@ -21,17 +21,17 @@ fn go_from_dorm_to_punk() {
 #[test]
 fn death_on_the_way_from_dorm_to_punk() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
-    replay_game(&mut game_ui, "10r");
+    replay_game(game_ui, "10r");
 
     assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
         assert_eq!(state.player().health(), HealthLevel(2));
     });
 
     // Идём на факультет
-    replay_game(&mut game_ui, "4↓r");
+    replay_game(game_ui, "4↓r");
 
     assert_matches!(state.borrow().screen(), GameScreen::GameEnd(state) => {
         assert_matches!(state.player().cause_of_death(), Some(CauseOfDeath::OnTheWayToPUNK));
@@ -41,8 +41,8 @@ fn death_on_the_way_from_dorm_to_punk() {
 #[test]
 fn go_from_dorm_to_mausoleum() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
-    replay_game(&mut game_ui, "6↓r");
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
+    replay_game(game_ui, "6↓r");
     assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
         assert_eq!(state.location(), Location::Mausoleum);
     });
@@ -51,17 +51,17 @@ fn go_from_dorm_to_mausoleum() {
 #[test]
 fn death_on_the_way_from_dorm_to_mausoleum() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
-    replay_game(&mut game_ui, "10r");
+    replay_game(game_ui, "10r");
 
     assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
         assert_eq!(state.player().health(), HealthLevel(2));
     });
 
     // Идём в мавзолей
-    replay_game(&mut game_ui, "6↓r");
+    replay_game(game_ui, "6↓r");
 
     assert_matches!(state.borrow().screen(), GameScreen::GameEnd(state) => {
         assert_matches!(state.player().cause_of_death(), Some(CauseOfDeath::OnTheWayToMausoleum));
@@ -71,34 +71,34 @@ fn death_on_the_way_from_dorm_to_mausoleum() {
 #[test]
 fn no_point_to_go_to_pdmi() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Отдыхаем до 22:00
     for _ in 0..13 {
-        replay_game(&mut game_ui, "2↓r");
+        replay_game(game_ui, "2↓r");
     }
 
     // Едем в ПОМИ
-    replay_game(&mut game_ui, "5↓r");
+    replay_game(game_ui, "5↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::TrainToPDMI(_, TrainToPDMI::NoPointToGoToPDMI)
     );
 
-    replay_game(&mut game_ui, "r");
+    replay_game(game_ui, "r");
     assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
 }
 
 #[test]
 fn go_to_pdmi_from_dorm_without_money_not_caught_by_inspectors() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
     assert_matches!(state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.player().health(), HealthLevel(44))
         }
     );
-    replay_game(&mut game_ui, "5↓r");
+    replay_game(game_ui, "5↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::TrainToPDMI(
@@ -111,7 +111,7 @@ fn go_to_pdmi_from_dorm_without_money_not_caught_by_inspectors() {
         }
     );
 
-    replay_game(&mut game_ui, "r");
+    replay_game(game_ui, "r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
@@ -122,13 +122,13 @@ fn go_to_pdmi_from_dorm_without_money_not_caught_by_inspectors() {
 #[test]
 fn go_to_pdmi_from_dorm_without_money_caught_by_inspectors() {
     initialize_game!((1, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
     assert_matches!(state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.player().health(), HealthLevel(45))
         }
     );
-    replay_game(&mut game_ui, "5↓r");
+    replay_game(game_ui, "5↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::TrainToPDMI(
@@ -147,13 +147,13 @@ fn go_to_pdmi_from_dorm_without_money_caught_by_inspectors() {
 #[test]
 fn death_on_the_way_to_pdmi() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
-    replay_game(&mut game_ui, "10r");
+    replay_game(game_ui, "10r");
 
     // Едем в ПОМИ
-    replay_game(&mut game_ui, "5↓r");
+    replay_game(game_ui, "5↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::GameEnd(state,) => {
@@ -168,13 +168,13 @@ fn death_on_the_way_to_pdmi() {
 #[test]
 fn killed_by_inspectors_no_money_from_dorm_to_pdmi() {
     initialize_game!((1, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
-    replay_game(&mut game_ui, "8r");
+    replay_game(game_ui, "8r");
 
     // Едем в ПОМИ
-    replay_game(&mut game_ui, "5↓r");
+    replay_game(game_ui, "5↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::GameEnd(state) => {
@@ -191,23 +191,23 @@ fn killed_by_inspectors_no_money_from_dorm_to_pdmi() {
 #[test]
 fn go_to_pdmi_with_money_but_without_ticket_not_caught_by_inspectors() {
     initialize_game!((2, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Отдыхаем пока на факультет не придёт Паша
-    replay_game(&mut game_ui, "2↓r2↓r");
+    replay_game(game_ui, "2↓r2↓r");
 
     // Получаем у Паши стипендию
-    replay_game(&mut game_ui, "4↓r3↑2r");
+    replay_game(game_ui, "4↓r3↑2r");
 
     // Едем в ПОМИ
-    replay_game(&mut game_ui, "3↓r");
+    replay_game(game_ui, "3↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::TrainToPDMI(_, TrainToPDMI::PromptToBuyTickets)
     );
 
     // Едем зайцем
-    replay_game(&mut game_ui, "r");
+    replay_game(game_ui, "r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::TrainToPDMI(
@@ -220,7 +220,7 @@ fn go_to_pdmi_with_money_but_without_ticket_not_caught_by_inspectors() {
         }
     );
 
-    replay_game(&mut game_ui, "r");
+    replay_game(game_ui, "r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
@@ -235,23 +235,23 @@ fn go_to_pdmi_with_money_but_without_ticket_not_caught_by_inspectors() {
 #[test]
 fn go_to_pdmi_with_money_but_without_ticket_caught_by_inspectors() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Отдыхаем пока на факультет не придёт Паша
-    replay_game(&mut game_ui, "2↓r2↓r");
+    replay_game(game_ui, "2↓r2↓r");
 
     // Получаем у Паши стипендию
-    replay_game(&mut game_ui, "4↓r3↑2r");
+    replay_game(game_ui, "4↓r3↑2r");
 
     // Едем в ПОМИ
-    replay_game(&mut game_ui, "3↓r");
+    replay_game(game_ui, "3↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::TrainToPDMI(_, TrainToPDMI::PromptToBuyTickets)
     );
 
     // Едем зайцем
-    replay_game(&mut game_ui, "r");
+    replay_game(game_ui, "r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::TrainToPDMI(
@@ -270,23 +270,23 @@ fn go_to_pdmi_with_money_but_without_ticket_caught_by_inspectors() {
 #[test]
 fn go_to_pdmi_with_ticket() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Отдыхаем пока на факультет не придёт Паша
-    replay_game(&mut game_ui, "2↓r2↓r");
+    replay_game(game_ui, "2↓r2↓r");
 
     // Получаем у Паши стипендию
-    replay_game(&mut game_ui, "4↓r3↑2r");
+    replay_game(game_ui, "4↓r3↑2r");
 
     // Едем в ПОМИ
-    replay_game(&mut game_ui, "3↓r");
+    replay_game(game_ui, "3↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::TrainToPDMI(_, TrainToPDMI::PromptToBuyTickets)
     );
 
     // Покупаем билет
-    replay_game(&mut game_ui, "↓r");
+    replay_game(game_ui, "↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::TrainToPDMI(
@@ -300,7 +300,7 @@ fn go_to_pdmi_with_ticket() {
         }
     );
 
-    replay_game(&mut game_ui, "r");
+    replay_game(game_ui, "r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
@@ -315,10 +315,10 @@ fn go_to_pdmi_with_ticket() {
 #[test]
 fn go_from_punk_to_dorm() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Идём на факультет
-    replay_game(&mut game_ui, "4↓r");
+    replay_game(game_ui, "4↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
@@ -328,7 +328,7 @@ fn go_from_punk_to_dorm() {
     );
 
     // Идём обратно в общагу факультет и проверяем что здоровье не изменилось
-    replay_game(&mut game_ui, "2↓r");
+    replay_game(game_ui, "2↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
@@ -341,10 +341,10 @@ fn go_from_punk_to_dorm() {
 #[test]
 fn go_from_punk_to_computer_class() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Идём на факультет
-    replay_game(&mut game_ui, "4↓r");
+    replay_game(game_ui, "4↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
@@ -354,7 +354,7 @@ fn go_from_punk_to_computer_class() {
     );
 
     // Идём в компьютерный класс
-    replay_game(&mut game_ui, "2↑r");
+    replay_game(game_ui, "2↑r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
@@ -364,7 +364,7 @@ fn go_from_punk_to_computer_class() {
     );
 
     // Возвращаемся в общагу
-    replay_game(&mut game_ui, "r");
+    replay_game(game_ui, "r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
@@ -374,7 +374,7 @@ fn go_from_punk_to_computer_class() {
     );
 
     // Отдыхаем до 19:00
-    replay_game(&mut game_ui, "2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r");
+    replay_game(game_ui, "2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
@@ -383,7 +383,7 @@ fn go_from_punk_to_computer_class() {
     );
 
     // Снова идём в компьютерный класс
-    replay_game(&mut game_ui, "4↓r4↑r");
+    replay_game(game_ui, "4↓r4↑r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
@@ -393,10 +393,10 @@ fn go_from_punk_to_computer_class() {
     );
 
     // Возвращаемся в общагу и отдыхаем до 20:00
-    replay_game(&mut game_ui, "r2↓r");
+    replay_game(game_ui, "r2↓r");
 
     // Идём на факультет, убеждаемся что компьютерный класс уже закрыт
-    replay_game(&mut game_ui, "4↓r");
+    replay_game(game_ui, "4↓r");
     assert!(!state
         .borrow()
         .available_actions()
@@ -406,17 +406,17 @@ fn go_from_punk_to_computer_class() {
 #[test]
 fn death_on_the_way_to_computer_class() {
     initialize_game!((1, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
-    replay_game(&mut game_ui, "10r");
+    replay_game(game_ui, "10r");
 
     assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
         assert_eq!(state.player().health(), HealthLevel(4));
     });
 
     // Идём в компьютерный класс
-    replay_game(&mut game_ui, "4↓r5↓r");
+    replay_game(game_ui, "4↓r5↓r");
 
     assert_matches!(state.borrow().screen(), GameScreen::GameEnd(state) => {
         assert_eq!(state.player().cause_of_death(), Some(CauseOfDeath::FellFromStairs));
@@ -426,10 +426,10 @@ fn death_on_the_way_to_computer_class() {
 #[test]
 fn go_from_punk_to_mausoleum() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
-    replay_until_dorm(&state, &mut game_ui, PlayStyle::RandomStudent);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Идём на факультет
-    replay_game(&mut game_ui, "4↓r");
+    replay_game(game_ui, "4↓r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
@@ -439,7 +439,7 @@ fn go_from_punk_to_mausoleum() {
     );
 
     // Идём в мавзолей
-    replay_game(&mut game_ui, "3↑r");
+    replay_game(game_ui, "3↑r");
     assert_matches!(
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {

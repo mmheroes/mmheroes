@@ -110,17 +110,19 @@ pub fn replay_until_dorm<G: Game>(
 #[macro_export]
 macro_rules! initialize_game {
     (($seed:expr, $mode:expr, $high_scores:expr) => $state:ident, $game_ui:ident) => {
-        let $state = core::cell::RefCell::new(
+        let state = core::cell::RefCell::new(
             mmheroes_core::logic::ObservableGameState::new($mode),
         );
+        let $state = &state;
         let mut game = mmheroes_core::logic::create_game($seed, &$state);
         let game = core::pin::pin!(game);
-        let mut $game_ui = $crate::TestGameUI::new(
-            &$state,
+        let mut game_ui = $crate::TestGameUI::new(
+            $state,
             game,
             $high_scores,
             TestRendererRequestConsumer::new(),
         );
+        let $game_ui = &mut game_ui;
         $game_ui.continue_game(mmheroes_core::ui::Input::Enter)
     };
     (($seed:expr, $mode:expr) => $state:ident, $game_ui:ident) => {
