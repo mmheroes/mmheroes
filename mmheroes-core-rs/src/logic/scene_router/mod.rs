@@ -141,7 +141,7 @@ async fn handle_router_action(
     use Location::*;
     match state.location() {
         PUNK => return punk::handle_router_action(g, state, action).await,
-        PDMI => pdmi::handle_router_action(g, state, action).await,
+        PDMI => return pdmi::handle_router_action(g, state, action).await,
         ComputerClass => computer_class::handle_router_action(g, state, action).await,
         Dorm => return dorm::handle_router_action(g, state, action).await,
         Mausoleum => mausoleum::handle_router_action(g, state, action).await,

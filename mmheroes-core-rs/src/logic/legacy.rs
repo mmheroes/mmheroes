@@ -69,7 +69,7 @@ pub(in crate::logic) fn handle_action_sync(
     use Location::*;
     match state.location() {
         PUNK => handle_punk_action(game, state, action),
-        PDMI => pdmi::handle_action(game, state, action),
+        PDMI => handle_pdmi_action(game, state, action),
         ComputerClass => computer_class::handle_action(game, state, action),
         Dorm => handle_dorm_action(game, state, action),
         Mausoleum => mausoleum::handle_action(game, state, action),
@@ -613,6 +613,32 @@ pub(in crate::logic) fn handle_punk_action(
         Action::GoToWork => {
             assert!(state.player.is_employed_at_terkom());
             todo!()
+        }
+        _ => illegal_action!(action),
+    }
+}
+
+#[deprecated]
+pub(in crate::logic) fn handle_pdmi_action(
+    game: &mut InternalGameState,
+    state: GameState,
+    action: Action,
+) -> ActionVec {
+    assert_eq!(state.location, Location::PDMI);
+    match action {
+        Action::GoToProfessor => go_to_professor(game, state),
+        Action::LookAtBulletinBoard => {
+            game.set_screen(GameScreen::HighScores(state));
+            wait_for_any_key()
+        }
+        Action::RestInCafePDMI => todo!("Пойти в кафе"),
+        Action::GoToPUNKFromPDMI => todo!("Поехать в ПУНК"),
+        Action::InteractWithClassmate(classmate) => {
+            assert_matches!(
+                state.classmates[classmate].current_location(),
+                ClassmateLocation::Location(Location::PDMI)
+            );
+            interact_with_classmate(game, state, classmate)
         }
         _ => illegal_action!(action),
     }
