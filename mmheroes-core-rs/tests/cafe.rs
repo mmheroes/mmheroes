@@ -3,9 +3,7 @@ mod common;
 use assert_matches::assert_matches;
 use common::*;
 use mmheroes_core::logic::actions::PlayStyle;
-use mmheroes_core::logic::{
-    Action, GameMode, GameScreen, HealthLevel, Location, Money, Time,
-};
+use mmheroes_core::logic::{Action, GameMode, GameScreen, HealthLevel, Location, Time};
 
 #[test]
 fn cafe_punk() {
@@ -46,9 +44,15 @@ fn cafe_punk() {
     assert_matches!(
         state.borrow().screen(),
         GameScreen::CafePUNK(state) => {
-            assert_eq!(state.player().health(), HealthLevel(58));
-            assert_eq!(state.player().money(), Money(50));
             assert_eq!(state.current_time(), Time(10));
+            assert_characteristics!(
+                state,
+                health: 58,
+                money: 50,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
         }
     );
     assert_eq!(
@@ -68,9 +72,15 @@ fn cafe_punk() {
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.player().health(), HealthLevel(62));
-            assert_eq!(state.player().money(), Money(48));
             assert_eq!(state.current_time(), Time(11));
+            assert_characteristics!(
+                state,
+                health: 62,
+                money: 48,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
         }
     );
 
@@ -80,9 +90,15 @@ fn cafe_punk() {
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.player().health(), HealthLevel(67));
-            assert_eq!(state.player().money(), Money(44));
             assert_eq!(state.current_time(), Time(12));
+            assert_characteristics!(
+                state,
+                health: 67,
+                money: 44,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
         }
     );
 
@@ -92,9 +108,15 @@ fn cafe_punk() {
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.player().health(), HealthLevel(78));
-            assert_eq!(state.player().money(), Money(38));
             assert_eq!(state.current_time(), Time(13));
+            assert_characteristics!(
+                state,
+                health: 78,
+                money: 38,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
         }
     );
 
@@ -104,9 +126,15 @@ fn cafe_punk() {
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.player().health(), HealthLevel(81));
-            assert_eq!(state.player().money(), Money(38));
             assert_eq!(state.current_time(), Time(14));
+            assert_characteristics!(
+                state,
+                health: 81,
+                money: 38,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
         }
     );
 
@@ -116,9 +144,16 @@ fn cafe_punk() {
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.player().health(), HealthLevel(81));
-            assert_eq!(state.player().money(), Money(38));
             assert_eq!(state.current_time(), Time(14));
+            assert_eq!(state.player().health(), HealthLevel(81));
+            assert_characteristics!(
+                state,
+                health: 81,
+                money: 38,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
         }
     );
 
@@ -128,9 +163,15 @@ fn cafe_punk() {
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.player().health(), HealthLevel(93));
-            assert_eq!(state.player().money(), Money(38));
             assert_eq!(state.current_time(), Time(18));
+            assert_characteristics!(
+                state,
+                health: 93,
+                money: 38,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
         }
     );
     assert!(state
@@ -144,9 +185,15 @@ fn cafe_punk() {
         state.borrow().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.player().health(), HealthLevel(94));
-            assert_eq!(state.player().money(), Money(38));
             assert_eq!(state.current_time(), Time(19));
+            assert_characteristics!(
+                state,
+                health: 94,
+                money: 38,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
         }
     );
     assert!(!state
@@ -173,9 +220,15 @@ fn cafe_punk_limited_menu() {
             state.borrow().screen(),
             GameScreen::SceneRouter(state) => {
                 assert_eq!(state.location(), Location::PUNK);
-                assert_eq!(state.player().health(), HealthLevel(132));
-                assert_eq!(state.player().money(), Money(4));
                 assert_eq!(state.current_time(), Time(18));
+                assert_characteristics!(
+                    state,
+                    health: 132,
+                    money: 4,
+                    brain: 5,
+                    stamina: 4,
+                    charisma: 5,
+                );
             }
         );
 
@@ -206,9 +259,15 @@ fn cafe_punk_limited_menu() {
             state.borrow().screen(),
             GameScreen::SceneRouter(state) => {
                 assert_eq!(state.location(), Location::PUNK);
-                assert_eq!(state.player().health(), HealthLevel(135));
-                assert_eq!(state.player().money(), Money(2));
                 assert_eq!(state.current_time(), Time(18));
+                assert_characteristics!(
+                    state,
+                    health: 135,
+                    money: 2,
+                    brain: 5,
+                    stamina: 4,
+                    charisma: 5,
+                );
             }
         );
 
