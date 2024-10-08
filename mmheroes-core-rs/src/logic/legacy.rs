@@ -9,12 +9,12 @@
 use crate::logic::actions::{wait_for_any_key, ActionVec, HelpAction};
 use crate::logic::pasha::PashaInteraction;
 use crate::logic::pasha::PashaInteraction::{Inspiration, Stipend};
+use crate::logic::scene_router::train;
 use crate::logic::scene_router::train::TrainToPDMI;
 use crate::logic::scene_router::train::TrainToPDMI::{
     BoughtRoundtripTicket, GatecrashBecauseNoMoney, GatecrashByChoice, NoPointToGoToPDMI,
     PromptToBuyTickets,
 };
-use crate::logic::scene_router::{punk, train};
 use crate::logic::*;
 
 #[deprecated]
@@ -68,7 +68,7 @@ pub(in crate::logic) fn handle_action_sync(
     use scene_router::*;
     use Location::*;
     match state.location() {
-        PUNK => punk::handle_action(game, state, action),
+        PUNK => handle_punk_action(game, state, action),
         PDMI => pdmi::handle_action(game, state, action),
         ComputerClass => computer_class::handle_action(game, state, action),
         Dorm => handle_dorm_action(game, state, action),
@@ -426,16 +426,6 @@ pub(in crate::logic) fn proceed_with_train(
 }
 
 #[deprecated]
-pub(in crate::logic) async fn handle_punk_action(
-    g: &mut InternalGameState<'_>,
-    state: &mut GameState,
-    action: Action,
-) {
-    let available_actions = punk::handle_action(g, state.clone(), action);
-    g.set_available_actions_from_vec(available_actions);
-}
-
-#[deprecated]
 pub(in crate::logic) fn go_to_professor(
     game: &mut InternalGameState,
     state: GameState,
@@ -555,4 +545,75 @@ pub(in crate::logic) fn proceed_with_pasha(
         }
     }
     scene_router_run(game, &state)
+}
+
+#[deprecated]
+pub(in crate::logic) fn handle_punk_action(
+    game: &mut InternalGameState,
+    mut state: GameState,
+    action: Action,
+) -> ActionVec {
+    assert_eq!(state.location, Location::PUNK);
+    match action {
+        Action::GoToProfessor => go_to_professor(game, state),
+        Action::LookAtBaobab => {
+            game.set_screen(GameScreen::HighScores(state));
+            wait_for_any_key()
+        }
+        Action::GoFromPunkToDorm => {
+            state.location = Location::Dorm;
+            scene_router_run(game, &state)
+        }
+        Action::GoToPDMI => go_to_pdmi(game, state),
+        Action::GoToMausoleum => {
+            state.location = Location::Mausoleum;
+            game.decrease_health(
+                HealthLevel::location_change_large_penalty(),
+                state,
+                CauseOfDeath::OnTheWayToMausoleum,
+                |g, state| scene_router_run(g, state),
+            )
+        }
+        Action::GoToComputerClass => {
+            assert!(state.current_time < Time::computer_class_closing());
+            state.location = Location::ComputerClass;
+            game.decrease_health(
+                HealthLevel::location_change_small_penalty(),
+                state,
+                CauseOfDeath::FellFromStairs,
+                |g, state| scene_router_run(g, state),
+            )
+        }
+        Action::GoToCafePUNK => {
+            // TODO: Логику можно переиспользовать в кафе ПОМИ
+            assert!(state.current_time.is_cafe_open());
+            let mut available_actions = ActionVec::new();
+            let available_money = state.player.money;
+            if available_money >= Money::tea_cost() {
+                available_actions.push(Action::OrderTea);
+            }
+            if available_money >= Money::cake_cost() {
+                available_actions.push(Action::OrderCake);
+            }
+            if available_money >= Money::tea_with_cake_cost() {
+                available_actions.push(Action::OrderTeaWithCake);
+            }
+            available_actions.push(Action::RestInCafePUNK);
+            available_actions.push(Action::ShouldntHaveComeToCafePUNK);
+            game.set_screen(GameScreen::CafePUNK(state));
+            available_actions
+        }
+        Action::InteractWithClassmate(classmate) => {
+            assert_matches!(
+                state.classmates[classmate].current_location(),
+                ClassmateLocation::Location(Location::PUNK)
+            );
+            interact_with_classmate(game, state, classmate)
+        }
+        Action::GoToWork => {
+            assert!(state.player.is_employed_at_terkom());
+            todo!()
+        }
+        _ => illegal_action!(action),
+    }
 }
