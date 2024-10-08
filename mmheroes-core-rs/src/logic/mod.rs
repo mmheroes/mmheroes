@@ -240,7 +240,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 let state = state.clone();
                 let interaction = *interaction;
                 drop(borrowed_screen);
-                npc::pasha::proceed(self, state, action, interaction)
+                legacy::proceed_with_pasha(self, state, action, interaction)
             }
             GrishaInteraction(state, interaction) => {
                 let state = state.clone();

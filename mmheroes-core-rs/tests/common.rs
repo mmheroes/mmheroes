@@ -129,3 +129,109 @@ macro_rules! initialize_game {
         initialize_game!(($seed, $mode, None) => $state, $game_ui);
     };
 }
+
+#[macro_export]
+macro_rules! assert_characteristics {
+    (
+        $state:expr,
+        health: $health:expr,
+        money: $money:expr,
+        brain: $brain:expr,
+        stamina: $stamina:expr,
+        charisma: $charisma:expr $(,)?
+    ) => {{
+        #[derive(Debug, Eq, PartialEq)]
+        struct Characterisctis {
+            health: i16,
+            money: i16,
+            brain: i16,
+            stamina: i16,
+            charisma: i16,
+        }
+        assert_eq!(
+            Characterisctis {
+                health: $state.player().health().0,
+                money: $state.player().money().0,
+                brain: $state.player().brain().0,
+                stamina: $state.player().stamina().0,
+                charisma: $state.player().charisma().0,
+            },
+            Characterisctis {
+                health: $health,
+                money: $money,
+                brain: $brain,
+                stamina: $stamina,
+                charisma: $charisma,
+            },
+        );
+    }};
+}
+
+#[macro_export]
+macro_rules! assert_subject_knowledge {
+    (
+        $state:expr,
+        algebra: $algebra_knowledge:expr,
+        calculus: $calculus_knowledge:expr,
+        geometry: $geometry_knowledge:expr,
+        cs: $cs_knowledge:expr,
+        english: $english_knowledge:expr,
+        pe: $pe_knowledge:expr $(,)?
+    ) => {{
+        #[derive(Debug, Eq, PartialEq)]
+        struct SubjectKnowledge {
+            algebra: i16,
+            calculus: i16,
+            geometry: i16,
+            cs: i16,
+            english: i16,
+            pe: i16,
+        }
+        assert_eq!(
+            SubjectKnowledge {
+                algebra: $state
+                    .player()
+                    .status_for_subject(
+                        mmheroes_core::logic::Subject::AlgebraAndNumberTheory
+                    )
+                    .knowledge()
+                    .0,
+                calculus: $state
+                    .player()
+                    .status_for_subject(mmheroes_core::logic::Subject::Calculus)
+                    .knowledge()
+                    .0,
+                geometry: $state
+                    .player()
+                    .status_for_subject(
+                        mmheroes_core::logic::Subject::GeometryAndTopology
+                    )
+                    .knowledge()
+                    .0,
+                cs: $state
+                    .player()
+                    .status_for_subject(mmheroes_core::logic::Subject::ComputerScience)
+                    .knowledge()
+                    .0,
+                english: $state
+                    .player()
+                    .status_for_subject(mmheroes_core::logic::Subject::English)
+                    .knowledge()
+                    .0,
+                pe: $state
+                    .player()
+                    .status_for_subject(mmheroes_core::logic::Subject::PhysicalEducation)
+                    .knowledge()
+                    .0,
+            },
+            SubjectKnowledge {
+                algebra: $algebra_knowledge,
+                calculus: $calculus_knowledge,
+                geometry: $geometry_knowledge,
+                cs: $cs_knowledge,
+                english: $english_knowledge,
+                pe: $pe_knowledge,
+            },
+        );
+    }};
+}

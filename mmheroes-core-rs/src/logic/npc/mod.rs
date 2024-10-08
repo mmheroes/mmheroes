@@ -5,6 +5,7 @@ pub mod pasha;
 pub mod sasha;
 
 use super::*;
+use crate::logic::scene_router::RouterResult;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Classmate {
@@ -271,23 +272,37 @@ impl core::ops::DerefMut for Classmates {
     }
 }
 
-pub(in crate::logic) fn interact_with_classmate(
-    game: &mut InternalGameState,
-    state: GameState,
+pub(super) async fn interact_with_classmate(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
     classmate: Classmate,
-) -> ActionVec {
-    match classmate {
-        Kolya => kolya::interact(game, state),
-        Pasha => pasha::interact(game, state),
-        Diamond => todo!(),
-        RAI => todo!(),
-        Misha => todo!(),
-        Serj => todo!(),
-        Sasha => sasha::interact(game, state),
-        NiL => todo!(),
-        Kuzmenko => kuzmenko::interact(game, state),
-        DJuG => todo!(),
-        Andrew => todo!(),
-        Grisha => grisha::interact(game, state),
+) -> RouterResult {
+    let available_actions = match classmate {
+        Kolya => kolya::interact(g, state.clone()),
+        Pasha => {
+            pasha::interact(g, state).await;
+            return Ok(());
+        }
+        Diamond => todo!("Diamond"),
+        RAI => todo!("RAI"),
+        Misha => todo!("Misha"),
+        Serj => todo!("Serj"),
+        Sasha => sasha::interact(g, state.clone()),
+        NiL => todo!("NiL"),
+        Kuzmenko => kuzmenko::interact(g, state.clone()),
+        DJuG => todo!("DJuG"),
+        Andrew => todo!("Andrew"),
+        Grisha => grisha::interact(g, state.clone()),
+    };
+    g.set_available_actions_from_vec(available_actions);
+
+    // LEGACY
+    loop {
+        let action = g.wait_for_action().await;
+        if action == Action::IAmDone {
+            return scene_router::i_am_done(g, state).await;
+        }
+        let new_actions = g.perform_action(action);
+        g.set_available_actions_from_vec(new_actions);
     }
 }

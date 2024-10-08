@@ -1,5 +1,4 @@
 use super::*;
-use crate::logic::legacy;
 
 pub(super) async fn handle_router_action(
     g: &mut InternalGameState<'_>,
@@ -66,7 +65,7 @@ pub(super) async fn handle_router_action(
                 state.classmates[classmate].current_location(),
                 ClassmateLocation::Location(Location::PUNK)
             );
-            npc::interact_with_classmate(g, state.clone(), classmate)
+            return npc::interact_with_classmate(g, state, classmate).await;
         }
         Action::GoToWork => {
             assert!(state.player.is_employed_at_terkom());
@@ -147,7 +146,7 @@ pub(in crate::logic) fn handle_action(
                 state.classmates[classmate].current_location(),
                 ClassmateLocation::Location(Location::PUNK)
             );
-            npc::interact_with_classmate(game, state, classmate)
+            legacy::interact_with_classmate(game, state, classmate)
         }
         Action::GoToWork => {
             assert!(state.player.is_employed_at_terkom());

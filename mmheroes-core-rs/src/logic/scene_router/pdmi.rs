@@ -19,7 +19,7 @@ pub(in crate::logic) fn handle_action(
                 state.classmates[classmate].current_location(),
                 ClassmateLocation::Location(Location::PDMI)
             );
-            npc::interact_with_classmate(game, state, classmate)
+            legacy::interact_with_classmate(game, state, classmate)
         }
         _ => illegal_action!(action),
     }

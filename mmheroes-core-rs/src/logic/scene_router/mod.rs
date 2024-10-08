@@ -157,7 +157,10 @@ async fn handle_router_action(
     }
 }
 
-async fn i_am_done(g: &mut InternalGameState<'_>, state: &GameState) -> RouterResult {
+pub(in crate::logic) async fn i_am_done(
+    g: &mut InternalGameState<'_>,
+    state: &GameState,
+) -> RouterResult {
     g.set_screen_and_available_actions(
         GameScreen::IAmDone(state.clone()),
         [Action::NoIAmNotDone, Action::IAmCertainlyDone],

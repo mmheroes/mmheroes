@@ -38,7 +38,7 @@ pub(in crate::logic) fn handle_action(
                 state.classmates[classmate].current_location(),
                 ClassmateLocation::Location(Location::ComputerClass)
             );
-            npc::interact_with_classmate(game, state, classmate)
+            legacy::interact_with_classmate(game, state, classmate)
         }
         Action::PlayMMHEROES => todo!(),
         Action::IAmDone => legacy::game_end(game, state),

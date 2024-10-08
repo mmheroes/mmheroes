@@ -7,6 +7,8 @@
 #![allow(deprecated)]
 
 use crate::logic::actions::{wait_for_any_key, ActionVec, HelpAction};
+use crate::logic::pasha::PashaInteraction;
+use crate::logic::pasha::PashaInteraction::{Inspiration, Stipend};
 use crate::logic::scene_router::train::TrainToPDMI;
 use crate::logic::scene_router::train::TrainToPDMI::{
     BoughtRoundtripTicket, GatecrashBecauseNoMoney, GatecrashByChoice, NoPointToGoToPDMI,
@@ -446,4 +448,73 @@ pub(in crate::logic) fn go_to_professor(
     available_actions.push(Action::DontGoToProfessor);
     game.set_screen(GameScreen::GoToProfessor(state));
     available_actions
+}
+
+#[deprecated]
+pub(in crate::logic) fn interact_with_classmate(
+    game: &mut InternalGameState,
+    state: GameState,
+    classmate: Classmate,
+) -> ActionVec {
+    use Classmate::*;
+    match classmate {
+        Kolya => kolya::interact(game, state),
+        Pasha => interact_with_pasha(game, state),
+        Diamond => todo!(),
+        RAI => todo!(),
+        Misha => todo!(),
+        Serj => todo!(),
+        Sasha => sasha::interact(game, state),
+        NiL => todo!(),
+        Kuzmenko => kuzmenko::interact(game, state),
+        DJuG => todo!(),
+        Andrew => todo!(),
+        Grisha => grisha::interact(game, state),
+    }
+}
+
+#[deprecated]
+pub(in crate::logic) fn interact_with_pasha(
+    game: &mut InternalGameState,
+    state: GameState,
+) -> ActionVec {
+    use crate::logic::pasha::PashaInteraction::{Inspiration, Stipend};
+    assert_eq!(state.location, Location::PUNK);
+    let interaction = if state.player.got_stipend() {
+        Inspiration
+    } else {
+        Stipend
+    };
+    game.set_screen(GameScreen::PashaInteraction(state, interaction));
+    wait_for_any_key()
+}
+
+#[deprecated]
+pub(in crate::logic) fn proceed_with_pasha(
+    game: &mut InternalGameState,
+    mut state: GameState,
+    action: Action,
+    interaction: PashaInteraction,
+) -> ActionVec {
+    assert_eq!(action, Action::AnyKey);
+    assert_eq!(state.location, Location::PUNK);
+    assert_matches!(&*game.screen(), GameScreen::PashaInteraction(_, _));
+    let player = &mut state.player;
+    match interaction {
+        Stipend => {
+            assert!(!player.got_stipend());
+            player.set_got_stipend();
+            player.money += Money::stipend();
+        }
+        Inspiration => {
+            player.stamina += 1;
+            for (subject, _) in SUBJECTS.iter() {
+                let knowledge = &mut player.status_for_subject_mut(*subject).knowledge;
+                if *knowledge > BrainLevel(3) {
+                    *knowledge -= game.rng.random(3);
+                }
+            }
+        }
+    }
+    scene_router_run(game, &state)
 }

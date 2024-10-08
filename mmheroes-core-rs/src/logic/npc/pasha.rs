@@ -11,33 +11,21 @@ pub enum PashaInteraction {
 
 use PashaInteraction::*;
 
-pub(in crate::logic) fn interact(
-    game: &mut InternalGameState,
-    state: GameState,
-) -> ActionVec {
+pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
     assert_eq!(state.location, Location::PUNK);
     let interaction = if state.player.got_stipend() {
         Inspiration
     } else {
         Stipend
     };
-    game.set_screen(GameScreen::PashaInteraction(state, interaction));
-    wait_for_any_key()
-}
-
-pub(in crate::logic) fn proceed(
-    game: &mut InternalGameState,
-    mut state: GameState,
-    action: Action,
-    interaction: PashaInteraction,
-) -> ActionVec {
-    assert_eq!(action, Action::AnyKey);
-    assert_eq!(state.location, Location::PUNK);
-    assert_matches!(&*game.screen(), GameScreen::PashaInteraction(_, _));
+    g.set_screen_and_wait_for_any_key(GameScreen::PashaInteraction(
+        state.clone(),
+        interaction,
+    ))
+    .await;
     let player = &mut state.player;
     match interaction {
         Stipend => {
-            assert!(!player.got_stipend());
             player.set_got_stipend();
             player.money += Money::stipend();
         }
@@ -46,10 +34,9 @@ pub(in crate::logic) fn proceed(
             for (subject, _) in SUBJECTS.iter() {
                 let knowledge = &mut player.status_for_subject_mut(*subject).knowledge;
                 if *knowledge > BrainLevel(3) {
-                    *knowledge -= game.rng.random(3);
+                    *knowledge -= g.rng.random(3);
                 }
             }
         }
     }
-    legacy::scene_router_run(game, &state)
 }
