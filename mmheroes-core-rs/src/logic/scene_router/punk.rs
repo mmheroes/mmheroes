@@ -6,18 +6,18 @@ pub(super) async fn handle_router_action(
     action: Action,
 ) -> RouterResult {
     assert_eq!(state.location, Location::PUNK);
-    let available_actions = match action {
-        Action::GoToProfessor => return exams::go_to_professor(g, state).await,
+    match action {
+        Action::GoToProfessor => exams::go_to_professor(g, state).await,
         Action::LookAtBaobab => {
             g.set_screen_and_wait_for_any_key(GameScreen::HighScores(state.clone()))
                 .await;
-            return Ok(());
+            Ok(())
         }
         Action::GoFromPunkToDorm => {
             state.location = Location::Dorm;
-            return Ok(());
+            Ok(())
         }
-        Action::GoToPDMI => return train::go_to_pdmi_async(g, state).await,
+        Action::GoToPDMI => train::go_to_pdmi_async(g, state).await,
         Action::GoToMausoleum => {
             state.location = Location::Mausoleum;
             misc::decrease_health(
@@ -26,8 +26,7 @@ pub(super) async fn handle_router_action(
                 state,
                 CauseOfDeath::OnTheWayToMausoleum,
             )
-            .await?;
-            return Ok(());
+            .await
         }
         Action::GoToComputerClass => {
             assert!(state.current_time < Time::computer_class_closing());
@@ -38,36 +37,24 @@ pub(super) async fn handle_router_action(
                 state,
                 CauseOfDeath::FellFromStairs,
             )
-            .await?;
-            return Ok(());
+            .await
         }
         Action::GoToCafePUNK => {
             assert!(state.current_time.is_cafe_open());
-            return go_to_cafe(g, state).await;
+            go_to_cafe(g, state).await
         }
         Action::InteractWithClassmate(classmate) => {
             assert_matches!(
                 state.classmates[classmate].current_location(),
                 ClassmateLocation::Location(Location::PUNK)
             );
-            return npc::interact_with_classmate(g, state, classmate).await;
+            npc::interact_with_classmate(g, state, classmate).await
         }
         Action::GoToWork => {
             assert!(state.player.is_employed_at_terkom());
             todo!("Пойти в ТЕРКОМ, поработать")
         }
         _ => illegal_action!(action),
-    };
-
-    // LEGACY
-    g.set_available_actions_from_vec(available_actions);
-    loop {
-        let action = g.wait_for_action().await;
-        if action == Action::IAmDone {
-            return i_am_done(g, state).await;
-        }
-        let new_actions = g.perform_action(action);
-        g.set_available_actions_from_vec(new_actions);
     }
 }
 
