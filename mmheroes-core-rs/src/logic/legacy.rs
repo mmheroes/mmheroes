@@ -451,6 +451,44 @@ pub(in crate::logic) fn go_to_professor(
 }
 
 #[deprecated]
+pub(in crate::logic) fn handle_cafe_punk_action(
+    game: &mut InternalGameState,
+    mut state: GameState,
+    action: Action,
+) -> ActionVec {
+    // TODO: Логику можно переиспользовать в кафе ПОМИ
+    assert_eq!(state.location, Location::PUNK);
+    assert!(state.current_time.is_cafe_open());
+    assert_matches!(&*game.screen(), GameScreen::CafePUNK(_));
+    let money = &mut state.player.money;
+    let health = &mut state.player.health;
+    let charisma_dependent_health_gain =
+        HealthLevel(game.rng.random(state.player.charisma.0));
+    match action {
+        Action::OrderTea => {
+            *money -= Money::tea_cost();
+            *health += charisma_dependent_health_gain + 2;
+        }
+        Action::OrderCake => {
+            *money -= Money::cake_cost();
+            *health += charisma_dependent_health_gain + 4;
+        }
+        Action::OrderTeaWithCake => {
+            *money -= Money::tea_with_cake_cost();
+            *health += charisma_dependent_health_gain + 7;
+        }
+        Action::RestInCafePUNK => {
+            *health += charisma_dependent_health_gain;
+        }
+        Action::ShouldntHaveComeToCafePUNK => {
+            return scene_router_run(game, &state);
+        }
+        _ => illegal_action!(action),
+    }
+    game.hour_pass(state)
+}
+
+#[deprecated]
 pub(in crate::logic) fn interact_with_classmate(
     game: &mut InternalGameState,
     state: GameState,

@@ -222,7 +222,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             CafePUNK(state) => {
                 let state = state.clone();
                 drop(borrowed_screen);
-                scene_router::punk::handle_cafe_punk_action(self, state, action)
+                legacy::handle_cafe_punk_action(self, state, action)
             }
             TrainToPDMI(state, interaction) => {
                 let state = state.clone();
@@ -473,5 +473,5 @@ fn memory() {
 
     let observable_game_state = RefCell::new(observable_game_state);
     let game = create_game(0, &observable_game_state);
-    assert_eq!(size_of_val(&game), 1520);
+    assert_eq!(size_of_val(&game), 1600);
 }

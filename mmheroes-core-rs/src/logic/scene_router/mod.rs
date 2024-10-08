@@ -1,3 +1,4 @@
+mod cafe;
 pub(in crate::logic) mod computer_class;
 pub(in crate::logic) mod dorm;
 mod exams;
