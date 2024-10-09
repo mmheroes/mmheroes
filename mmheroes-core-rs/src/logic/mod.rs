@@ -280,12 +280,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 let state = state.clone();
                 let found_program = *found_program;
                 drop(borrowed_screen);
-                scene_router::computer_class::proceed_with_internet(
-                    self,
-                    state,
-                    action,
-                    found_program,
-                )
+                legacy::proceed_with_internet(self, state, action, found_program)
             }
             IAmDone(_) => {
                 unreachable!()

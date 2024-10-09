@@ -21,7 +21,7 @@ pub enum TrainToPDMI {
     BoughtRoundtripTicket,
 }
 
-pub(super) async fn go_to_pdmi_async(
+pub(super) async fn go_to_pdmi(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
 ) -> RouterResult {

@@ -17,7 +17,7 @@ pub(super) async fn handle_router_action(
             state.location = Location::Dorm;
             Ok(())
         }
-        Action::GoToPDMI => train::go_to_pdmi_async(g, state).await,
+        Action::GoToPDMI => train::go_to_pdmi(g, state).await,
         Action::GoToMausoleum => {
             state.location = Location::Mausoleum;
             misc::decrease_health(
