@@ -31,10 +31,10 @@ jobs:
         run: |
           rustfmt --check mmheroes-rs/src/main.rs
       - name: Run clippy
-        uses: auguwu/clippy-action@1.4.0
+        uses: actions-rs/clippy-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          args: --all-features
+          args: --all-features --tests
       - name: Install cbindgen
         run: cargo install cbindgen
       - name: Run cbindgen
@@ -47,8 +47,8 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install the Rust toolchain specified in the rust-toolchain file
-        uses: dsherret/rust-toolchain-file@v1
+      - name: Install the stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
       - name: Install iOS rustup targets
         run: |
           rustup target add \
