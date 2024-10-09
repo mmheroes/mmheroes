@@ -65,7 +65,7 @@ typedef enum MMHEROES_GameMode {
    * Same as `SelectInitialParameters`, but another option is available —
    * God mode. It enables maximum abilities.
    *
-   * This mode is enable by passing a special flag to the executable.
+   * This mode is enabled by passing a special flag to the executable.
    */
   MMHEROES_GameMode_God,
 } MMHEROES_GameMode;

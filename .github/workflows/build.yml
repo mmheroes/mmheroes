@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install the stable Rust toolchain
+      - name: Install the latest stable Rust toolchain
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
@@ -35,6 +35,8 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features --tests
+      - name: Install latest nightly Rust toolchain
+        uses: dtolnay/rust-toolchain@nightly
       - name: Install cbindgen
         run: cargo install cbindgen
       - name: Run cbindgen
@@ -47,7 +49,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install the stable Rust toolchain
+      - name: Install the latest stable Rust toolchain
         uses: dtolnay/rust-toolchain@stable
       - name: Install iOS rustup targets
         run: |
