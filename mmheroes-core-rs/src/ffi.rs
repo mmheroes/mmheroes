@@ -5,12 +5,11 @@ use crate::ui::recording::InputRecorder;
 use crate::ui::Milliseconds;
 use crate::ui::*;
 
-use crate::logic::{create_game, Game, GameMode, Money, ObservableGameState, Time};
+use crate::logic::{create_game, Game, GameMode, Money, StateHolder, Time};
 
 use crate::ui::high_scores::{HighScore, SCORE_COUNT};
 use crate::ui::renderer::RendererRequestConsumer;
 use crate::util::TinyString;
-use core::cell::RefCell;
 use core::ffi::c_void;
 use core::mem::{align_of_val, size_of_val, MaybeUninit};
 
@@ -40,7 +39,7 @@ impl RendererRequestConsumer for FfiRendererRequestConsumer {
 }
 
 struct FfiGame<G: 'static> {
-    state: RefCell<ObservableGameState>,
+    state_holder: StateHolder,
     game: MaybeUninit<G>,
     game_ui: MaybeUninit<GameUI<'static, G, FfiRendererRequestConsumer>>,
 }
@@ -96,7 +95,7 @@ pub unsafe extern "C" fn mmheroes_game_get_current_time(
     out_time: &mut Time,
 ) -> bool {
     let game = game_or_return!(const game, return false);
-    let borrowed_state = game.state.borrow();
+    let borrowed_state = game.state_holder.observable_state();
     if let Some(state) = borrowed_state.screen().state() {
         *out_day = state.current_day().index() as u8;
         *out_time = state.current_time();
@@ -165,7 +164,7 @@ pub unsafe extern "C" fn mmheroes_game_create(
     };
 
     let ffi_game = FfiGame {
-        state: RefCell::new(ObservableGameState::new(mode)),
+        state_holder: StateHolder::new(mode),
         game: MaybeUninit::uninit(),
         game_ui: MaybeUninit::uninit(),
     };
@@ -181,10 +180,10 @@ pub unsafe extern "C" fn mmheroes_game_create(
     };
     memory.write(ffi_game);
 
-    let state = &memory.as_mut().state;
-    let game = memory.as_mut().game.write(create_game(seed, state));
+    let state_holder = &memory.as_ref().state_holder;
+    let game = memory.as_mut().game.write(create_game(seed, state_holder));
     memory.as_mut().game_ui.write(GameUI::new(
-        state,
+        state_holder,
         core::pin::Pin::new_unchecked(game),
         scores,
         renderer_request_consumer,

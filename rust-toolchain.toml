@@ -1,2 +1,0 @@
-[toolchain]
-channel = "nightly-2024-09-30" # We use the following unstable features: context_ext, local_waker

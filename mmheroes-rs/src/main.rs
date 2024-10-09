@@ -1,4 +1,4 @@
-use mmheroes_core::logic::{create_game, ObservableGameState};
+use mmheroes_core::logic::{create_game, ObservableGameState, StateHolder};
 use mmheroes_core::ui::recording::{InputRecordingParser, InputRecordingParserError};
 use mmheroes_core::{
     logic::GameMode,
@@ -248,7 +248,7 @@ fn main() {
 
     let steps = env_steps();
 
-    let observable_game_state = RefCell::new(ObservableGameState::new(mode));
+    let observable_game_state = StateHolder::new(mode);
     let game = create_game(seed, &observable_game_state);
     let game = pin!(game);
 

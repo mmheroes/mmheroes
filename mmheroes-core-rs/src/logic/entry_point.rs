@@ -26,7 +26,7 @@ pub(super) async fn run(g: &mut InternalGameState<'_>) {
 }
 
 pub(super) fn should_select_game_style(g: &mut InternalGameState) -> bool {
-    let mode = g.observable_state.borrow().mode;
+    let mode = g.state_holder.observable_state().mode;
     match mode {
         GameMode::SelectInitialParameters => {
             // Можно выбрать 4 стиля игры:

@@ -19,10 +19,10 @@ fn look_at_baobab() {
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     replay_game(game_ui, "4↓r↓r");
-    assert_matches!(state.borrow().screen(), GameScreen::HighScores(_));
+    assert_matches!(state.observable_state().screen(), GameScreen::HighScores(_));
     assert_eq!(game_ui.high_scores, high_scores);
     replay_game(game_ui, "r");
-    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
         assert_matches!(state.location(), Location::PUNK);
     });
 }

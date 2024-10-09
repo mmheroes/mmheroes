@@ -13,14 +13,14 @@ fn surf_internet_god_mode() {
     // Идём в мавзолей, ждём пока не появится Гриша
     replay_game(game_ui, "3↑r2↑2r2↑2r");
     assert!(state
-        .borrow()
+        .observable_state()
         .available_actions()
         .contains(&Action::InteractWithClassmate(Classmate::Grisha)));
 
     // Подходим к Грише, принимаем его предложение устроиться в ТЕРКОМ
     replay_game(game_ui, "2↑3r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert!(!state.player().has_internet());
         }
@@ -29,7 +29,7 @@ fn surf_internet_god_mode() {
     // Снова подходим к Грише, получаем у него адрес прокси-сервера
     replay_game(game_ui, "2↑2r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert!(state.player().has_internet());
             assert_eq!(state.current_time(), Time(10));
@@ -47,7 +47,7 @@ fn surf_internet_god_mode() {
     for i in 1..=10 {
         replay_game(game_ui, "4↓2r");
         assert_matches!(
-            state.borrow().screen(),
+            state.observable_state().screen(),
             GameScreen::SceneRouter(state) => {
                 assert_eq!(state.current_time(), Time(10 + i));
                 assert_eq!(

@@ -64,7 +64,7 @@ pub enum GameMode {
     /// Same as `SelectInitialParameters`, but another option is available —
     /// God mode. It enables maximum abilities.
     ///
-    /// This mode is enable by passing a special flag to the executable.
+    /// This mode is enabled by passing a special flag to the executable.
     God,
 }
 
@@ -102,29 +102,26 @@ impl ObservableGameState {
 }
 
 struct InternalGameState<'a> {
-    observable_state: &'a RefCell<ObservableGameState>,
+    state_holder: &'a StateHolder,
     rng: random::Rng,
 }
 
 impl<'a: 'b, 'b> InternalGameState<'a> {
-    fn new(
-        seed: u64,
-        observable_state: &'a RefCell<ObservableGameState>,
-    ) -> InternalGameState<'a> {
+    fn new(seed: u64, state_holder: &'a StateHolder) -> InternalGameState<'a> {
         let rng = random::Rng::new(seed);
-        observable_state.borrow_mut().reset();
-        InternalGameState {
-            observable_state,
-            rng,
-        }
+        state_holder.observable_state.borrow_mut().reset();
+        InternalGameState { state_holder, rng }
     }
 
     fn screen(&self) -> Ref<'b, GameScreen> {
-        Ref::map(self.observable_state.borrow(), ObservableGameState::screen)
+        Ref::map(
+            self.state_holder.observable_state(),
+            ObservableGameState::screen,
+        )
     }
 
     fn set_screen(&self, new_screen: GameScreen) {
-        self.observable_state.borrow_mut().screen = new_screen;
+        self.state_holder.observable_state.borrow_mut().screen = new_screen;
     }
 
     async fn set_screen_and_wait_for_any_key(&self, new_screen: GameScreen) {
@@ -133,13 +130,16 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
     }
 
     fn set_screen_and_action_vec(&self, new_screen: GameScreen, actions: ActionVec) {
-        let mut state = self.observable_state.borrow_mut();
+        let mut state = self.state_holder.observable_state.borrow_mut();
         state.screen = new_screen;
         state.available_actions = actions;
     }
 
     fn set_available_actions_from_vec(&self, actions: ActionVec) {
-        self.observable_state.borrow_mut().available_actions = actions
+        self.state_holder
+            .observable_state
+            .borrow_mut()
+            .available_actions = actions
     }
 
     fn set_screen_and_available_actions<const N: usize>(
@@ -422,10 +422,10 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
     }
 
     async fn wait_for_action(&self) -> Action {
-        let action = prompt(()).await;
+        let action = prompt((), &self.state_holder.shared_future_data).await;
         if !self
-            .observable_state
-            .borrow()
+            .state_holder
+            .observable_state()
             .available_actions()
             .contains(&action)
         {
@@ -444,18 +444,39 @@ pub trait Game {
     fn perform_action(self: Pin<&mut Self>, action: Action);
 }
 
-pub(in crate::logic) type GameExecutor<F> = PromptingExecutor<F, Action, ()>;
+pub(in crate::logic) type GameExecutor<'a, F> = PromptingExecutor<'a, F, Action, ()>;
 
-impl<F: Future> Game for GameExecutor<F> {
+impl<F: Future> Game for GameExecutor<'_, F> {
     fn perform_action(self: Pin<&mut Self>, action: Action) {
         // FIXME: The result is ignored, we probably don't want that
         self.resume_with_input(action);
     }
 }
 
-pub fn create_game(seed: u64, state: &RefCell<ObservableGameState>) -> impl Game + '_ {
-    let mut game = InternalGameState::new(seed, state);
-    GameExecutor::new(async move { entry_point::run(&mut game).await })
+pub struct StateHolder {
+    observable_state: RefCell<ObservableGameState>,
+    shared_future_data: RefCell<Option<FutureData<Action, ()>>>,
+}
+
+impl StateHolder {
+    pub fn new(mode: GameMode) -> Self {
+        Self {
+            observable_state: RefCell::new(ObservableGameState::new(mode)),
+            shared_future_data: RefCell::new(None),
+        }
+    }
+
+    pub fn observable_state(&self) -> Ref<ObservableGameState> {
+        self.observable_state.borrow()
+    }
+}
+
+pub fn create_game(seed: u64, state_holder: &StateHolder) -> impl Game + '_ {
+    let mut game = InternalGameState::new(seed, state_holder);
+    GameExecutor::new(
+        async move { entry_point::run(&mut game).await },
+        &state_holder.shared_future_data,
+    )
 }
 
 #[test]
@@ -466,7 +487,7 @@ fn memory() {
     assert_eq!(size_of::<Action>(), 2);
     assert_eq!(size_of::<GameScreen>(), 296);
 
-    let observable_game_state = RefCell::new(observable_game_state);
-    let game = create_game(0, &observable_game_state);
-    assert_eq!(size_of_val(&game), 1600);
+    let state_holder = StateHolder::new(GameMode::Normal);
+    let game = create_game(0, &state_holder);
+    assert_eq!(size_of_val(&game), 1640);
 }

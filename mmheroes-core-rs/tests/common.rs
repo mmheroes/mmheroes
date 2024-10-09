@@ -1,6 +1,6 @@
 use assert_matches::assert_matches;
 use mmheroes_core::logic::actions::PlayStyle;
-use mmheroes_core::logic::{Game, GameMode, GameScreen, ObservableGameState};
+use mmheroes_core::logic::{Game, GameMode, GameScreen, StateHolder};
 use mmheroes_core::ui::recording::{InputRecordingParser, InputRecordingParserError};
 use mmheroes_core::ui::renderer::RendererRequestConsumer;
 use mmheroes_core::ui::*;
@@ -76,12 +76,12 @@ pub fn replay_game<G: Game>(game_ui: &mut TestGameUI<G>, steps: &str) -> bool {
 }
 
 pub fn replay_until_dorm<G: Game>(
-    state: &core::cell::RefCell<ObservableGameState>,
+    state: &StateHolder,
     game_ui: &mut TestGameUI<G>,
     style: PlayStyle,
 ) {
     replay_game(game_ui, "r");
-    let mode = state.borrow().mode();
+    let mode = state.observable_state().mode();
     if mode != GameMode::Normal {
         match style {
             PlayStyle::RandomStudent => {}
@@ -104,17 +104,18 @@ pub fn replay_until_dorm<G: Game>(
     }
     // Дзинь!
     replay_game(game_ui, "2r");
-    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(_)
+    );
 }
 
 #[macro_export]
 macro_rules! initialize_game {
     (($seed:expr, $mode:expr, $high_scores:expr) => $state:ident, $game_ui:ident) => {
-        let state = core::cell::RefCell::new(
-            mmheroes_core::logic::ObservableGameState::new($mode),
-        );
-        let $state = &state;
-        let mut game = mmheroes_core::logic::create_game($seed, &$state);
+        let state_holder = mmheroes_core::logic::StateHolder::new($mode);
+        let $state = &state_holder;
+        let mut game = mmheroes_core::logic::create_game($seed, $state);
         let game = core::pin::pin!(game);
         let mut game_ui = $crate::TestGameUI::new(
             $state,

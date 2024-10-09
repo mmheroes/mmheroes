@@ -11,14 +11,17 @@ fn overstudy_to_zero_health() {
     initialize_game!((1641333345581, GameMode::Normal) => state, game_ui);
     replay_game(game_ui, "13r");
     assert_matches!(
-          state.borrow().screen(),
+          state.observable_state().screen(),
           GameScreen::GameEnd(state)
             if matches!(state.player().cause_of_death(), Some(CauseOfDeath::Overstudied))
     );
     replay_game(game_ui, "2r");
-    assert_matches!(state.borrow().screen(), GameScreen::Ding(_));
+    assert_matches!(state.observable_state().screen(), GameScreen::Ding(_));
     replay_game(game_ui, "2r");
-    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(_)
+    );
 }
 
 /// Проверяем, что в случае отрицательного brain level попытка подготовиться к зачёту
@@ -27,7 +30,7 @@ fn overstudy_to_zero_health() {
 fn study_with_negative_brain_level() {
     initialize_game!((1641336778475, GameMode::Normal) => state, game_ui);
     replay_game(game_ui, "3r2↓r2↓r4↓r2↑2r4↓r3↑r↓2r3↑r↓2r4↓r↓2r3↑r↑2r3↑r↑2r3↑r↑2r3↑2r3↑2r2↑2r3↑2r3↑2r2↑r↓3r2↓2r");
-    assert_matches!(state.borrow().screen(), GameScreen::Study(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::Study(state) => {
         assert_eq!(state.player().brain(), BrainLevel(-1));
         assert_eq!(
             state
@@ -39,7 +42,7 @@ fn study_with_negative_brain_level() {
         assert_eq!(state.current_time(), Time(15));
     });
     replay_game(game_ui, "r");
-    let borrowed_state = state.borrow();
+    let borrowed_state = state.observable_state();
     match borrowed_state.screen() {
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.player().brain(), BrainLevel(-1));
@@ -71,7 +74,7 @@ fn died_of_studying_to_well() {
     replay_game(game_ui, "2r2↑r↓2r2↑r2↓2r");
 
     assert!(state
-        .borrow()
+        .observable_state()
         .screen()
         .state()
         .unwrap()
@@ -88,7 +91,7 @@ fn died_of_studying_to_well() {
     }
 
     // Умираем от зубрёжки
-    assert_matches!(state.borrow().screen(), GameScreen::GameEnd(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::GameEnd(state) => {
         assert_matches!(state.player().cause_of_death(), Some(CauseOfDeath::StudiedTooWell))
     });
 }

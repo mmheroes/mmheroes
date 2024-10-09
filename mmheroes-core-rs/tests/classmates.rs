@@ -13,7 +13,7 @@ fn pasha() {
     replay_until_dorm(state, game_ui, PlayStyle::SociableStudent);
 
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_subject_knowledge!(
                 state,
@@ -30,21 +30,21 @@ fn pasha() {
     // Идём на факультет и проверяем что Паши нет
     replay_game(game_ui, "4↓r");
     assert!(!state
-        .borrow()
+        .observable_state()
         .available_actions()
         .contains(&Action::InteractWithClassmate(Pasha)));
 
     // Отдыхаем до 9, идём и проверяем что Паши нет
     replay_game(game_ui, "2↓r2↓r4↓r");
     assert!(!state
-        .borrow()
+        .observable_state()
         .available_actions()
         .contains(&Action::InteractWithClassmate(Pasha)));
 
     // Отдыхаем до 10, идём и проверяем что Паша появился
     replay_game(game_ui, "2↓r2↓r4↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.current_time(), Time(10));
             assert!(!state.player().got_stipend());
@@ -59,14 +59,14 @@ fn pasha() {
         }
     );
     assert!(state
-        .borrow()
+        .observable_state()
         .available_actions()
         .contains(&Action::InteractWithClassmate(Pasha)));
 
     // Подходим к Паше
     replay_game(game_ui, "3↑r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::PashaInteraction(state, PashaInteraction::Stipend) => {
             assert_eq!(state.current_time(), Time(10));
             assert!(!state.player().got_stipend());
@@ -84,7 +84,7 @@ fn pasha() {
     // Убеждаемся что Паша отдал стипендию
     replay_game(game_ui, "r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.current_time(), Time(10));
             assert!(state.player().got_stipend());
@@ -111,7 +111,7 @@ fn pasha() {
     // Подходим к Паше снова
     replay_game(game_ui, "3↑r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::PashaInteraction(state, PashaInteraction::Inspiration) => {
             assert_eq!(state.current_time(), Time(10));
             assert_characteristics!(
@@ -138,7 +138,7 @@ fn pasha() {
     // (потому что они слишком маленькие), по увеличил выносливость
     replay_game(game_ui, "r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.current_time(), Time(10));
             assert_characteristics!(
@@ -167,7 +167,7 @@ fn pasha_decreases_subject_knowledge() {
     initialize_game!((0, GameMode::SelectInitialParameters) => state, game_ui);
     replay_until_dorm(state, game_ui, PlayStyle::CleverStudent);
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_characteristics!(
                 state,
@@ -192,7 +192,7 @@ fn pasha_decreases_subject_knowledge() {
     // Подтягиваем знания по информатике и матанализу
     replay_game(game_ui, "r3↓2r↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_characteristics!(
                 state,
@@ -217,7 +217,7 @@ fn pasha_decreases_subject_knowledge() {
     // Идём на факультет, берём у Паши стипендию
     replay_game(game_ui, "4↓r7↓2r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_characteristics!(
                 state,
@@ -243,7 +243,7 @@ fn pasha_decreases_subject_knowledge() {
     // а знания по некоторым предметам уменьшились
     replay_game(game_ui, "7↓2r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_characteristics!(
                 state,
@@ -268,7 +268,7 @@ fn pasha_decreases_subject_knowledge() {
     // И ещё раз
     replay_game(game_ui, "7↓2r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_characteristics!(
                 state,
@@ -293,7 +293,7 @@ fn pasha_decreases_subject_knowledge() {
     // И ещё раз
     replay_game(game_ui, "7↓2r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_characteristics!(
                 state,

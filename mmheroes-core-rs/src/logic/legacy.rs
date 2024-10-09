@@ -20,7 +20,7 @@ use crate::logic::*;
 #[deprecated]
 pub(in crate::logic) fn start_game(g: &mut InternalGameState) -> ActionVec {
     if entry_point::should_select_game_style(g) {
-        g.observable_state.borrow().available_actions.clone()
+        g.state_holder.observable_state().available_actions.clone()
     } else {
         ding(
             g,

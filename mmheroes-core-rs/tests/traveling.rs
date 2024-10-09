@@ -13,7 +13,7 @@ fn go_from_dorm_to_punk() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
     replay_game(game_ui, "4↓r");
-    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
         assert_eq!(state.location(), Location::PUNK);
     });
 }
@@ -26,14 +26,14 @@ fn death_on_the_way_from_dorm_to_punk() {
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
     replay_game(game_ui, "10r");
 
-    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
         assert_eq!(state.player().health(), HealthLevel(2));
     });
 
     // Идём на факультет
     replay_game(game_ui, "4↓r");
 
-    assert_matches!(state.borrow().screen(), GameScreen::GameEnd(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::GameEnd(state) => {
         assert_matches!(state.player().cause_of_death(), Some(CauseOfDeath::OnTheWayToPUNK));
     });
 }
@@ -43,7 +43,7 @@ fn go_from_dorm_to_mausoleum() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
     replay_game(game_ui, "6↓r");
-    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
         assert_eq!(state.location(), Location::Mausoleum);
     });
 }
@@ -56,14 +56,14 @@ fn death_on_the_way_from_dorm_to_mausoleum() {
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
     replay_game(game_ui, "10r");
 
-    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
         assert_eq!(state.player().health(), HealthLevel(2));
     });
 
     // Идём в мавзолей
     replay_game(game_ui, "6↓r");
 
-    assert_matches!(state.borrow().screen(), GameScreen::GameEnd(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::GameEnd(state) => {
         assert_matches!(state.player().cause_of_death(), Some(CauseOfDeath::OnTheWayToMausoleum));
     });
 }
@@ -81,26 +81,29 @@ fn no_point_to_go_to_pdmi() {
     // Едем в ПОМИ
     replay_game(game_ui, "5↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::TrainToPDMI(_, TrainToPDMI::NoPointToGoToPDMI)
     );
 
     replay_game(game_ui, "r");
-    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(_));
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(_)
+    );
 }
 
 #[test]
 fn go_to_pdmi_from_dorm_without_money_not_caught_by_inspectors() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
-    assert_matches!(state.borrow().screen(),
+    assert_matches!(state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.player().health(), HealthLevel(44))
         }
     );
     replay_game(game_ui, "5↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::TrainToPDMI(
             state,
             TrainToPDMI::GatecrashBecauseNoMoney {
@@ -113,7 +116,7 @@ fn go_to_pdmi_from_dorm_without_money_not_caught_by_inspectors() {
 
     replay_game(game_ui, "r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
         assert_eq!(state.location(), Location::PDMI)
     });
@@ -123,14 +126,14 @@ fn go_to_pdmi_from_dorm_without_money_not_caught_by_inspectors() {
 fn go_to_pdmi_from_dorm_without_money_caught_by_inspectors() {
     initialize_game!((1, GameMode::Normal) => state, game_ui);
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
-    assert_matches!(state.borrow().screen(),
+    assert_matches!(state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.player().health(), HealthLevel(45))
         }
     );
     replay_game(game_ui, "5↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::TrainToPDMI(
             state,
             TrainToPDMI::GatecrashBecauseNoMoney {
@@ -155,7 +158,7 @@ fn death_on_the_way_to_pdmi() {
     // Едем в ПОМИ
     replay_game(game_ui, "5↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::GameEnd(state,) => {
             assert_matches!(
                 state.player().cause_of_death(),
@@ -176,7 +179,7 @@ fn killed_by_inspectors_no_money_from_dorm_to_pdmi() {
     // Едем в ПОМИ
     replay_game(game_ui, "5↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::GameEnd(state) => {
             assert_matches!(
                 state.player().cause_of_death(),
@@ -202,14 +205,14 @@ fn go_to_pdmi_with_money_but_without_ticket_not_caught_by_inspectors() {
     // Едем в ПОМИ
     replay_game(game_ui, "3↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::TrainToPDMI(_, TrainToPDMI::PromptToBuyTickets)
     );
 
     // Едем зайцем
     replay_game(game_ui, "r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::TrainToPDMI(
             state,
             TrainToPDMI::GatecrashByChoice {
@@ -222,7 +225,7 @@ fn go_to_pdmi_with_money_but_without_ticket_not_caught_by_inspectors() {
 
     replay_game(game_ui, "r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PDMI);
             assert_eq!(state.player().health(), HealthLevel(52));
@@ -246,14 +249,14 @@ fn go_to_pdmi_with_money_but_without_ticket_caught_by_inspectors() {
     // Едем в ПОМИ
     replay_game(game_ui, "3↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::TrainToPDMI(_, TrainToPDMI::PromptToBuyTickets)
     );
 
     // Едем зайцем
     replay_game(game_ui, "r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::TrainToPDMI(
             state,
             TrainToPDMI::GatecrashByChoice {
@@ -281,14 +284,14 @@ fn go_to_pdmi_with_ticket() {
     // Едем в ПОМИ
     replay_game(game_ui, "3↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::TrainToPDMI(_, TrainToPDMI::PromptToBuyTickets)
     );
 
     // Покупаем билет
     replay_game(game_ui, "↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::TrainToPDMI(
             state,
             TrainToPDMI::BoughtRoundtripTicket
@@ -302,7 +305,7 @@ fn go_to_pdmi_with_ticket() {
 
     replay_game(game_ui, "r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PDMI);
             assert_eq!(state.player().health(), HealthLevel(59));
@@ -320,7 +323,7 @@ fn go_from_punk_to_dorm() {
     // Идём на факультет
     replay_game(game_ui, "4↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
             assert_eq!(state.player().health(), HealthLevel(41));
@@ -330,7 +333,7 @@ fn go_from_punk_to_dorm() {
     // Идём обратно в общагу факультет и проверяем что здоровье не изменилось
     replay_game(game_ui, "2↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::Dorm);
             assert_eq!(state.player().health(), HealthLevel(41));
@@ -346,7 +349,7 @@ fn go_from_punk_to_computer_class() {
     // Идём на факультет
     replay_game(game_ui, "4↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
             assert_eq!(state.player().health(), HealthLevel(41));
@@ -356,7 +359,7 @@ fn go_from_punk_to_computer_class() {
     // Идём в компьютерный класс
     replay_game(game_ui, "2↑r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::ComputerClass);
             assert_eq!(state.player().health(), HealthLevel(39));
@@ -366,7 +369,7 @@ fn go_from_punk_to_computer_class() {
     // Возвращаемся в общагу
     replay_game(game_ui, "r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::Dorm);
             assert_eq!(state.player().health(), HealthLevel(39));
@@ -376,7 +379,7 @@ fn go_from_punk_to_computer_class() {
     // Отдыхаем до 19:00
     replay_game(game_ui, "2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.player().health(), HealthLevel(170));
         }
@@ -385,7 +388,7 @@ fn go_from_punk_to_computer_class() {
     // Снова идём в компьютерный класс
     replay_game(game_ui, "4↓r4↑r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::ComputerClass);
             assert_eq!(state.player().health(), HealthLevel(165));
@@ -398,7 +401,7 @@ fn go_from_punk_to_computer_class() {
     // Идём на факультет, убеждаемся что компьютерный класс уже закрыт
     replay_game(game_ui, "4↓r");
     assert!(!state
-        .borrow()
+        .observable_state()
         .available_actions()
         .contains(&Action::GoToComputerClass));
 }
@@ -411,14 +414,14 @@ fn death_on_the_way_to_computer_class() {
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
     replay_game(game_ui, "10r");
 
-    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
         assert_eq!(state.player().health(), HealthLevel(4));
     });
 
     // Идём в компьютерный класс
     replay_game(game_ui, "4↓r5↓r");
 
-    assert_matches!(state.borrow().screen(), GameScreen::GameEnd(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::GameEnd(state) => {
         assert_eq!(state.player().cause_of_death(), Some(CauseOfDeath::FellFromStairs));
     });
 }
@@ -431,7 +434,7 @@ fn go_from_punk_to_mausoleum() {
     // Идём на факультет
     replay_game(game_ui, "4↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
             assert_eq!(state.player().health(), HealthLevel(41));
@@ -441,7 +444,7 @@ fn go_from_punk_to_mausoleum() {
     // Идём в мавзолей
     replay_game(game_ui, "3↑r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::Mausoleum);
             assert_eq!(state.player().health(), HealthLevel(38));

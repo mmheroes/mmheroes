@@ -14,16 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install the Rust toolchain specified in the rust-toolchain file
-        uses: dsherret/rust-toolchain-file@v1
-      - name: Build core with no_std
-        run: |
-          cd mmheroes-core-rs
-          cargo build --no-default-features
-      - name: Build
-        run: cargo build
+      - name: Install the stable Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
       - name: Run tests
         run: cargo test
+      - name: Run tests (no_std core)
+        run: cargo test --no-default-features
       - name: Run rustfmt for core
         run: |
           rustfmt --check mmheroes-core-rs/src/lib.rs
@@ -33,7 +31,7 @@ jobs:
         run: |
           rustfmt --check mmheroes-rs/src/main.rs
       - name: Run clippy
-        uses: actions-rs/clippy-check@v1
+        uses: auguwu/clippy-action@1.4.0
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           args: --all-features

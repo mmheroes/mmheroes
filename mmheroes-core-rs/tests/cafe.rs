@@ -13,7 +13,7 @@ fn cafe_punk() {
     // Идём на факультет и убеждаемся что кафе ещё закрыто
     replay_game(game_ui, "4↓r");
     assert!(!state
-        .borrow()
+        .observable_state()
         .available_actions()
         .contains(&Action::GoToCafePUNK));
 
@@ -22,27 +22,27 @@ fn cafe_punk() {
 
     // Кафе закрыто
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
         }
     );
     assert!(!state
-        .borrow()
+        .observable_state()
         .available_actions()
         .contains(&Action::GoToCafePUNK));
 
     // Отдыхаем до 10:00 и снова идём на факультет. Заходим в кафе.
     replay_game(game_ui, "2↓r2↓r4↓r6↓r");
     assert_eq!(
-        state.borrow().available_actions(),
+        state.observable_state().available_actions(),
         [Action::RestInCafePUNK, Action::ShouldntHaveComeToCafePUNK]
     );
 
     // Получаем деньги у Паши, снова идём в кафе
     replay_game(game_ui, "↓r3↑2r6↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::CafePUNK(state) => {
             assert_eq!(state.current_time(), Time(10));
             assert_characteristics!(
@@ -56,7 +56,7 @@ fn cafe_punk() {
         }
     );
     assert_eq!(
-        state.borrow().available_actions(),
+        state.observable_state().available_actions(),
         [
             Action::OrderTea,
             Action::OrderCake,
@@ -69,7 +69,7 @@ fn cafe_punk() {
     // Заказываем чай
     replay_game(game_ui, "r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
             assert_eq!(state.current_time(), Time(11));
@@ -87,7 +87,7 @@ fn cafe_punk() {
     // Снова идём в кафе, заказываем кекс
     replay_game(game_ui, "6↓r↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
             assert_eq!(state.current_time(), Time(12));
@@ -105,7 +105,7 @@ fn cafe_punk() {
     // Снова идём в кафе, заказываем чай и выпечку
     replay_game(game_ui, "6↓r2↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
             assert_eq!(state.current_time(), Time(13));
@@ -123,7 +123,7 @@ fn cafe_punk() {
     // Снова идём в кафе, просто отдыхаем
     replay_game(game_ui, "6↓r3↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
             assert_eq!(state.current_time(), Time(14));
@@ -141,7 +141,7 @@ fn cafe_punk() {
     // Снова идём в кафе, после чего сразу же выходим обратно
     replay_game(game_ui, "6↓r4↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
             assert_eq!(state.current_time(), Time(14));
@@ -160,7 +160,7 @@ fn cafe_punk() {
     // Отдыхаем в кафе до 18:00.
     replay_game(game_ui, "6↓r3↓r6↓r3↓r6↓r3↓r6↓r3↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
             assert_eq!(state.current_time(), Time(18));
@@ -175,14 +175,14 @@ fn cafe_punk() {
         }
     );
     assert!(state
-        .borrow()
+        .observable_state()
         .available_actions()
         .contains(&Action::GoToCafePUNK));
 
     // Отдыхаем в кафе до 19:00 и убеждаемся что оно закрывается
     replay_game(game_ui, "6↓r3↓r");
     assert_matches!(
-        state.borrow().screen(),
+        state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
             assert_eq!(state.current_time(), Time(19));
@@ -197,7 +197,7 @@ fn cafe_punk() {
         }
     );
     assert!(!state
-        .borrow()
+        .observable_state()
         .available_actions()
         .contains(&Action::GoToCafePUNK));
 }
@@ -217,7 +217,7 @@ fn cafe_punk_limited_menu() {
         }
         replay_game(game_ui, "6↓r↓r");
         assert_matches!(
-            state.borrow().screen(),
+            state.observable_state().screen(),
             GameScreen::SceneRouter(state) => {
                 assert_eq!(state.location(), Location::PUNK);
                 assert_eq!(state.current_time(), Time(18));
@@ -235,7 +235,7 @@ fn cafe_punk_limited_menu() {
         // Снова идём в кафе. Меню должно быть меньше, т.к. у нас мало денег.
         replay_game(game_ui, "6↓r");
         assert_eq!(
-            state.borrow().available_actions(),
+            state.observable_state().available_actions(),
             [
                 Action::OrderTea,
                 Action::OrderCake,
@@ -256,7 +256,7 @@ fn cafe_punk_limited_menu() {
             replay_game(game_ui, "6↓r2↓r");
         }
         assert_matches!(
-            state.borrow().screen(),
+            state.observable_state().screen(),
             GameScreen::SceneRouter(state) => {
                 assert_eq!(state.location(), Location::PUNK);
                 assert_eq!(state.current_time(), Time(18));
@@ -274,7 +274,7 @@ fn cafe_punk_limited_menu() {
         // Снова идём в кафе. Меню должно быть меньше, т.к. у нас мало денег.
         replay_game(game_ui, "6↓r");
         assert_eq!(
-            state.borrow().available_actions(),
+            state.observable_state().available_actions(),
             [
                 Action::OrderTea,
                 Action::RestInCafePUNK,

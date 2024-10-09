@@ -9,13 +9,13 @@ use mmheroes_core::logic::{GameMode, GameScreen, Time};
 fn try_to_sleep() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
-    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
         assert_eq!(state.current_time(), Time(8))
     });
     replay_game(game_ui, "3↓r");
-    assert_matches!(state.borrow().screen(), GameScreen::Sleep(_));
+    assert_matches!(state.observable_state().screen(), GameScreen::Sleep(_));
     replay_game(game_ui, "r");
-    assert_matches!(state.borrow().screen(), GameScreen::SceneRouter(state) => {
+    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
         assert_eq!(state.current_time(), Time(8))
     });
 }
@@ -28,5 +28,5 @@ fn rest_until_midnight() {
     for _ in 0..16 {
         replay_game(game_ui, "2↓r");
     }
-    assert_matches!(state.borrow().screen(), GameScreen::Sleep(_));
+    assert_matches!(state.observable_state().screen(), GameScreen::Sleep(_));
 }

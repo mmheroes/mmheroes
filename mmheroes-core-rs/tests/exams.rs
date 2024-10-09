@@ -15,9 +15,12 @@ fn exam_list_in_punk() {
     // - Алгебра 13:00–15:00
     // - English 14:00-16:00
     replay_game(game_ui, "4↓2r");
-    assert_matches!(state.borrow().screen(), GameScreen::GoToProfessor(_));
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::GoToProfessor(_)
+    );
     assert_eq!(
-        state.borrow().available_actions(),
+        state.observable_state().available_actions(),
         [Action::DontGoToProfessor]
     );
 
@@ -26,9 +29,12 @@ fn exam_list_in_punk() {
 
     // Снова идём на факультет.
     replay_game(game_ui, "4↓2r");
-    assert_matches!(state.borrow().screen(), GameScreen::GoToProfessor(_));
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::GoToProfessor(_)
+    );
     assert_eq!(
-        state.borrow().available_actions(),
+        state.observable_state().available_actions(),
         [
             Action::Exam(Subject::AlgebraAndNumberTheory),
             Action::DontGoToProfessor
@@ -40,9 +46,12 @@ fn exam_list_in_punk() {
 
     // Снова идём на факультет.
     replay_game(game_ui, "4↓2r");
-    assert_matches!(state.borrow().screen(), GameScreen::GoToProfessor(_));
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::GoToProfessor(_)
+    );
     assert_eq!(
-        state.borrow().available_actions(),
+        state.observable_state().available_actions(),
         [
             Action::Exam(Subject::AlgebraAndNumberTheory),
             Action::Exam(Subject::English),
@@ -55,9 +64,12 @@ fn exam_list_in_punk() {
 
     // Снова идём на факультет.
     replay_game(game_ui, "4↓2r");
-    assert_matches!(state.borrow().screen(), GameScreen::GoToProfessor(_));
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::GoToProfessor(_)
+    );
     assert_eq!(
-        state.borrow().available_actions(),
+        state.observable_state().available_actions(),
         [Action::Exam(Subject::English), Action::DontGoToProfessor]
     );
 
@@ -66,9 +78,12 @@ fn exam_list_in_punk() {
 
     // Снова идём на факультет.
     replay_game(game_ui, "4↓2r");
-    assert_matches!(state.borrow().screen(), GameScreen::GoToProfessor(_));
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::GoToProfessor(_)
+    );
     assert_eq!(
-        state.borrow().available_actions(),
+        state.observable_state().available_actions(),
         [Action::DontGoToProfessor]
     );
 }
