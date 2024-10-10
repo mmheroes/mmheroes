@@ -131,7 +131,8 @@ fn go_to_pdmi_from_dorm_without_money_caught_by_inspectors() {
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
     assert_matches!(state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
-            assert_eq!(state.player().health(), HealthLevel(45))
+            assert_eq!(state.player().health(), HealthLevel(45));
+            assert_eq!(state.current_time(), Time(8));
         }
     );
     replay_game(game_ui, "5↓r");
@@ -143,11 +144,20 @@ fn go_to_pdmi_from_dorm_without_money_caught_by_inspectors() {
                 caught_by_inspectors: true
             }
         ) => {
+            assert_eq!(state.current_time(), Time(8));
+            assert_eq!(state.location(), Location::PDMI);
             assert_eq!(state.player().health(), HealthLevel(26))
         }
     );
 
-    // TODO: Проверить что оказались в ПОМИ + уровень здоровья
+    replay_game(game_ui, "r");
+    assert_matches!(state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(10));
+            assert_eq!(state.location(), Location::PDMI);
+            assert_eq!(state.player().health(), HealthLevel(26));
+        }
+    );
 }
 
 #[test]
@@ -299,12 +309,24 @@ fn go_to_pdmi_with_money_but_without_ticket_caught_by_inspectors() {
 
     // Получаем у Паши стипендию
     replay_game(game_ui, "4↓r3↑2r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::PUNK);
+            assert_eq!(state.current_time(), Time(10));
+            assert_eq!(state.player().health(), HealthLevel(64))
+        }
+    );
 
     // Едем в ПОМИ
     replay_game(game_ui, "3↓r");
     assert_matches!(
         state.observable_state().screen(),
-        GameScreen::TrainToPDMI(_, TrainToPDMI::PromptToBuyTickets)
+        GameScreen::TrainToPDMI(state, TrainToPDMI::PromptToBuyTickets) => {
+            assert_eq!(state.location(), Location::PDMI);
+            assert_eq!(state.current_time(), Time(10));
+            assert_eq!(state.player().health(), HealthLevel(59))
+        }
     );
 
     // Едем зайцем
@@ -317,11 +339,21 @@ fn go_to_pdmi_with_money_but_without_ticket_caught_by_inspectors() {
                 caught_by_inspectors: true
             }
         ) => {
+            assert_eq!(state.location(), Location::PDMI);
+            assert_eq!(state.current_time(), Time(10));
             assert_eq!(state.player().health(), HealthLevel(59))
         }
     );
 
-    // TODO: Проверить что оказались в ПОМИ + уровень здоровья
+    replay_game(game_ui, "r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::PDMI);
+            assert_eq!(state.current_time(), Time(12));
+            assert_eq!(state.player().health(), HealthLevel(59))
+        }
+    );
 }
 
 #[test]

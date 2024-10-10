@@ -60,11 +60,7 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
             match g.wait_for_action().await {
                 Action::GatecrashTrain => {
                     let caught_by_inspectors = inspectors(&mut g.rng, state);
-                    if caught_by_inspectors {
-                        // Здоровье не уменьшается
-                        // TODO: Написать на это тест!
-                        misc::hour_pass(g, state).await;
-                    }
+                    // Здоровье не уменьшается если поймали контролёры!
                     g.set_screen(GameScreen::TrainToPDMI(
                         state.clone(),
                         GatecrashByChoice {
