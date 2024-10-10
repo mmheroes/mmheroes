@@ -21,11 +21,7 @@ pub enum TrainToPDMI {
     BoughtRoundtripTicket,
 }
 
-// FIXME: Здесь всё неправильно, нужно переделать.
-pub(super) async fn go_to_pdmi(
-    g: &mut InternalGameState<'_>,
-    state: &mut GameState,
-) -> RouterResult {
+pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameState) {
     assert_ne!(state.location, Location::PDMI);
     if state.current_time > Time(20) {
         g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
@@ -33,20 +29,28 @@ pub(super) async fn go_to_pdmi(
             NoPointToGoToPDMI,
         ))
         .await;
-        return Ok(());
+        return;
     }
+
     let health_penalty = HealthLevel(g.rng.random(10));
-    // FIXME: Игра должна закончится после wait_for_any_key, а не сразу!!!
-    misc::decrease_health(
-        g,
-        health_penalty,
-        state,
-        CauseOfDeath::CorpseFoundInTheTrain,
-    )
-    .await?;
+    misc::decrease_health(state, health_penalty, CauseOfDeath::CorpseFoundInTheTrain);
     state.location = Location::PDMI;
     if state.player.money < Money::roundtrip_train_ticket_cost() {
-        no_money(g, state).await
+        let caught_by_inspectors = inspectors(&mut g.rng, state);
+        if caught_by_inspectors {
+            misc::decrease_health(
+                state,
+                HealthLevel(10),
+                CauseOfDeath::KilledByInspectors,
+            );
+            misc::hour_pass(g, state).await;
+        }
+        g.set_screen(GameScreen::TrainToPDMI(
+            state.clone(),
+            GatecrashBecauseNoMoney {
+                caught_by_inspectors,
+            },
+        ));
     } else {
         g.set_screen_and_available_actions(
             GameScreen::TrainToPDMI(state.clone(), PromptToBuyTickets),
@@ -55,52 +59,33 @@ pub(super) async fn go_to_pdmi(
         match g.wait_for_action().await {
             Action::GatecrashTrain => {
                 let caught_by_inspectors = inspectors(&mut g.rng, state);
-                g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+                if caught_by_inspectors {
+                    // Здоровье не уменьшается
+                    // TODO: Написать на это тест!
+                    misc::hour_pass(g, state).await;
+                }
+                g.set_screen(GameScreen::TrainToPDMI(
                     state.clone(),
                     GatecrashByChoice {
                         caught_by_inspectors,
                     },
-                ))
-                .await;
-                if caught_by_inspectors {
-                    todo!("Если поймали контролёры, должно пройти два часа!")
-                }
-                misc::hour_pass(g, state).await
+                ));
             }
             Action::BuyRoundtripTrainTicket => {
-                g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+                g.set_screen(GameScreen::TrainToPDMI(
                     state.clone(),
                     BoughtRoundtripTicket,
-                ))
-                .await;
+                ));
                 state.player.money -= Money::roundtrip_train_ticket_cost();
                 state.player.set_has_roundtrip_train_ticket();
-                misc::hour_pass(g, state).await
             }
             action => illegal_action!(action),
         }
     }
+    g.wait_for_any_key().await;
+    misc::hour_pass(g, state).await;
 }
 
 pub(in crate::logic) fn inspectors(rng: &mut Rng, state: &GameState) -> bool {
     state.player.charisma < CharismaLevel(rng.random(10))
-}
-
-async fn no_money(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterResult {
-    let caught_by_inspectors = inspectors(&mut g.rng, state);
-    let health_penalty = HealthLevel(10);
-    if caught_by_inspectors {
-        // FIXME: Игра должна закончится после wait_for_any_key, а не сразу!!!
-        misc::decrease_health(g, health_penalty, state, CauseOfDeath::KilledByInspectors)
-            .await?;
-    }
-    g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
-        state.clone(),
-        GatecrashBecauseNoMoney {
-            caught_by_inspectors,
-        },
-    ))
-    .await;
-    // TODO: Должен пройти час!
-    Ok(())
 }

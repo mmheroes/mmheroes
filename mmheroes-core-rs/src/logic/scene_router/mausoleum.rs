@@ -4,23 +4,20 @@ pub(in crate::logic) async fn handle_router_action(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     action: Action,
-) -> RouterResult {
+) {
     assert_eq!(state.location, Location::Mausoleum);
     match action {
         Action::GoFromMausoleumToPunk => {
             state.location = Location::PUNK;
             misc::decrease_health(
-                g,
-                HealthLevel::location_change_large_penalty(),
                 state,
+                HealthLevel::location_change_large_penalty(),
                 CauseOfDeath::OnTheWayToPUNK,
-            )
-            .await
+            );
         }
         Action::GoToPDMI => train::go_to_pdmi(g, state).await,
         Action::GoFromMausoleumToDorm => {
             state.location = Location::Dorm;
-            Ok(())
         }
         Action::Rest => rest(g, state).await,
         Action::InteractWithClassmate(classmate) => {
@@ -34,7 +31,7 @@ pub(in crate::logic) async fn handle_router_action(
     }
 }
 
-async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterResult {
+async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) {
     let money = state.player.money;
     let mut available_actions = ActionVec::new();
     if money >= Money::cola_cost() {
@@ -77,13 +74,12 @@ async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterRes
             if player.brain <= BrainLevel(0) {
                 player.health = HealthLevel(0);
                 player.cause_of_death = Some(CauseOfDeath::BeerAlcoholism);
-                return Err(misc::game_end(g, state).await); // TODO: Убрать это
             }
         }
         Action::RestByOurselvesInMausoleum => {
             player.health += g.rng.random(player.charisma.0);
         }
-        Action::NoRestIsNoGood => return Ok(()),
+        Action::NoRestIsNoGood => return,
         action => illegal_action!(action),
     }
     misc::hour_pass(g, state).await

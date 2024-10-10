@@ -5,7 +5,6 @@ pub mod pasha;
 pub mod sasha;
 
 use super::*;
-use crate::logic::scene_router::RouterResult;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Classmate {
@@ -276,12 +275,11 @@ pub(super) async fn interact_with_classmate(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     classmate: Classmate,
-) -> RouterResult {
+) {
     let available_actions = match classmate {
         Kolya => kolya::interact(g, state.clone()),
         Pasha => {
-            pasha::interact(g, state).await;
-            return Ok(());
+            return pasha::interact(g, state).await;
         }
         Diamond => todo!("Diamond"),
         RAI => todo!("RAI"),
@@ -300,7 +298,7 @@ pub(super) async fn interact_with_classmate(
     loop {
         let action = g.wait_for_action().await;
         if action == Action::IAmDone {
-            return scene_router::i_am_done(g, state).await;
+            todo!()
         }
         let new_actions = g.perform_action(action);
         g.set_available_actions_from_vec(new_actions);

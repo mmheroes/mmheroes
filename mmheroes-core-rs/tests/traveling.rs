@@ -119,7 +119,7 @@ fn go_to_pdmi_from_dorm_without_money_not_caught_by_inspectors() {
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(8)); // FIXME: Должен пройти час
+            assert_eq!(state.current_time(), Time(9));
             assert_eq!(state.location(), Location::PDMI)
         }
     );
@@ -157,16 +157,42 @@ fn death_on_the_way_to_pdmi() {
 
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
     replay_game(game_ui, "10r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(13));
+            assert_eq!(state.player().health(), HealthLevel(2));
+        }
+    );
 
     // Едем в ПОМИ
     replay_game(game_ui, "5↓r");
     assert_matches!(
         state.observable_state().screen(),
-        GameScreen::GameEnd(state,) => {
+        GameScreen::TrainToPDMI(
+            state,
+            TrainToPDMI::GatecrashBecauseNoMoney { caught_by_inspectors: false },
+        ) => {
             assert_matches!(
                 state.player().cause_of_death(),
                 Some(CauseOfDeath::CorpseFoundInTheTrain)
             );
+            assert_eq!(state.current_time(), Time(13));
+            assert_eq!(state.player().health(), HealthLevel(2));
+            assert_eq!(state.location(), Location::PDMI)
+        }
+    );
+
+    replay_game(game_ui, "r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::GameEnd(state) => {
+            assert_eq!(state.current_time(), Time(14));
+            assert_matches!(
+                state.player().cause_of_death(),
+                Some(CauseOfDeath::CorpseFoundInTheTrain)
+            );
+            assert_eq!(state.location(), Location::PDMI)
         }
     );
 }
@@ -190,13 +216,30 @@ fn killed_by_inspectors_no_money_from_dorm_to_pdmi() {
     replay_game(game_ui, "5↓r");
     assert_matches!(
         state.observable_state().screen(),
-        GameScreen::GameEnd(state) => {
-            assert_eq!(state.current_time(), Time(12));
+        GameScreen::TrainToPDMI(
+            state,
+            TrainToPDMI::GatecrashBecauseNoMoney { caught_by_inspectors: true },
+        ) => {
             assert_matches!(
                 state.player().cause_of_death(),
                 Some(CauseOfDeath::KilledByInspectors)
             );
+            assert_eq!(state.current_time(), Time(13));
+            assert_eq!(state.location(), Location::PDMI);
+            assert_eq!(state.player().health(), HealthLevel(8));
+        }
+    );
 
+    replay_game(game_ui, "r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::GameEnd(state) => {
+            assert_eq!(state.current_time(), Time(14));
+            assert_matches!(
+                state.player().cause_of_death(),
+                Some(CauseOfDeath::KilledByInspectors)
+            );
+            assert_eq!(state.player().health(), HealthLevel(8));
             assert_eq!(state.location(), Location::PDMI)
         }
     );

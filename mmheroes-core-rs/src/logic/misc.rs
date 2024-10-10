@@ -1,30 +1,26 @@
 use crate::logic::actions::illegal_action;
 use crate::logic::entry_point::GameEnd;
-use crate::logic::scene_router::RouterResult;
 use crate::logic::{
     scene_router, Action, CauseOfDeath, CharismaLevel, Duration, GameScreen, GameState,
     HealthLevel, InternalGameState, Location, Time,
 };
 
-pub(in crate::logic) async fn decrease_health(
-    g: &mut InternalGameState<'_>,
-    delta: HealthLevel,
+pub(in crate::logic) fn decrease_health(
     state: &mut GameState,
+    delta: HealthLevel,
     cause_of_death: CauseOfDeath,
-) -> RouterResult {
+) {
     if state.player.health <= delta {
         state.player.cause_of_death = Some(cause_of_death);
-        Err(game_end(g, state).await)
     } else {
         state.player.health -= delta;
-        Ok(())
     }
 }
 
 pub(in crate::logic) async fn hour_pass(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
-) -> RouterResult {
+) {
     // TODO: Lot of stuff going on here
 
     // TODO: Поменять эти строки местами и не забыть отредактировать метод
@@ -39,16 +35,14 @@ pub(in crate::logic) async fn hour_pass(
     if state.current_time.is_midnight() {
         state.current_day_index += 1;
         state.current_time = Time(0);
-        midnight(g, state).await
-    } else {
-        Ok(())
+        midnight(g, state).await;
     }
 }
 
 pub(in crate::logic) async fn midnight(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
-) -> RouterResult {
+) {
     match state.location {
         Location::PUNK => todo!("sub_1E907"),
         Location::PDMI => todo!("sub_1E7F8"),

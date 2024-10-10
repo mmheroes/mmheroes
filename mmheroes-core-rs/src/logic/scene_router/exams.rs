@@ -1,11 +1,10 @@
 use crate::logic::actions::{illegal_action, ActionVec};
-use crate::logic::scene_router::RouterResult;
 use crate::logic::{Action, GameScreen, GameState, InternalGameState};
 
 pub(super) async fn go_to_professor(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
-) -> RouterResult {
+) {
     let mut available_actions = state
         .current_day()
         .current_exams(state.location, state.current_time)
@@ -18,7 +17,7 @@ pub(super) async fn go_to_professor(
     );
     let _subject = match g.wait_for_action().await {
         Action::Exam(subject) => subject,
-        Action::DontGoToProfessor => return Ok(()),
+        Action::DontGoToProfessor => return,
         action => illegal_action!(action),
     };
     todo!("Экзамен")

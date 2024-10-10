@@ -5,40 +5,34 @@ pub(super) async fn handle_router_action(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     action: Action,
-) -> RouterResult {
+) {
     assert_eq!(state.location, Location::Dorm);
     match action {
         Action::Study => study(g, state).await,
         Action::ViewTimetable => {
             timetable::show(g, state).await;
-            Ok(())
         }
         Action::Rest => rest(g, state).await,
         Action::GoToBed => sleep(g, state).await,
         Action::GoFromDormToPunk => {
             state.location = Location::PUNK;
             misc::decrease_health(
-                g,
-                HealthLevel::location_change_large_penalty(),
                 state,
+                HealthLevel::location_change_large_penalty(),
                 CauseOfDeath::OnTheWayToPUNK,
-            )
-            .await
+            );
         }
         Action::GoToPDMI => train::go_to_pdmi(g, state).await,
         Action::GoToMausoleum => {
             state.location = Location::Mausoleum;
             misc::decrease_health(
-                g,
-                HealthLevel::location_change_large_penalty(),
                 state,
+                HealthLevel::location_change_large_penalty(),
                 CauseOfDeath::OnTheWayToMausoleum,
-            )
-            .await
+            );
         }
         Action::WhatToDo => {
             show_help(g, state).await;
-            Ok(())
         }
         _ => illegal_action!(action),
     }
@@ -59,12 +53,12 @@ pub(in crate::logic) fn subjects_to_study(state: &GameState) -> ActionVec {
     available_actions
 }
 
-async fn study(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterResult {
+async fn study(g: &mut InternalGameState<'_>, state: &mut GameState) {
     let available_subjects = subjects_to_study(state);
     g.set_screen_and_action_vec(GameScreen::Study(state.clone()), available_subjects);
     let subject_to_study = match g.wait_for_action().await {
         Action::DoStudy { subject, .. } => subject,
-        Action::DontStudy {} => return Ok(()),
+        Action::DontStudy {} => return,
         action => illegal_action!(action),
     };
     let lecture_notes_available = state
@@ -95,7 +89,7 @@ async fn study_subject(
     state: &mut GameState,
     subject: Subject,
     use_lecture_notes: bool,
-) -> RouterResult {
+) {
     // Импликация "использовать конспект => у игрока есть конспект"
     // должна быть истинной
     assert!(
@@ -109,7 +103,7 @@ async fn study_subject(
         state.player.brain.0
     };
     if brain_or_stamina <= 0 {
-        return Ok(());
+        return;
     }
     let health = state.player.health;
     let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
@@ -133,25 +127,22 @@ async fn study_subject(
         health_penalty += 12;
     }
     misc::decrease_health(
-        g,
-        HealthLevel(health_penalty),
         state,
+        HealthLevel(health_penalty),
         CauseOfDeath::Overstudied,
-    )
-    .await?;
+    );
     if state
         .player
         .status_for_subject(subject)
         .knowledge
         .is_lethal()
     {
-        misc::decrease_health(g, HealthLevel(10), state, CauseOfDeath::StudiedTooWell)
-            .await?;
+        misc::decrease_health(state, HealthLevel(10), CauseOfDeath::StudiedTooWell);
     }
     misc::hour_pass(g, state).await
 }
 
-async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterResult {
+async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) {
     state.player.health += g.rng.random_in_range(7..15);
     misc::hour_pass(g, state).await
 }
@@ -159,11 +150,10 @@ async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterRes
 pub(in crate::logic) async fn sleep(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
-) -> RouterResult {
+) {
     if state.current_time > Time(3) && state.current_time < Time(20) {
         g.set_screen_and_wait_for_any_key(GameScreen::Sleep(state.clone()))
             .await;
-        Ok(())
     } else {
         todo!("Реализовать что-то помимо неудавшегося сна")
     }

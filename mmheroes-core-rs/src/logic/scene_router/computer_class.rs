@@ -4,34 +4,29 @@ pub(super) async fn handle_router_action(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     action: Action,
-) -> RouterResult {
+) {
     assert_eq!(state.location, Location::ComputerClass);
     match action {
         Action::Exam(Subject::ComputerScience) => todo!("Экзамен по информатике"),
         Action::GoFromPunkToDorm => {
             state.location = Location::Dorm;
-            Ok(())
         }
         Action::LeaveComputerClass => {
             state.location = Location::PUNK;
             misc::decrease_health(
-                g,
-                HealthLevel::location_change_small_penalty(),
                 state,
+                HealthLevel::location_change_small_penalty(),
                 CauseOfDeath::CouldntLeaveTheComputer,
-            )
-            .await
+            );
         }
         Action::GoToPDMI => train::go_to_pdmi(g, state).await,
         Action::GoToMausoleum => {
             state.location = Location::Mausoleum;
             misc::decrease_health(
-                g,
-                HealthLevel::location_change_small_penalty(),
                 state,
+                HealthLevel::location_change_small_penalty(),
                 CauseOfDeath::OnTheWayToMausoleum,
-            )
-            .await
+            );
         }
         Action::SurfInternet => surf_internet(g, state).await,
         Action::InteractWithClassmate(classmate) => {
@@ -46,10 +41,7 @@ pub(super) async fn handle_router_action(
     }
 }
 
-async fn surf_internet(
-    g: &mut InternalGameState<'_>,
-    state: &mut GameState,
-) -> RouterResult {
+async fn surf_internet(g: &mut InternalGameState<'_>, state: &mut GameState) {
     let player = &state.player;
     let cs_problems_done = player
         .status_for_subject(Subject::ComputerScience)

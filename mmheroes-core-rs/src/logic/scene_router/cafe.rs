@@ -1,5 +1,4 @@
 use crate::logic::actions::{illegal_action, ActionVec};
-use crate::logic::scene_router::RouterResult;
 use crate::logic::{
     misc, Action, GameScreen, GameState, HealthLevel, InternalGameState, Money,
 };
@@ -11,7 +10,7 @@ pub(super) async fn go(
     rest_action: Action,
     exit_action: Action,
     mut cafe_screen: impl FnMut(GameState) -> GameScreen,
-) -> RouterResult {
+) {
     let mut available_actions = ActionVec::new();
     let available_money = state.player.money;
     for &(position, cost, _) in menu {
@@ -34,9 +33,9 @@ pub(super) async fn go(
     } else if selected_action == rest_action {
         state.player.health += charisma_dependent_health_gain;
     } else if selected_action == exit_action {
-        return Ok(());
+        return;
     } else {
         illegal_action!(selected_action);
     }
-    misc::hour_pass(g, state).await
+    misc::hour_pass(g, state).await;
 }

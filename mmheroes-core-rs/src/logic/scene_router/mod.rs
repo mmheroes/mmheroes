@@ -9,8 +9,6 @@ pub mod train;
 
 use super::*;
 
-pub(in crate::logic) type RouterResult = Result<(), entry_point::GameEnd>;
-
 pub(super) fn available_actions(state: &GameState) -> ActionVec {
     // TODO: assert that no exam is in progress
     let location = state.location;
@@ -122,9 +120,15 @@ pub(super) async fn run(
             available_actions(&state),
         );
         let router_action = g.wait_for_action().await;
-        match handle_router_action(g, &mut state, router_action).await {
-            Ok(()) => continue,
-            Err(game_end) => return game_end,
+        if router_action == Action::IAmDone {
+            match i_am_done(g, &state).await {
+                None => continue,
+                Some(game_end) => return game_end,
+            }
+        }
+        handle_router_action(g, &mut state, router_action).await;
+        if state.player.cause_of_death.is_some() {
+            return misc::game_end(g, &state).await;
         }
     }
 }
@@ -133,11 +137,7 @@ async fn handle_router_action(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     action: Action,
-) -> RouterResult {
-    if action == Action::IAmDone {
-        return i_am_done(g, state).await;
-    }
-
+) {
     use Location::*;
     match state.location() {
         PUNK => punk::handle_router_action(g, state, action).await,
@@ -148,17 +148,17 @@ async fn handle_router_action(
     }
 }
 
-pub(in crate::logic) async fn i_am_done(
+async fn i_am_done(
     g: &mut InternalGameState<'_>,
     state: &GameState,
-) -> RouterResult {
+) -> Option<entry_point::GameEnd> {
     g.set_screen_and_available_actions(
         GameScreen::IAmDone(state.clone()),
         [Action::NoIAmNotDone, Action::IAmCertainlyDone],
     );
     match g.wait_for_action().await {
-        Action::NoIAmNotDone => Ok(()),
-        Action::IAmCertainlyDone => Err(misc::game_end(g, state).await),
+        Action::NoIAmNotDone => None,
+        Action::IAmCertainlyDone => Some(misc::game_end(g, state).await),
         action => illegal_action!(action),
     }
 }

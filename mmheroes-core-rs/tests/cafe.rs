@@ -616,7 +616,7 @@ fn mausoleum_death_of_alcoholism() {
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::GameEnd(state) => {
-            assert_eq!(state.current_time(), Time(13));
+            assert_eq!(state.current_time(), Time(14));
             assert_eq!(
                 state.player().cause_of_death(),
                 Some(CauseOfDeath::BeerAlcoholism)
