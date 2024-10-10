@@ -35,55 +35,61 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
     let health_penalty = HealthLevel(g.rng.random(10));
     misc::decrease_health(state, health_penalty, CauseOfDeath::CorpseFoundInTheTrain);
     state.location = Location::PDMI;
-    if state.player.money < Money::roundtrip_train_ticket_cost() {
-        let caught_by_inspectors = inspectors(&mut g.rng, state);
-        if caught_by_inspectors {
-            misc::decrease_health(
-                state,
-                HealthLevel(10),
-                CauseOfDeath::KilledByInspectors,
+    let caught_by_inspectors =
+        if state.player.money < Money::roundtrip_train_ticket_cost() {
+            let caught_by_inspectors = inspectors(&mut g.rng, state);
+            if caught_by_inspectors {
+                misc::decrease_health(
+                    state,
+                    HealthLevel(10),
+                    CauseOfDeath::KilledByInspectors,
+                );
+            }
+            g.set_screen(GameScreen::TrainToPDMI(
+                state.clone(),
+                GatecrashBecauseNoMoney {
+                    caught_by_inspectors,
+                },
+            ));
+            caught_by_inspectors
+        } else {
+            g.set_screen_and_available_actions(
+                GameScreen::TrainToPDMI(state.clone(), PromptToBuyTickets),
+                [Action::GatecrashTrain, Action::BuyRoundtripTrainTicket],
             );
-            misc::hour_pass(g, state).await;
-        }
-        g.set_screen(GameScreen::TrainToPDMI(
-            state.clone(),
-            GatecrashBecauseNoMoney {
-                caught_by_inspectors,
-            },
-        ));
-    } else {
-        g.set_screen_and_available_actions(
-            GameScreen::TrainToPDMI(state.clone(), PromptToBuyTickets),
-            [Action::GatecrashTrain, Action::BuyRoundtripTrainTicket],
-        );
-        match g.wait_for_action().await {
-            Action::GatecrashTrain => {
-                let caught_by_inspectors = inspectors(&mut g.rng, state);
-                if caught_by_inspectors {
-                    // Здоровье не уменьшается
-                    // TODO: Написать на это тест!
-                    misc::hour_pass(g, state).await;
+            match g.wait_for_action().await {
+                Action::GatecrashTrain => {
+                    let caught_by_inspectors = inspectors(&mut g.rng, state);
+                    if caught_by_inspectors {
+                        // Здоровье не уменьшается
+                        // TODO: Написать на это тест!
+                        misc::hour_pass(g, state).await;
+                    }
+                    g.set_screen(GameScreen::TrainToPDMI(
+                        state.clone(),
+                        GatecrashByChoice {
+                            caught_by_inspectors,
+                        },
+                    ));
+                    caught_by_inspectors
                 }
-                g.set_screen(GameScreen::TrainToPDMI(
-                    state.clone(),
-                    GatecrashByChoice {
-                        caught_by_inspectors,
-                    },
-                ));
+                Action::BuyRoundtripTrainTicket => {
+                    g.set_screen(GameScreen::TrainToPDMI(
+                        state.clone(),
+                        BoughtRoundtripTicket,
+                    ));
+                    state.player.money -= Money::roundtrip_train_ticket_cost();
+                    state.player.set_has_roundtrip_train_ticket();
+                    false
+                }
+                action => illegal_action!(action),
             }
-            Action::BuyRoundtripTrainTicket => {
-                g.set_screen(GameScreen::TrainToPDMI(
-                    state.clone(),
-                    BoughtRoundtripTicket,
-                ));
-                state.player.money -= Money::roundtrip_train_ticket_cost();
-                state.player.set_has_roundtrip_train_ticket();
-            }
-            action => illegal_action!(action),
-        }
-    }
+        };
     g.wait_for_any_key().await;
     misc::hour_pass(g, state).await;
+    if caught_by_inspectors {
+        misc::hour_pass(g, state).await;
+    }
 }
 
 pub(in crate::logic) fn inspectors(rng: &mut Rng, state: &GameState) -> bool {

@@ -224,7 +224,7 @@ fn killed_by_inspectors_no_money_from_dorm_to_pdmi() {
                 state.player().cause_of_death(),
                 Some(CauseOfDeath::KilledByInspectors)
             );
-            assert_eq!(state.current_time(), Time(13));
+            assert_eq!(state.current_time(), Time(12));
             assert_eq!(state.location(), Location::PDMI);
             assert_eq!(state.player().health(), HealthLevel(8));
         }
