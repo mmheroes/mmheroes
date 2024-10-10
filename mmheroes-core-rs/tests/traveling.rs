@@ -462,3 +462,88 @@ fn go_from_punk_to_mausoleum() {
         }
     );
 }
+
+#[test]
+fn go_from_mausoleum_to_punk() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
+
+    // Идём в мавзолей
+    replay_game(game_ui, "6↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::Mausoleum);
+            assert_eq!(state.player().health(), HealthLevel(41));
+        }
+    );
+
+    // Идём в ПУНК
+    replay_game(game_ui, "r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::PUNK);
+            assert_eq!(state.player().health(), HealthLevel(38));
+        }
+    );
+}
+
+#[test]
+fn death_on_the_way_from_mausoleum_to_punk() {
+    initialize_game!((1, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
+
+    // Учим алгебру пока уровень здоровья не упадёт до почти нуля
+    replay_game(game_ui, "10r");
+
+    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
+        assert_eq!(state.player().health(), HealthLevel(4));
+    });
+
+    // Идём в мавзолей
+    replay_game(game_ui, "6↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::Mausoleum);
+            assert_eq!(state.player().health(), HealthLevel(1));
+        }
+    );
+
+    // Идём в ПУНК
+    replay_game(game_ui, "r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::GameEnd(state) => {
+            assert_eq!(state.location(), Location::PUNK);
+            assert_eq!(state.player().cause_of_death(), Some(CauseOfDeath::OnTheWayToPUNK));
+        }
+    );
+}
+
+#[test]
+fn go_from_mausoleum_to_dorm() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
+
+    // Идём в мавзолей
+    replay_game(game_ui, "6↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::Mausoleum);
+            assert_eq!(state.player().health(), HealthLevel(41));
+        }
+    );
+
+    // Идём в общагу
+    replay_game(game_ui, "2↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::Dorm);
+            assert_eq!(state.player().health(), HealthLevel(41));
+        }
+    );
+}

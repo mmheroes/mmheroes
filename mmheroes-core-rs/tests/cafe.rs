@@ -3,7 +3,9 @@ mod common;
 use assert_matches::assert_matches;
 use common::*;
 use mmheroes_core::logic::actions::PlayStyle;
-use mmheroes_core::logic::{Action, GameMode, GameScreen, HealthLevel, Location, Time};
+use mmheroes_core::logic::{
+    Action, CauseOfDeath, GameMode, GameScreen, HealthLevel, Location, Time,
+};
 
 #[test]
 fn cafe_punk() {
@@ -282,4 +284,351 @@ fn cafe_punk_limited_menu() {
             ],
         );
     }
+}
+
+#[test]
+fn mausoleum_rest_without_money() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
+
+    // Идём в мавзолей без денег
+    replay_game(game_ui, "6↓r3↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::RestInMausoleum(state) => {
+            assert_eq!(state.location(), Location::Mausoleum);
+            assert_eq!(state.current_time(), Time(8));
+            assert_characteristics!(
+                state,
+                health: 41,
+                money: 0,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
+        }
+    );
+    assert_eq!(
+        state.observable_state().available_actions(),
+        [Action::RestByOurselvesInMausoleum, Action::NoRestIsNoGood]
+    );
+
+    // Отдыхаем, немного улучшая здоровье
+    replay_game(game_ui, "r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.location(), Location::Mausoleum);
+            assert_eq!(state.current_time(), Time(9));
+            assert_characteristics!(
+                state,
+                health: 42,
+                money: 0,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
+        }
+    );
+}
+
+#[test]
+fn mausoleum_with_money() {
+    initialize_game!((0, GameMode::Normal) => state, game_ui);
+    replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
+
+    // Ждём 10:00, идём на факультет и получаем деньги у Паши
+    replay_game(game_ui, "2↓r2↓r4↓r7↓2r");
+
+    // Идём в мавзолей с деньгами
+    replay_game(game_ui, "4↓r3↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::RestInMausoleum(state) => {
+            assert_eq!(state.location(), Location::Mausoleum);
+            assert_eq!(state.current_time(), Time(10));
+            assert_characteristics!(
+                state,
+                health: 61,
+                money: 50,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
+        }
+    );
+    assert_eq!(
+        state.observable_state().available_actions(),
+        [
+            Action::OrderCola,
+            Action::OrderSoup,
+            Action::OrderBeer,
+            Action::RestByOurselvesInMausoleum,
+            Action::NoRestIsNoGood
+        ]
+    );
+
+    // Заказываем колу
+    replay_game(game_ui, "r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(11));
+            assert_characteristics!(
+                state,
+                health: 64,
+                money: 46,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
+        }
+    );
+
+    // Ещё колу
+    replay_game(game_ui, "3↓2r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(12));
+            assert_characteristics!(
+                state,
+                health: 68,
+                money: 42,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
+        }
+    );
+
+    // Заказываем суп
+    replay_game(game_ui, "3↓r↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(13));
+            assert_characteristics!(
+                state,
+                health: 74,
+                money: 36,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
+        }
+    );
+
+    // Ещё суп
+    replay_game(game_ui, "3↓r↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(14));
+            assert_characteristics!(
+                state,
+                health: 80,
+                money: 30,
+                brain: 5,
+                stamina: 4,
+                charisma: 5,
+            );
+        }
+    );
+
+    // Заказываем пиво, немного увеличиваем здоровье и выносливость, но тупеем
+    replay_game(game_ui, "3↓r2↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(15));
+            assert_characteristics!(
+                state,
+                health: 81,
+                money: 22,
+                brain: 4,
+                stamina: 5,
+                charisma: 5,
+            );
+        }
+    );
+
+    // Заказываем ещё пиво
+    replay_game(game_ui, "3↓r2↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(16));
+            assert_characteristics!(
+                state,
+                health: 81,
+                money: 14,
+                brain: 4,
+                stamina: 6,
+                charisma: 5,
+            );
+        }
+    );
+
+    // Заказываем ещё пиво
+    replay_game(game_ui, "3↓r2↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(17));
+            assert_characteristics!(
+                state,
+                health: 84,
+                money: 6,
+                brain: 4,
+                stamina: 6,
+                charisma: 5,
+            );
+        }
+    );
+
+    // Проверяем, что больше не можем купить пиво
+    replay_game(game_ui, "3↓r");
+    assert_eq!(
+        state.observable_state().available_actions(),
+        [
+            Action::OrderCola,
+            Action::OrderSoup,
+            Action::RestByOurselvesInMausoleum,
+            Action::NoRestIsNoGood,
+        ],
+    );
+
+    // Покупаем суп
+    replay_game(game_ui, "↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(18));
+            assert_characteristics!(
+                state,
+                health: 92,
+                money: 0,
+                brain: 4,
+                stamina: 6,
+                charisma: 5,
+            );
+        }
+    );
+
+    // Возвращаемся отдыхать и сразу идём назад, проверяем что ничего не изменилось
+    replay_game(game_ui, "3↓r↑r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(18));
+            assert_characteristics!(
+                state,
+                health: 92,
+                money: 0,
+                brain: 4,
+                stamina: 6,
+                charisma: 5,
+            );
+        }
+    );
+}
+
+#[test]
+fn mausoleum_death_of_alcoholism() {
+    initialize_game!((7, GameMode::SelectInitialParameters) => state, game_ui);
+    replay_until_dorm(state, game_ui, PlayStyle::ImpudentStudent);
+
+    // Ждём 10:00, идём на факультет и получаем деньги у Паши
+    replay_game(game_ui, "2↓r2↓r4↓r7↓2r");
+
+    // Идём в мавзолей с деньгами
+    replay_game(game_ui, "4↓r3↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::RestInMausoleum(state) => {
+            assert_eq!(state.location(), Location::Mausoleum);
+            assert_eq!(state.current_time(), Time(10));
+            assert_characteristics!(
+                state,
+                health: 66,
+                money: 50,
+                brain: 2,
+                stamina: 9,
+                charisma: 2,
+            );
+        }
+    );
+
+    // Заказываем пиво
+    replay_game(game_ui, "2↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(11));
+            assert_characteristics!(
+                state,
+                health: 66,
+                money: 42,
+                brain: 2,
+                stamina: 9,
+                charisma: 3,
+            );
+        }
+    );
+
+    // Ещё пиво
+    replay_game(game_ui, "3↓r2↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(12));
+            assert_characteristics!(
+                state,
+                health: 68,
+                money: 34,
+                brain: 2,
+                stamina: 9,
+                charisma: 3,
+            );
+        }
+    );
+
+    // Ещё пиво
+    replay_game(game_ui, "3↓r2↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.current_time(), Time(13));
+            assert_characteristics!(
+                state,
+                health: 69,
+                money: 26,
+                brain: 1,
+                stamina: 9,
+                charisma: 3,
+            );
+        }
+    );
+
+    // Ещё пиво
+    replay_game(game_ui, "3↓r2↓r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::GameEnd(state) => {
+            assert_eq!(state.current_time(), Time(13));
+            assert_eq!(
+                state.player().cause_of_death(),
+                Some(CauseOfDeath::BeerAlcoholism)
+            );
+            assert_characteristics!(
+                state,
+                health: 0,
+                money: 18,
+                brain: 0,
+                stamina: 10,
+                charisma: 4,
+            );
+        }
+    );
 }

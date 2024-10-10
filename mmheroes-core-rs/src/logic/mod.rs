@@ -217,7 +217,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             RestInMausoleum(state) => {
                 let state = state.clone();
                 drop(borrowed_screen);
-                scene_router::mausoleum::handle_rest(self, state, action)
+                legacy::handle_mausoleum_rest(self, state, action)
             }
             CafePUNK(state) => {
                 let state = state.clone();
@@ -489,5 +489,5 @@ fn memory() {
 
     let state_holder = StateHolder::new(GameMode::Normal);
     let game = create_game(0, &state_holder);
-    assert_eq!(size_of_val(&game), 1640);
+    assert_eq!(size_of_val(&game), 1624);
 }
