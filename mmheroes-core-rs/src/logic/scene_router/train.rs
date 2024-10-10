@@ -21,6 +21,7 @@ pub enum TrainToPDMI {
     BoughtRoundtripTicket,
 }
 
+// FIXME: Здесь всё неправильно, нужно переделать.
 pub(super) async fn go_to_pdmi(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
@@ -35,6 +36,7 @@ pub(super) async fn go_to_pdmi(
         return Ok(());
     }
     let health_penalty = HealthLevel(g.rng.random(10));
+    // FIXME: Игра должна закончится после wait_for_any_key, а не сразу!!!
     misc::decrease_health(
         g,
         health_penalty,
@@ -85,26 +87,12 @@ pub(in crate::logic) fn inspectors(rng: &mut Rng, state: &GameState) -> bool {
 }
 
 async fn no_money(g: &mut InternalGameState<'_>, state: &mut GameState) -> RouterResult {
-    let caught_by_inspectors = inspectors(&mut g.rng, &state);
+    let caught_by_inspectors = inspectors(&mut g.rng, state);
     let health_penalty = HealthLevel(10);
     if caught_by_inspectors {
-        if state.location == Location::Dorm {
-            // При попытке поехать в ПОМИ из общежития здоровье уменьшается, но смерть
-            // не наступает, даже если здоровье стало отрицательным.
-            // Баг в оригинальной реализации. Возможно, стоит исправить, но пока не буду.
-            state.player.health -= health_penalty;
-            if state.player.health.0 < 0 {
-                panic!("Отрицательное здоровье! Нужно сохранить зерно и шаги, чтобы написать на это тест, после чего убрать эту панику.")
-            }
-        } else {
-            misc::decrease_health(
-                g,
-                health_penalty,
-                state,
-                CauseOfDeath::KilledByInspectors,
-            )
+        // FIXME: Игра должна закончится после wait_for_any_key, а не сразу!!!
+        misc::decrease_health(g, health_penalty, state, CauseOfDeath::KilledByInspectors)
             .await?;
-        }
     }
     g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
         state.clone(),
@@ -113,5 +101,6 @@ async fn no_money(g: &mut InternalGameState<'_>, state: &mut GameState) -> Route
         },
     ))
     .await;
+    // TODO: Должен пройти час!
     Ok(())
 }

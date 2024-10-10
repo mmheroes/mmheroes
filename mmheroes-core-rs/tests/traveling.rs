@@ -5,7 +5,7 @@ use common::*;
 use mmheroes_core::logic::actions::PlayStyle;
 use mmheroes_core::logic::scene_router::train::TrainToPDMI;
 use mmheroes_core::logic::{
-    Action, CauseOfDeath, GameMode, GameScreen, HealthLevel, Location, Money,
+    Action, CauseOfDeath, GameMode, GameScreen, HealthLevel, Location, Money, Time,
 };
 
 #[test]
@@ -110,6 +110,7 @@ fn go_to_pdmi_from_dorm_without_money_not_caught_by_inspectors() {
                 caught_by_inspectors: false
             }
         ) => {
+            assert_eq!(state.current_time(), Time(8));
             assert_eq!(state.player().health(), HealthLevel(43))
         }
     );
@@ -118,8 +119,10 @@ fn go_to_pdmi_from_dorm_without_money_not_caught_by_inspectors() {
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
-        assert_eq!(state.location(), Location::PDMI)
-    });
+            assert_eq!(state.current_time(), Time(8)); // FIXME: Должен пройти час
+            assert_eq!(state.location(), Location::PDMI)
+        }
+    );
 }
 
 #[test]
@@ -175,12 +178,20 @@ fn killed_by_inspectors_no_money_from_dorm_to_pdmi() {
 
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
     replay_game(game_ui, "8r");
+    assert_matches!(
+        state.observable_state().screen(),
+        GameScreen::SceneRouter(state) => {
+            assert_eq!(state.player().health(), HealthLevel(13));
+            assert_eq!(state.current_time(), Time(12))
+        }
+    );
 
     // Едем в ПОМИ
     replay_game(game_ui, "5↓r");
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::GameEnd(state) => {
+            assert_eq!(state.current_time(), Time(12));
             assert_matches!(
                 state.player().cause_of_death(),
                 Some(CauseOfDeath::KilledByInspectors)
