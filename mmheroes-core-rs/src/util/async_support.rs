@@ -119,7 +119,7 @@ struct MyFuture<'a, Input, Output> {
 impl<'a, Input: Any + Unpin, Output: Any + Unpin> Future for MyFuture<'a, Input, Output> {
     type Output = Input;
 
-    fn poll(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Input> {
+    fn poll(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Input> {
         let mut borrowed_data = self.shared_future_data.borrow_mut();
         let data = borrowed_data.as_mut().expect("Missing FutureData");
         match self.maybe_output.take() {
