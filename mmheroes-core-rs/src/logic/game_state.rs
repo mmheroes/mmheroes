@@ -4,7 +4,7 @@ use core::fmt::{Debug, Formatter, Result as FmtResult};
 #[derive(Clone)]
 pub struct GameState {
     pub(in crate::logic) player: Player,
-    pub(in crate::logic) current_day_index: usize,
+    pub(in crate::logic) current_day_index: u8,
     pub(in crate::logic) current_time: Time,
     pub(in crate::logic) timetable: timetable::Timetable,
     pub(in crate::logic) location: Location,
@@ -34,7 +34,7 @@ impl GameState {
     }
 
     pub fn current_day(&self) -> &Day {
-        &self.timetable.days()[self.current_day_index]
+        &self.timetable.days()[self.current_day_index as usize]
     }
 
     pub fn current_time(&self) -> Time {

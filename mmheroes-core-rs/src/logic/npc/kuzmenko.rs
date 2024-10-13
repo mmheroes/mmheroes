@@ -53,7 +53,7 @@ pub(in crate::logic) fn interact(
     let mut additional_exam_day_idx: Option<usize> = None;
     if tomorrow <= saturday {
         for i in (tomorrow..=saturday).rev() {
-            let day = &mut state.timetable.days_mut()[i];
+            let day = &mut state.timetable.days_mut()[i as usize];
             let has_enough_charisma =
                 state.player.charisma > game.rng.random(CharismaLevel(18));
             let can_add_exam = day.exam(Subject::ComputerScience).is_none();
@@ -67,7 +67,7 @@ pub(in crate::logic) fn interact(
                     Location::ComputerClass,
                 );
                 day.add_exam(additional_exam);
-                additional_exam_day_idx = Some(i);
+                additional_exam_day_idx = Some(i as usize);
                 break;
             }
         }

@@ -119,13 +119,13 @@ impl SubjectStatus {
         self.bits ^= problems_done << SUBJECT_NBITS;
     }
 
-    fn passed_exam_day_index(&self) -> Option<usize> {
+    fn passed_exam_day_index(&self) -> Option<u8> {
         let day_index_bits = (self.bits & PASSED_EXAM_DAY_INDEX_BITMASK)
             >> (SUBJECT_NBITS + PROBLEMS_DONE_NBITS);
         if day_index_bits == NOT_PASSED {
             None
         } else {
-            Some(day_index_bits as usize)
+            Some(day_index_bits as u8)
         }
     }
 
@@ -134,7 +134,8 @@ impl SubjectStatus {
     }
 
     pub fn passed_exam_day<'a>(&self, timetable: &'a Timetable) -> Option<&'a Day> {
-        self.passed_exam_day_index().map(|i| &timetable.days()[i])
+        self.passed_exam_day_index()
+            .map(|i| &timetable.days()[i as usize])
     }
 
     #[allow(dead_code)]
