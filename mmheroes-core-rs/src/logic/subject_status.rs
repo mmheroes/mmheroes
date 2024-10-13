@@ -134,8 +134,7 @@ impl SubjectStatus {
     }
 
     pub fn passed_exam_day<'a>(&self, timetable: &'a Timetable) -> Option<&'a Day> {
-        self.passed_exam_day_index()
-            .map(|i| &timetable.days()[i as usize])
+        self.passed_exam_day_index().map(|i| timetable.day(i))
     }
 
     #[allow(dead_code)]

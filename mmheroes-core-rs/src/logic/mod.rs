@@ -391,7 +391,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
 
     fn run_classmate_routines(&mut self, state: &mut GameState) {
         let timetable = &state.timetable;
-        let day = &timetable.days()[state.current_day_index as usize];
+        let day = timetable.day(state.current_day_index);
         let time = state.current_time;
         let classmates = &mut state.classmates;
         for classmate in classmates.iter_mut() {

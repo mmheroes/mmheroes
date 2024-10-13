@@ -1,9 +1,13 @@
-use super::super::*;
+use crate::logic::{
+    timetable, CharismaLevel, Duration, GameScreen, GameState, InternalGameState,
+    Location, Subject, Time,
+};
+use crate::random;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum KuzmenkoInteraction {
     /// "Вы знаете, Климова можно найти в компьютерном классе 24-го мая с 10 по 11ч.."
-    AdditionalComputerScienceExam { day_index: usize },
+    AdditionalComputerScienceExam { day_index: u8 },
 
     /// "... отформатировать дискету так, чтобы 1ый сектор был 5ым ..."
     FormatFloppy,
@@ -44,48 +48,46 @@ pub enum KuzmenkoInteraction {
 
 use KuzmenkoInteraction::*;
 
-pub(in crate::logic) fn interact(
-    game: &mut InternalGameState,
-    mut state: GameState,
-) -> ActionVec {
+fn additional_exam_day_index(rng: &mut random::Rng, state: &mut GameState) -> Option<u8> {
     let tomorrow = state.current_day_index + 1;
     let saturday = 5;
-    let mut additional_exam_day_idx: Option<usize> = None;
-    if tomorrow <= saturday {
-        for i in (tomorrow..=saturday).rev() {
-            let day = &mut state.timetable.days_mut()[i as usize];
-            let has_enough_charisma =
-                state.player.charisma > game.rng.random(CharismaLevel(18));
-            let can_add_exam = day.exam(Subject::ComputerScience).is_none();
-            if has_enough_charisma && can_add_exam {
-                let exam_start_time = Time(10u8 + game.rng.random(5));
-                let exam_end_time = exam_start_time + Duration(1i8 + game.rng.random(2));
-                let additional_exam = timetable::Exam::new(
-                    Subject::ComputerScience,
-                    exam_start_time,
-                    exam_end_time,
-                    Location::ComputerClass,
-                );
-                day.add_exam(additional_exam);
-                additional_exam_day_idx = Some(i as usize);
-                break;
-            }
+    if tomorrow > saturday {
+        return None;
+    }
+    let mut additional_exam_day_idx: Option<u8> = None;
+    for i in (tomorrow..=saturday).rev() {
+        let day = state.timetable.day_mut(i);
+        let has_enough_charisma = state.player.charisma > rng.random(CharismaLevel(18));
+        let can_add_exam = day.exam(Subject::ComputerScience).is_none();
+        if has_enough_charisma && can_add_exam {
+            let exam_start_time = Time(10 + rng.random(5));
+            let exam_end_time = exam_start_time + Duration(1 + rng.random(2));
+            let additional_exam = timetable::Exam::new(
+                Subject::ComputerScience,
+                exam_start_time,
+                exam_end_time,
+                Location::ComputerClass,
+            );
+            day.add_exam(additional_exam);
+            additional_exam_day_idx = Some(i);
+            break;
         }
     }
+    additional_exam_day_idx
+}
 
-    let new_screen = match additional_exam_day_idx {
-        // Проверка на `state.additional_computer_science_exams() < 2` должна быть
-        // раньше — до модификации расписания.
-        // Иначе получается, что при достаточной харизме Кузьменко может
-        // добавить экзамены по информатике на каждый день.
-        // Баг в оригинальной реализации. Возможно, стоит исправить, но
-        // пока не буду.
+pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
+    let new_screen = match additional_exam_day_index(&mut g.rng, state) {
         Some(additional_exam_day_idx)
             if state.additional_computer_science_exams() < 2 =>
         {
+            // Баг в оригинальной реализации:
+            // экран AdditionalComputerScienceExam показывается максимум дважды,
+            // но в последующие разы экзамен тоже может добавиться в расписание,
+            // просто Кузьменко об этом не скажет.
             state.add_additional_computer_science_exam();
             GameScreen::KuzmenkoInteraction(
-                state,
+                state.clone(),
                 AdditionalComputerScienceExam {
                     day_index: additional_exam_day_idx,
                 },
@@ -106,10 +108,11 @@ pub(in crate::logic) fn interact(
                 GetYourselvesAnEmail,
                 TerekhovSenior,
             ];
-            GameScreen::KuzmenkoInteraction(state, *game.rng.random_element(&replies))
+            GameScreen::KuzmenkoInteraction(
+                state.clone(),
+                *g.rng.random_element(&replies),
+            )
         }
     };
-    game.set_screen(new_screen);
-
-    wait_for_any_key()
+    g.set_screen_and_wait_for_any_key(new_screen).await;
 }

@@ -34,7 +34,7 @@ impl GameState {
     }
 
     pub fn current_day(&self) -> &Day {
-        &self.timetable.days()[self.current_day_index as usize]
+        self.timetable.day(self.current_day_index)
     }
 
     pub fn current_time(&self) -> Time {

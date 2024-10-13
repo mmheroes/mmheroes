@@ -235,12 +235,16 @@ impl Timetable {
         Timetable { days }
     }
 
-    pub fn days(&self) -> &[Day] {
-        &self.days
+    pub fn day(&self, index: u8) -> &Day {
+        &self.days[index as usize]
     }
 
-    pub fn days_mut(&mut self) -> &mut [Day] {
-        &mut self.days
+    pub(in crate::logic) fn day_mut(&mut self, index: u8) -> &mut Day {
+        &mut self.days[index as usize]
+    }
+
+    pub fn days(&self) -> &[Day] {
+        &self.days
     }
 }
 

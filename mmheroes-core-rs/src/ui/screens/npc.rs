@@ -371,7 +371,9 @@ pub(in crate::ui) fn display_kuzmenko_interaction(
     write_colored!(White, r, "Кузьменко:");
     let reply = match interaction {
         AdditionalComputerScienceExam { day_index } => {
-            let exam = state.timetable().days()[day_index]
+            let exam = state
+                .timetable()
+                .day(day_index)
                 .exam(Subject::ComputerScience)
                 .unwrap();
             writeln_colored!(

@@ -121,7 +121,7 @@ macro_rules! initialize_game {
             $state,
             game,
             $high_scores,
-            TestRendererRequestConsumer::new(),
+            $crate::TestRendererRequestConsumer::new(),
         );
         let $game_ui = &mut game_ui;
         $game_ui.continue_game(mmheroes_core::ui::Input::Enter)
