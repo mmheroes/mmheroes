@@ -277,7 +277,7 @@ pub(super) async fn interact_with_classmate(
     classmate: Classmate,
 ) {
     let available_actions = match classmate {
-        Kolya => kolya::interact(g, state.clone()),
+        Kolya => return kolya::interact(g, state).await,
         Pasha => {
             return pasha::interact(g, state).await;
         }

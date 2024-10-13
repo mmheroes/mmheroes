@@ -234,7 +234,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 let state = state.clone();
                 let interaction = *interaction;
                 drop(borrowed_screen);
-                npc::kolya::proceed(self, state, action, interaction)
+                legacy::proceed_with_kolya(self, state, action, interaction)
             }
             PashaInteraction(state, interaction) => {
                 let state = state.clone();

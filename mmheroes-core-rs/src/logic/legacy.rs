@@ -7,6 +7,11 @@
 #![allow(deprecated)]
 
 use crate::logic::actions::{wait_for_any_key, ActionVec, HelpAction};
+use crate::logic::kolya::KolyaInteraction;
+use crate::logic::kolya::KolyaInteraction::{
+    Altruism, BrakeFluidBecauseRefused, BrakeFluidNoMoney, PromptOatTincture,
+    SolvedAlgebraProblemsForFree, SolvedAlgebraProblemsForOatTincture,
+};
 use crate::logic::pasha::PashaInteraction;
 use crate::logic::pasha::PashaInteraction::{Inspiration, Stipend};
 use crate::logic::scene_router::train;
@@ -16,6 +21,7 @@ use crate::logic::scene_router::train::TrainToPDMI::{
     PromptToBuyTickets,
 };
 use crate::logic::*;
+use crate::random::Rng;
 
 #[deprecated]
 pub(in crate::logic) fn start_game(g: &mut InternalGameState) -> ActionVec {
@@ -485,7 +491,7 @@ pub(in crate::logic) fn interact_with_classmate(
 ) -> ActionVec {
     use Classmate::*;
     match classmate {
-        Kolya => kolya::interact(game, state),
+        Kolya => interact_with_kolya(game, state),
         Pasha => interact_with_pasha(game, state),
         Diamond => todo!(),
         RAI => todo!(),
@@ -818,4 +824,125 @@ pub(in crate::logic) fn handle_mausoleum_rest(
     }
 
     game.hour_pass(state)
+}
+
+#[deprecated]
+pub(in crate::logic) fn interact_with_kolya(
+    game: &mut InternalGameState,
+    mut state: GameState,
+) -> ActionVec {
+    assert_eq!(state.location, Location::Mausoleum);
+    let player = &mut state.player;
+    let (available_actions, interaction) = if let Some(available_actions) =
+        kolya_maybe_solve_algebra_problems(&mut game.rng, player)
+    {
+        (available_actions, SolvedAlgebraProblemsForFree)
+    } else if player.money < Money::oat_tincture_cost() {
+        // "Коля достает тормозную жидкость, и вы распиваете еще по стакану."
+        (wait_for_any_key(), BrakeFluidNoMoney)
+    } else {
+        // "Знаешь, пиво, конечно, хорошо, но настойка овса - лучше!"
+        // "Заказать Коле настойку овса?"
+        (
+            ActionVec::from([Action::Yes, Action::No]),
+            PromptOatTincture,
+        )
+    };
+    game.set_screen(GameScreen::KolyaInteraction(state, interaction));
+    available_actions
+}
+
+#[deprecated]
+pub(in crate::logic) fn proceed_with_kolya(
+    game: &mut InternalGameState,
+    mut state: GameState,
+    action: Action,
+    interaction: KolyaInteraction,
+) -> ActionVec {
+    assert_eq!(state.location, Location::Mausoleum);
+    assert_matches!(&*game.screen(), GameScreen::KolyaInteraction(_, _));
+    let player = &mut state.player;
+    match action {
+        Action::AnyKey => {
+            let algebra_status =
+                player.status_for_subject_mut(Subject::AlgebraAndNumberTheory);
+            match interaction {
+                SolvedAlgebraProblemsForFree => {
+                    algebra_status.more_problems_solved(2);
+                    return game.hour_pass(state);
+                }
+                PromptOatTincture => unreachable!(),
+                SolvedAlgebraProblemsForOatTincture => {
+                    algebra_status.more_problems_solved(2);
+                    player.money -= Money::oat_tincture_cost();
+                    return game.hour_pass(state);
+                }
+                BrakeFluidNoMoney => {
+                    player.brain -= 1;
+                    if player.brain <= BrainLevel(0) {
+                        player.health = HealthLevel(0);
+                        player.cause_of_death = Some(CauseOfDeath::DrankTooMuch);
+                        return game_end(game, state);
+                    }
+                }
+                BrakeFluidBecauseRefused => {
+                    state.player.brain -= 1;
+                    // Забавно, что в этой ветке можно бесконечно пить тормозную
+                    // жидкость и никогда не спиться. Баг в оригинальной реализации.
+                }
+                Altruism => {
+                    player.money -= Money::oat_tincture_cost();
+                }
+            }
+            scene_router_run(game, &state)
+        }
+        Action::Yes => {
+            assert_eq!(interaction, PromptOatTincture);
+            if let Some(num_actions) =
+                kolya_maybe_solve_algebra_problems(&mut game.rng, player)
+            {
+                // "Коля решил тебе ещё 2 задачи по алгебре!"
+                game.set_screen(GameScreen::KolyaInteraction(
+                    state,
+                    SolvedAlgebraProblemsForOatTincture,
+                ));
+                num_actions
+            } else {
+                // "Твой альтруизм навсегда останется в памяти потомков."
+                game.set_screen(GameScreen::KolyaInteraction(state, Altruism));
+                wait_for_any_key()
+            }
+        }
+        Action::No => {
+            assert_eq!(interaction, PromptOatTincture);
+            // "Зря, ой, зря ..."
+            // "Коля достает тормозную жидкость, и вы распиваете еще по стакану."
+            game.set_screen(GameScreen::KolyaInteraction(
+                state,
+                BrakeFluidBecauseRefused,
+            ));
+            wait_for_any_key()
+        }
+        _ => illegal_action!(action),
+    }
+}
+
+/// Возвращает `Some`, если Коля может помочь решить задачи по алгебре,
+/// иначе — `None`.
+#[deprecated]
+fn kolya_maybe_solve_algebra_problems(
+    rng: &mut Rng,
+    player: &mut Player,
+) -> Option<ActionVec> {
+    use crate::logic::Subject::AlgebraAndNumberTheory;
+    let has_enough_charisma = player.charisma > rng.random(CharismaLevel(10));
+    let algebra = player.status_for_subject(AlgebraAndNumberTheory);
+    let problems_done = algebra.problems_done();
+    let required_problems = SUBJECTS[AlgebraAndNumberTheory].required_problems;
+    let has_at_least_2_remaining_problems = problems_done + 2 <= required_problems;
+    if has_enough_charisma && has_at_least_2_remaining_problems {
+        Some(wait_for_any_key())
+    } else {
+        None
+    }
 }
