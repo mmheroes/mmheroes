@@ -695,6 +695,7 @@ pub(in crate::logic) fn handle_computer_class_action(
     }
 }
 
+#[deprecated]
 pub(in crate::logic) fn surf_internet(
     game: &mut InternalGameState,
     state: GameState,
@@ -711,6 +712,7 @@ pub(in crate::logic) fn surf_internet(
     wait_for_any_key()
 }
 
+#[deprecated]
 pub(in crate::logic) fn proceed_with_internet(
     game: &mut InternalGameState,
     mut state: GameState,
