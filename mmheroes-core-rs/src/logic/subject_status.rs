@@ -5,25 +5,24 @@ use core::fmt::{Debug, Formatter, Result as FmtResult};
 pub struct SubjectStatus {
     pub(in crate::logic) knowledge: BrainLevel,
 
-    /// This is a packed representation of the `Subject`,
-    /// the number of solved problems, and the index of the day the exam was passed
-    /// (if any). Something like bitfields, just to save memory.
+    /// Компактное представления для `Subject`, количества сданных задач, дня,
+    /// когда зачёт был сдан (если был сдан).
     ///
-    /// The lowest 3 bits is the subject, then 4 bits denote the number of solved
-    /// problems, then another 3 bits denote the index of the day the exam was passed.
-    /// If the exam wasn't passed, this 3 bits are all set to 1.
-    /// The 10th bit determines if the player has lecture notes.
+    /// Младшие 3 бита — предмет, следующие 8 бит отвечают за количество сданных задач,
+    /// следующие 3 бита обозначают индекс дня, в который экзамен был сдан.
+    /// Если экзамен не был сдан, все три бита выставлены в единицу.
+    /// 14-й бит — флаг наличия конспекта по этом предмету.
     ///
     /// ```plain
-    ///     15                             0
-    ///      * * * * * * * * * * * * * * * *
-    ///               │ │     │       │     │
-    ///               └┬┴──┬──┴───┬───┴──┬──┘
-    /// has_lecture_notes  │      │      │
-    ///                    │      │      │
-    ///    passed_exam_day_index  │     subject
-    ///                           │
-    ///                    problems_done
+    ///             15                             0
+    ///              * * * * * * * * * * * * * * * *
+    ///               │ │     │               │     │
+    ///               └┬┴──┬──┴───────┬───────┴──┬──┘
+    /// has_lecture_notes  │          │          │
+    ///                    │          │          │
+    ///    passed_exam_day_index      │       subject
+    ///                               │
+    ///                         problems_done
     /// ```
     bits: u16,
 }
@@ -31,7 +30,7 @@ pub struct SubjectStatus {
 const SUBJECT_NBITS: u16 = 3;
 const SUBJECT_BITMASK: u16 = (1 << SUBJECT_NBITS) - 1;
 
-const PROBLEMS_DONE_NBITS: u16 = 4;
+const PROBLEMS_DONE_NBITS: u16 = 8;
 const MAX_PROBLEMS_DONE: u16 = (1 << PROBLEMS_DONE_NBITS) - 1;
 const PROBLEMS_DONE_BITMASK: u16 = MAX_PROBLEMS_DONE << SUBJECT_NBITS;
 
@@ -187,27 +186,27 @@ mod tests {
     fn test_new() {
         assert_eq!(
             SubjectStatus::new(Subject::AlgebraAndNumberTheory, BrainLevel(0)).bits,
-            0b0_111_0000_000
+            0b0_111_00000000_000
         );
         assert_eq!(
             SubjectStatus::new(Subject::Calculus, BrainLevel(0)).bits,
-            0b0_111_0000_001
+            0b0_111_00000000_001
         );
         assert_eq!(
             SubjectStatus::new(Subject::GeometryAndTopology, BrainLevel(0)).bits,
-            0b0_111_0000_010
+            0b0_111_00000000_010
         );
         assert_eq!(
             SubjectStatus::new(Subject::ComputerScience, BrainLevel(0)).bits,
-            0b0_111_0000_011
+            0b0_111_00000000_011
         );
         assert_eq!(
             SubjectStatus::new(Subject::English, BrainLevel(0)).bits,
-            0b0_111_0000_100
+            0b0_111_00000000_100
         );
         assert_eq!(
             SubjectStatus::new(Subject::PhysicalEducation, BrainLevel(0)).bits,
-            0b0_111_0000_101
+            0b0_111_00000000_101
         );
     }
 
@@ -246,26 +245,31 @@ mod tests {
 
         status.more_problems_solved(0);
         assert_eq!(status.problems_done(), 0);
-        assert_eq!(status.bits, 0b0_111_0000_001);
+        assert_eq!(status.bits, 0b0_111_00000000_001);
 
         status.more_problems_solved(1);
         assert_eq!(status.problems_done(), 1);
-        assert_eq!(status.bits, 0b0_111_0001_001);
+        assert_eq!(status.bits, 0b0_111_00000001_001);
 
         status.more_problems_solved(13);
         assert_eq!(status.problems_done(), 14);
-        assert_eq!(status.bits, 0b0_111_1110_001);
+        assert_eq!(status.bits, 0b0_111_00001110_001);
+
+        status.more_problems_solved(240);
+        assert_eq!(status.problems_done(), 254);
+        assert_eq!(status.bits, 0b0_111_11111110_001);
 
         status.more_problems_solved(1);
-        assert_eq!(status.problems_done(), 15);
-        assert_eq!(status.bits, 0b0_111_1111_001);
+        assert_eq!(status.problems_done(), 255);
+        assert_eq!(status.bits, 0b0_111_11111111_001);
     }
 
     #[test]
     #[should_panic]
     fn test_too_many_problems_done() {
         let mut status = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
-        status.more_problems_solved(16);
+        status.more_problems_solved(255);
+        status.more_problems_solved(1);
     }
 
     #[test]
@@ -275,14 +279,14 @@ mod tests {
 
         status1.set_passed_exam_day_index(0);
         assert_eq!(status1.passed_exam_day_index(), Some(0));
-        assert_eq!(status1.bits, 0b0_000_0000_001);
+        assert_eq!(status1.bits, 0b0_000_00000000_001);
 
         let mut status2 = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
         assert_eq!(status2.passed_exam_day_index(), None);
 
         status2.set_passed_exam_day_index(6);
         assert_eq!(status2.passed_exam_day_index(), Some(6));
-        assert_eq!(status2.bits, 0b0_110_0000_001);
+        assert_eq!(status2.bits, 0b0_110_00000000_001);
     }
 
     #[test]
@@ -307,7 +311,7 @@ mod tests {
 
         status.set_has_lecture_notes();
         assert!(status.has_lecture_notes());
-        assert_eq!(status.bits, 0b1_111_0000_001);
+        assert_eq!(status.bits, 0b1_111_00000000_001);
     }
 
     #[test]
