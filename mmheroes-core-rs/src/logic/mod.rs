@@ -252,7 +252,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 let state = state.clone();
                 let interaction = *interaction;
                 drop(borrowed_screen);
-                npc::sasha::proceed(self, state, action, interaction)
+                legacy::proceed_with_sasha(self, state, action, interaction)
             }
             KuzmenkoInteraction(state, _) => {
                 assert_eq!(action, Action::AnyKey);

@@ -1,5 +1,3 @@
-use super::super::*;
-
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum SashaInteraction {
     /// Выбор предмета, по которому попросить конспект у Саши
@@ -15,12 +13,14 @@ pub enum SashaInteraction {
     SorryGaveToSomeoneElse,
 }
 
+use crate::logic::actions::{illegal_action, ActionVec};
+use crate::logic::{
+    Action, CharismaLevel, GameScreen, GameState, InternalGameState, Location,
+    SUBJECTS_WITH_LECTURE_NOTES,
+};
 use SashaInteraction::*;
 
-pub(in crate::logic) fn interact(
-    game: &mut InternalGameState,
-    state: GameState,
-) -> ActionVec {
+pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
     assert_eq!(state.location, Location::PUNK);
     let mut available_actions = SUBJECTS_WITH_LECTURE_NOTES
         .into_iter()
@@ -33,23 +33,13 @@ pub(in crate::logic) fn interact(
         .map(Action::RequestLectureNotesFromSasha)
         .collect::<ActionVec>();
     available_actions.push(Action::DontNeedAnythingFromSasha);
-    game.set_screen(GameScreen::SashaInteraction(state, ChooseSubject));
-    available_actions
-}
-
-pub(in crate::logic) fn proceed(
-    game: &mut InternalGameState,
-    mut state: GameState,
-    action: Action,
-    interaction: SashaInteraction,
-) -> ActionVec {
-    assert_eq!(state.location, Location::PUNK);
-    assert_matches!(&*game.screen(), GameScreen::SashaInteraction(_, _));
-    match action {
+    g.set_screen_and_action_vec(
+        GameScreen::SashaInteraction(state.clone(), ChooseSubject),
+        available_actions,
+    );
+    let new_interaction = match g.wait_for_action().await {
         Action::RequestLectureNotesFromSasha(subject) => {
-            assert_eq!(interaction, ChooseSubject);
-            let new_interaction = if state.player.charisma
-                > CharismaLevel(game.rng.random(18))
+            if state.player.charisma > CharismaLevel(g.rng.random(18))
                 && state.sasha_has_lecture_notes(subject)
             {
                 state
@@ -60,19 +50,14 @@ pub(in crate::logic) fn proceed(
             } else {
                 state.set_sasha_has_lecture_notes(subject, false);
                 SorryGaveToSomeoneElse
-            };
-            game.set_screen(GameScreen::SashaInteraction(state, new_interaction));
-            wait_for_any_key()
+            }
         }
-        Action::DontNeedAnythingFromSasha => {
-            assert_eq!(interaction, ChooseSubject);
-            game.set_screen(GameScreen::SashaInteraction(state, SuitYourself));
-            wait_for_any_key()
-        }
-        Action::AnyKey => {
-            assert_ne!(interaction, ChooseSubject);
-            legacy::scene_router_run(game, &state)
-        }
-        _ => illegal_action!(action),
-    }
+        Action::DontNeedAnythingFromSasha => SuitYourself,
+        action => illegal_action!(action),
+    };
+    g.set_screen_and_wait_for_any_key(GameScreen::SashaInteraction(
+        state.clone(),
+        new_interaction,
+    ))
+    .await;
 }

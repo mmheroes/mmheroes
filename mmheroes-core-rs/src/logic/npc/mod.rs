@@ -285,7 +285,7 @@ pub(super) async fn interact_with_classmate(
         RAI => todo!("RAI"),
         Misha => todo!("Misha"),
         Serj => todo!("Serj"),
-        Sasha => sasha::interact(g, state.clone()),
+        Sasha => return sasha::interact(g, state).await,
         NiL => todo!("NiL"),
         Kuzmenko => kuzmenko::interact(g, state.clone()),
         DJuG => todo!("DJuG"),
