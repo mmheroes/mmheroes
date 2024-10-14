@@ -145,7 +145,7 @@ pub(in crate::ui) fn display_grisha_interaction(
         | HateLevTolstoy { .. }
         | DontGoToPDMI { .. }
         | NamesOfFreebieLovers { .. }
-        | LetsHaveABreakHere { .. }
+        | SitHereAndChill { .. }
         | NoNeedToTakeLectureNotes { .. }
         | CantBeExpelledInFourthYear { .. }
         | MechanicsHaveFreebie { .. } => {
@@ -263,7 +263,7 @@ pub(in crate::ui) fn display_grisha_interaction(
             drink_beer,
             hour_pass,
         ),
-        LetsHaveABreakHere {
+        SitHereAndChill {
             drink_beer,
             hour_pass,
         } => (

@@ -21,7 +21,7 @@ pub use subject_status::SubjectStatus;
 
 pub mod actions;
 pub use actions::Action;
-pub(in crate::logic) use actions::{illegal_action, wait_for_any_key, ActionVec};
+pub(in crate::logic) use actions::{illegal_action, ActionVec};
 
 pub mod cause_of_death;
 pub use cause_of_death::*;
@@ -32,7 +32,6 @@ pub use game_screen::*;
 pub mod scene_router;
 
 mod entry_point;
-mod legacy;
 mod misc;
 
 use crate::random;
@@ -113,13 +112,6 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         InternalGameState { state_holder, rng }
     }
 
-    fn screen(&self) -> Ref<'b, GameScreen> {
-        Ref::map(
-            self.state_holder.observable_state(),
-            ObservableGameState::screen,
-        )
-    }
-
     fn set_screen(&self, new_screen: GameScreen) {
         self.state_holder.observable_state.borrow_mut().screen = new_screen;
     }
@@ -152,168 +144,6 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
 
     fn set_available_actions<const N: usize>(&self, actions: [Action; N]) {
         self.set_available_actions_from_vec(ActionVec::from(actions))
-    }
-
-    #[deprecated]
-    fn perform_action(&mut self, action: Action) -> ActionVec {
-        use GameScreen::*;
-        let borrowed_screen = self.screen();
-        match &*borrowed_screen {
-            Terminal => panic!("Attempted to perform an action in terminal state"),
-            Intro => {
-                unreachable!()
-            }
-            InitialParameters => {
-                unreachable!()
-            }
-            Ding(player) => {
-                // TODO: Remove player
-                let state = GameState::new(
-                    player.clone(),
-                    timetable::Timetable::random(&mut self.rng),
-                    Location::Dorm,
-                );
-                drop(borrowed_screen);
-                legacy::view_timetable(self, state)
-            }
-            Timetable(state) => {
-                let state = state.clone();
-                drop(borrowed_screen);
-                legacy::scene_router_run(self, &state)
-            }
-            SceneRouter(state) => {
-                let state = state.clone();
-                drop(borrowed_screen);
-                legacy::handle_action_sync(self, state, action)
-            }
-            Study(state) => {
-                let state = state.clone();
-                drop(borrowed_screen);
-                legacy::choose_use_lecture_notes(self, state, action)
-            }
-            PromptUseLectureNotes(state) => {
-                let state = state.clone();
-                drop(borrowed_screen);
-                let (subject, use_lecture_notes) = match action {
-                    Action::UseLectureNotes(subject) => (subject, true),
-                    Action::DontUseLectureNotes(subject) => (subject, false),
-                    _ => illegal_action!(action),
-                };
-                legacy::study(self, state, subject, use_lecture_notes)
-            }
-            Sleep(state) => {
-                let state = state.clone();
-                drop(borrowed_screen);
-                legacy::handle_sleeping(self, state, action)
-            }
-            HighScores(state) => match action {
-                Action::AnyKey => {
-                    let state = state.clone();
-                    drop(borrowed_screen);
-                    legacy::scene_router_run(self, &state)
-                }
-                _ => illegal_action!(action),
-            },
-            RestInMausoleum(state) => {
-                let state = state.clone();
-                drop(borrowed_screen);
-                legacy::handle_mausoleum_rest(self, state, action)
-            }
-            CafePUNK(state) => {
-                let state = state.clone();
-                drop(borrowed_screen);
-                legacy::handle_cafe_punk_action(self, state, action)
-            }
-            TrainToPDMI(state, interaction) => {
-                let state = state.clone();
-                let interaction = *interaction;
-                drop(borrowed_screen);
-                legacy::proceed_with_train(self, state, action, interaction)
-            }
-            KolyaInteraction(state, interaction) => {
-                let state = state.clone();
-                let interaction = *interaction;
-                drop(borrowed_screen);
-                legacy::proceed_with_kolya(self, state, action, interaction)
-            }
-            PashaInteraction(state, interaction) => {
-                let state = state.clone();
-                let interaction = *interaction;
-                drop(borrowed_screen);
-                legacy::proceed_with_pasha(self, state, action, interaction)
-            }
-            GrishaInteraction(state, interaction) => {
-                let state = state.clone();
-                let interaction = *interaction;
-                drop(borrowed_screen);
-                npc::grisha::proceed(self, state, action, interaction)
-            }
-            SashaInteraction(state, interaction) => {
-                let state = state.clone();
-                let interaction = *interaction;
-                drop(borrowed_screen);
-                legacy::proceed_with_sasha(self, state, action, interaction)
-            }
-            KuzmenkoInteraction(state, _) => {
-                assert_eq!(action, Action::AnyKey);
-                let state = state.clone();
-                drop(borrowed_screen);
-                legacy::scene_router_run(self, &state)
-            }
-            GoToProfessor(state) => match action {
-                Action::Exam(subject) => {
-                    let state = state.clone();
-                    drop(borrowed_screen);
-                    self.enter_exam(state, subject)
-                }
-                Action::DontGoToProfessor => {
-                    let state = state.clone();
-                    drop(borrowed_screen);
-                    legacy::scene_router_run(self, &state)
-                }
-                _ => illegal_action!(action),
-            },
-            Exam(_state, _subject) => {
-                todo!()
-            }
-            SurfInternet(state, found_program) => {
-                let state = state.clone();
-                let found_program = *found_program;
-                drop(borrowed_screen);
-                legacy::proceed_with_internet(self, state, action, found_program)
-            }
-            IAmDone(_) => {
-                unreachable!()
-            }
-            GameEnd(_) => {
-                drop(borrowed_screen);
-                legacy::wanna_try_again(self)
-            }
-            WannaTryAgain => {
-                drop(borrowed_screen);
-                legacy::handle_wanna_try_again(self, action)
-            }
-            Disclaimer => {
-                drop(borrowed_screen);
-                self.set_screen(Terminal);
-                ActionVec::new()
-            }
-            WhatToDo(state)
-            | AboutScreen(state)
-            | WhereToGoAndWhy(state)
-            | AboutProfessors(state)
-            | AboutCharacters(state)
-            | AboutThisProgram(state) => {
-                let state = state.clone();
-                drop(borrowed_screen);
-                match action {
-                    Action::Help(help_action) => {
-                        legacy::handle_what_to_do(self, state, help_action)
-                    }
-                    _ => illegal_action!(action),
-                }
-            }
-        }
     }
 
     fn initialize_player(&mut self, style: actions::PlayStyle) -> Player {
@@ -354,41 +184,6 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         })
     }
 
-    #[deprecated]
-    fn enter_exam(&mut self, _state: GameState, _subject: Subject) -> ActionVec {
-        todo!()
-    }
-
-    #[deprecated]
-    fn decrease_health<F: FnOnce(&mut InternalGameState, &mut GameState) -> ActionVec>(
-        &mut self,
-        delta: HealthLevel,
-        mut state: GameState,
-        cause_of_death: CauseOfDeath,
-        if_alive: F,
-    ) -> ActionVec {
-        if state.player.health <= delta {
-            state.player.cause_of_death = Some(cause_of_death);
-            legacy::game_end(self, state)
-        } else {
-            state.player.health -= delta;
-            if_alive(self, &mut state)
-        }
-    }
-
-    #[deprecated]
-    fn midnight(&mut self, state: GameState) -> ActionVec {
-        match state.location {
-            Location::PUNK => todo!("sub_1E907"),
-            Location::PDMI => todo!("sub_1E7F8"),
-            Location::ComputerClass => {
-                unreachable!("Компьютерный класс уже должен быть закрыт в полночь!")
-            }
-            Location::Dorm => legacy::go_to_sleep(self, state),
-            Location::Mausoleum => todo!("sub_1E993"),
-        }
-    }
-
     fn run_classmate_routines(&mut self, state: &mut GameState) {
         let timetable = &state.timetable;
         let day = timetable.day(state.current_day_index);
@@ -397,28 +192,6 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         for classmate in classmates.iter_mut() {
             classmate.update(&mut self.rng, state.location, day, time);
         }
-    }
-
-    #[deprecated]
-    fn hour_pass(&mut self, mut state: GameState) -> ActionVec {
-        // TODO: Lot of stuff going on here
-
-        // TODO: Поменять эти строки местами и не забыть отредактировать метод
-        // Time::is_between_9_and_19()!
-        self.run_classmate_routines(&mut state);
-        state.current_time += Duration(1);
-
-        if state.player.charisma <= CharismaLevel(0) {
-            state.player.health = HealthLevel(0);
-        }
-
-        if state.current_time.is_midnight() {
-            state.current_day_index += 1;
-            state.current_time = Time(0);
-            return self.midnight(state);
-        }
-
-        legacy::scene_router_run(self, &state)
     }
 
     async fn wait_for_action(&self) -> Action {

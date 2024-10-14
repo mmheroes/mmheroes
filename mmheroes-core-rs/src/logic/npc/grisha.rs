@@ -1,4 +1,8 @@
-use super::super::*;
+use crate::logic::actions::illegal_action;
+use crate::logic::{
+    misc, Action, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
+    HealthLevel, InternalGameState, Location,
+};
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum GrishaInteraction {
@@ -49,7 +53,7 @@ pub enum GrishaInteraction {
     NamesOfFreebieLovers { drink_beer: bool, hour_pass: bool },
 
     /// "Правильно, лучше посидим здесь и оттянемся!"
-    LetsHaveABreakHere { drink_beer: bool, hour_pass: bool },
+    SitHereAndChill { drink_beer: bool, hour_pass: bool },
 
     /// "Конспектировать ничего не надо. В мире есть ксероксы!"
     NoNeedToTakeLectureNotes { drink_beer: bool, hour_pass: bool },
@@ -63,27 +67,46 @@ pub enum GrishaInteraction {
 
 use GrishaInteraction::*;
 
-pub(in crate::logic) fn interact(
-    game: &mut InternalGameState,
-    state: GameState,
-) -> ActionVec {
+pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
     assert_eq!(state.location, Location::Mausoleum);
-    let player = &state.player;
-    let has_enough_charisma = player.charisma > game.rng.random(CharismaLevel(20));
-    let (actions, interaction) = if !player.is_employed_at_terkom() && has_enough_charisma
-    {
-        (
-            ActionVec::from([
+    let mut has_enough_charisma =
+        || state.player.charisma > g.rng.random(CharismaLevel(20));
+    if !state.player.is_employed_at_terkom() && has_enough_charisma() {
+        g.set_screen_and_available_actions(
+            GameScreen::GrishaInteraction(state.clone(), PromptEmploymentAtTerkom),
+            [
                 Action::AcceptEmploymentAtTerkom,
                 Action::DeclineEmploymentAtTerkom,
-            ]),
-            PromptEmploymentAtTerkom,
-        )
-    } else if !player.has_internet() && has_enough_charisma {
-        (wait_for_any_key(), ProxyAddress)
+            ],
+        );
+        match g.wait_for_action().await {
+            Action::AcceptEmploymentAtTerkom => {
+                g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(
+                    state.clone(),
+                    CongratulationsYouAreNowEmployed,
+                ))
+                .await;
+                state.player.set_employed_at_terkom();
+            }
+            Action::DeclineEmploymentAtTerkom => {
+                g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(
+                    state.clone(),
+                    AsYouWantButDontOverstudy,
+                ))
+                .await;
+            }
+            action => illegal_action!(action),
+        }
+    } else if !state.player.has_internet() && has_enough_charisma() {
+        g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(
+            state.clone(),
+            ProxyAddress,
+        ))
+        .await;
+        state.player.set_has_internet();
     } else {
-        let drink_beer = game.rng.random(3) > 0;
-        let hour_pass = game.rng.roll_dice(3);
+        let drink_beer = g.rng.random(3) > 0;
+        let hour_pass = g.rng.roll_dice(3);
         let replies = [
             WantFreebie {
                 drink_beer,
@@ -129,7 +152,7 @@ pub(in crate::logic) fn interact(
                 drink_beer,
                 hour_pass,
             },
-            LetsHaveABreakHere {
+            SitHereAndChill {
                 drink_beer,
                 hour_pass,
             },
@@ -146,126 +169,22 @@ pub(in crate::logic) fn interact(
                 hour_pass,
             },
         ];
-        (wait_for_any_key(), *game.rng.random_element(&replies[..]))
-    };
-    game.set_screen(GameScreen::GrishaInteraction(state, interaction));
-    actions
-}
-
-pub(in crate::logic) fn proceed(
-    game: &mut InternalGameState,
-    mut state: GameState,
-    action: Action,
-    interaction: GrishaInteraction,
-) -> ActionVec {
-    assert_matches!(&*game.screen(), GameScreen::GrishaInteraction(_, _));
-    let player = &mut state.player;
-    match action {
-        Action::AnyKey => match interaction {
-            PromptEmploymentAtTerkom => unreachable!(),
-            CongratulationsYouAreNowEmployed | AsYouWantButDontOverstudy => {
-                legacy::scene_router_run(game, &state)
+        let reply = *g.rng.random_element(&replies);
+        g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(
+            state.clone(),
+            reply,
+        ))
+        .await;
+        if drink_beer {
+            state.player.brain -= g.rng.random(2);
+            if state.player.brain <= BrainLevel(0) {
+                state.player.health = HealthLevel(0);
+                state.player.cause_of_death = Some(CauseOfDeath::DrankTooMuchBeer);
             }
-            ProxyAddress => {
-                assert!(!player.has_internet());
-                player.set_has_internet();
-                legacy::scene_router_run(game, &state)
-            }
-            WantFreebie {
-                drink_beer,
-                hour_pass,
-            }
-            | FreebieComeToMe {
-                drink_beer,
-                hour_pass,
-            }
-            | FreebieExists {
-                drink_beer,
-                hour_pass,
-            }
-            | LetsOrganizeFreebieLoversClub {
-                drink_beer,
-                hour_pass,
-            }
-            | NoNeedToStudyToGetDiploma {
-                drink_beer,
-                hour_pass,
-            }
-            | YouStudiedDidItHelp {
-                drink_beer,
-                hour_pass,
-            }
-            | ThirdYearStudentsDontAttendLectures {
-                drink_beer,
-                hour_pass,
-            }
-            | TakeExampleFromKolya {
-                drink_beer,
-                hour_pass,
-            }
-            | HateLevTolstoy {
-                drink_beer,
-                hour_pass,
-            }
-            | DontGoToPDMI {
-                drink_beer,
-                hour_pass,
-            }
-            | NamesOfFreebieLovers {
-                drink_beer,
-                hour_pass,
-            }
-            | LetsHaveABreakHere {
-                drink_beer,
-                hour_pass,
-            }
-            | NoNeedToTakeLectureNotes {
-                drink_beer,
-                hour_pass,
-            }
-            | CantBeExpelledInFourthYear {
-                drink_beer,
-                hour_pass,
-            }
-            | MechanicsHaveFreebie {
-                drink_beer,
-                hour_pass,
-            } => {
-                if drink_beer {
-                    player.brain -= game.rng.random(2);
-                    if player.brain <= BrainLevel(0) {
-                        player.health = HealthLevel(0);
-                        player.cause_of_death = Some(CauseOfDeath::DrankTooMuchBeer);
-                        return legacy::game_end(game, state);
-                    }
-                    player.charisma += game.rng.random(2);
-                }
-                if hour_pass {
-                    return game.hour_pass(state);
-                }
-
-                legacy::scene_router_run(game, &state)
-            }
-        },
-        Action::AcceptEmploymentAtTerkom => {
-            assert_eq!(interaction, PromptEmploymentAtTerkom);
-            assert!(!player.is_employed_at_terkom());
-            player.set_employed_at_terkom();
-            game.set_screen(GameScreen::GrishaInteraction(
-                state,
-                CongratulationsYouAreNowEmployed,
-            ));
-            wait_for_any_key()
+            state.player.charisma += g.rng.random(2);
         }
-        Action::DeclineEmploymentAtTerkom => {
-            assert_eq!(interaction, PromptEmploymentAtTerkom);
-            assert!(!player.is_employed_at_terkom());
-            game.set_screen(GameScreen::GrishaInteraction(
-                state,
-                AsYouWantButDontOverstudy,
-            ));
-            wait_for_any_key()
+        if hour_pass {
+            misc::hour_pass(g, state).await;
         }
-        _ => illegal_action!(action),
     }
 }

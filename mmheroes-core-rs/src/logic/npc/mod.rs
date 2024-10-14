@@ -276,31 +276,18 @@ pub(super) async fn interact_with_classmate(
     state: &mut GameState,
     classmate: Classmate,
 ) {
-    let available_actions = match classmate {
-        Kolya => return kolya::interact(g, state).await,
-        Pasha => {
-            return pasha::interact(g, state).await;
-        }
+    match classmate {
+        Kolya => kolya::interact(g, state).await,
+        Pasha => pasha::interact(g, state).await,
         Diamond => todo!("Diamond"),
         RAI => todo!("RAI"),
         Misha => todo!("Misha"),
         Serj => todo!("Serj"),
-        Sasha => return sasha::interact(g, state).await,
+        Sasha => sasha::interact(g, state).await,
         NiL => todo!("NiL"),
-        Kuzmenko => return kuzmenko::interact(g, state).await,
+        Kuzmenko => kuzmenko::interact(g, state).await,
         DJuG => todo!("DJuG"),
         Andrew => todo!("Andrew"),
-        Grisha => grisha::interact(g, state.clone()),
+        Grisha => grisha::interact(g, state).await,
     };
-    g.set_available_actions_from_vec(available_actions);
-
-    // LEGACY
-    loop {
-        let action = g.wait_for_action().await;
-        if action == Action::IAmDone {
-            todo!()
-        }
-        let new_actions = g.perform_action(action);
-        g.set_available_actions_from_vec(new_actions);
-    }
 }

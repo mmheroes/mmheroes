@@ -85,11 +85,6 @@ pub enum Action {
 
 pub(in crate::logic) type ActionVec = TinyVec<Action, 16>;
 
-#[deprecated]
-pub(in crate::logic) fn wait_for_any_key() -> ActionVec {
-    ActionVec::from([Action::AnyKey])
-}
-
 macro_rules! illegal_action {
     ($action:expr) => {
         panic!("Illegal action: {:?}", $action)
