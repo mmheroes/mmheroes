@@ -7,7 +7,7 @@ pub(super) async fn go_to_professor(
 ) {
     let mut available_actions = state
         .current_day()
-        .current_exams(state.location, state.current_time)
+        .current_exams(state.location(), state.current_time())
         .map(|exam| Action::Exam(exam.subject()))
         .collect::<ActionVec>();
     available_actions.push(Action::DontGoToProfessor);

@@ -5,10 +5,10 @@ pub(in crate::logic) async fn handle_router_action(
     state: &mut GameState,
     action: Action,
 ) {
-    assert_eq!(state.location, Location::Mausoleum);
+    assert_eq!(state.location(), Location::Mausoleum);
     match action {
         Action::GoFromMausoleumToPunk => {
-            state.location = Location::PUNK;
+            state.set_location(Location::PUNK);
             misc::decrease_health(
                 state,
                 HealthLevel::location_change_large_penalty(),
@@ -17,7 +17,7 @@ pub(in crate::logic) async fn handle_router_action(
         }
         Action::GoToPDMI => train::go_to_pdmi(g, state).await,
         Action::GoFromMausoleumToDorm => {
-            state.location = Location::Dorm;
+            state.set_location(Location::Dorm);
         }
         Action::Rest => rest(g, state).await,
         Action::InteractWithClassmate(classmate) => {

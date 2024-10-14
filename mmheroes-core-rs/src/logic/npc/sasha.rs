@@ -21,7 +21,7 @@ use crate::logic::{
 use SashaInteraction::*;
 
 pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
-    assert_eq!(state.location, Location::PUNK);
+    assert_eq!(state.location(), Location::PUNK);
     let mut available_actions = SUBJECTS_WITH_LECTURE_NOTES
         .into_iter()
         .filter(|subject| {

@@ -11,7 +11,7 @@ use super::*;
 
 pub(super) fn available_actions(state: &GameState) -> ActionVec {
     // TODO: assert that no exam is in progress
-    let location = state.location;
+    let location = state.location();
 
     let add_classmates = |available_actions: &mut ActionVec| {
         for classmate_info in state.classmates.filter_by_location(location) {
@@ -40,10 +40,10 @@ pub(super) fn available_actions(state: &GameState) -> ActionVec {
                 Action::GoToPDMI,
                 Action::GoToMausoleum,
             ]);
-            if state.current_time < Time::computer_class_closing() {
+            if state.current_time() < Time::computer_class_closing() {
                 available_actions.push(Action::GoToComputerClass);
             }
-            if state.current_time.is_cafe_open() {
+            if state.current_time().is_cafe_open() {
                 available_actions.push(Action::GoToCafePUNK);
             }
             add_classmates(&mut available_actions);
@@ -79,14 +79,14 @@ pub(super) fn available_actions(state: &GameState) -> ActionVec {
             Action::WhatToDo,
         ]),
         Location::ComputerClass => {
-            if state.current_time > Time::computer_class_closing() {
+            if state.current_time() > Time::computer_class_closing() {
                 todo!("Класс закрывается. Пошли домой!")
             }
             let mut available_actions = ActionVec::new();
             if location.is_exam_here_now(
                 Subject::ComputerScience,
                 state.current_day(),
-                state.current_time,
+                state.current_time(),
             ) {
                 available_actions.push(Action::Exam(Subject::ComputerScience));
             }

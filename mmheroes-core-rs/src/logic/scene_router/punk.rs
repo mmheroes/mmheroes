@@ -5,7 +5,7 @@ pub(super) async fn handle_router_action(
     state: &mut GameState,
     action: Action,
 ) {
-    assert_eq!(state.location, Location::PUNK);
+    assert_eq!(state.location(), Location::PUNK);
     match action {
         Action::GoToProfessor => exams::go_to_professor(g, state).await,
         Action::LookAtBaobab => {
@@ -13,11 +13,11 @@ pub(super) async fn handle_router_action(
                 .await;
         }
         Action::GoFromPunkToDorm => {
-            state.location = Location::Dorm;
+            state.set_location(Location::Dorm);
         }
         Action::GoToPDMI => train::go_to_pdmi(g, state).await,
         Action::GoToMausoleum => {
-            state.location = Location::Mausoleum;
+            state.set_location(Location::Mausoleum);
             misc::decrease_health(
                 state,
                 HealthLevel::location_change_large_penalty(),
@@ -25,8 +25,8 @@ pub(super) async fn handle_router_action(
             )
         }
         Action::GoToComputerClass => {
-            assert!(state.current_time < Time::computer_class_closing());
-            state.location = Location::ComputerClass;
+            assert!(state.current_time() < Time::computer_class_closing());
+            state.set_location(Location::ComputerClass);
             misc::decrease_health(
                 state,
                 HealthLevel::location_change_small_penalty(),
@@ -34,7 +34,7 @@ pub(super) async fn handle_router_action(
             )
         }
         Action::GoToCafePUNK => {
-            assert!(state.current_time.is_cafe_open());
+            assert!(state.current_time().is_cafe_open());
             go_to_cafe(g, state).await
         }
         Action::InteractWithClassmate(classmate) => {

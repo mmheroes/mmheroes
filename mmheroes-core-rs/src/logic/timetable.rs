@@ -19,6 +19,14 @@ pub const WORKDAY_BEGINS: Time = Time(9);
 pub const WORKDAY_ENDS: Time = Time(18);
 
 impl Time {
+    pub(super) const fn from_bits(bits: u8) -> Time {
+        Time(bits)
+    }
+
+    pub(super) const fn into_bits(self) -> u8 {
+        self.0
+    }
+
     pub fn is_midnight(self) -> bool {
         self.0 == 0 || self.0 == 24
     }

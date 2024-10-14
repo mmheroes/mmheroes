@@ -14,6 +14,7 @@ edition = "2021"
 unicode-segmentation = "1.12.0"
 assert_matches = "1.5.0"
 bitflags = "2.6.0"
+bitfield-struct = "0.9.1"
 
 [features]
 default = ["std"]

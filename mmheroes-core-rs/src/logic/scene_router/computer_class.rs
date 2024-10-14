@@ -5,14 +5,14 @@ pub(super) async fn handle_router_action(
     state: &mut GameState,
     action: Action,
 ) {
-    assert_eq!(state.location, Location::ComputerClass);
+    assert_eq!(state.location(), Location::ComputerClass);
     match action {
         Action::Exam(Subject::ComputerScience) => todo!("Экзамен по информатике"),
         Action::GoFromPunkToDorm => {
-            state.location = Location::Dorm;
+            state.set_location(Location::Dorm);
         }
         Action::LeaveComputerClass => {
-            state.location = Location::PUNK;
+            state.set_location(Location::PUNK);
             misc::decrease_health(
                 state,
                 HealthLevel::location_change_small_penalty(),
@@ -21,7 +21,7 @@ pub(super) async fn handle_router_action(
         }
         Action::GoToPDMI => train::go_to_pdmi(g, state).await,
         Action::GoToMausoleum => {
-            state.location = Location::Mausoleum;
+            state.set_location(Location::Mausoleum);
             misc::decrease_health(
                 state,
                 HealthLevel::location_change_small_penalty(),

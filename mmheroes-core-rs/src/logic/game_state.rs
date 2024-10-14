@@ -1,44 +1,78 @@
 use super::*;
+use bitfield_struct::bitfield;
 use core::fmt::{Debug, Formatter, Result as FmtResult};
+
+#[bitfield(u16, debug = false, default = false)]
+struct GameStateBits {
+    #[bits(3)]
+    current_day_index: u8,
+
+    #[bits(5, default = Time(8))]
+    current_time: Time,
+
+    #[bits(2)]
+    additional_computer_science_exams: u8,
+
+    #[bits(1, default = true)]
+    sasha_has_algebra_lecture_notes: bool,
+
+    #[bits(1, default = true)]
+    sasha_has_calculus_lecture_notes: bool,
+
+    #[bits(1, default = true)]
+    sasha_has_geometry_lecture_notes: bool,
+
+    #[bits(3, default = Location::Dorm)]
+    location: Location,
+}
 
 #[derive(Clone)]
 pub struct GameState {
     pub(in crate::logic) player: Player,
-    pub(in crate::logic) current_day_index: u8,
-    pub(in crate::logic) current_time: Time,
-    pub(in crate::logic) timetable: timetable::Timetable,
-    pub(in crate::logic) location: Location,
+    pub(in crate::logic) timetable: Timetable,
     pub(in crate::logic) classmates: Classmates,
 
-    /// Младшие 5 бит — количество дополнительных экзаменов по информатике
-    /// Старшие 3 бита — флаги о наличии у Саши конспектов по АиТЧ,
-    /// матанализу и геометрии.
-    bits: u8,
+    bits: GameStateBits,
 }
 
 impl GameState {
     pub(in crate::logic) fn new(
         player: Player,
-        timetable: timetable::Timetable,
+        timetable: Timetable,
         location: Location,
     ) -> GameState {
         GameState {
             player,
-            current_day_index: 0,
-            current_time: Time(8),
             timetable,
-            location,
             classmates: Classmates::new(),
-            bits: 0b111_00000,
+            bits: GameStateBits::new().with_location(location),
         }
     }
 
+    pub(in crate::logic) fn current_day_index(&self) -> u8 {
+        self.bits.current_day_index()
+    }
+
     pub fn current_day(&self) -> &Day {
-        self.timetable.day(self.current_day_index)
+        self.timetable.day(self.current_day_index())
+    }
+
+    pub(in crate::logic) fn next_day(&mut self) {
+        self.bits
+            .set_current_day_index(self.bits.current_day_index() + 1);
     }
 
     pub fn current_time(&self) -> Time {
-        self.current_time
+        self.bits.current_time()
+    }
+
+    pub(in crate::logic) fn midnight(&mut self) {
+        self.bits.set_current_time(Time(0));
+    }
+
+    pub(in crate::logic) fn next_hour(&mut self) {
+        self.bits
+            .set_current_time(self.bits.current_time() + Duration(1));
     }
 
     pub fn player(&self) -> &Player {
@@ -50,7 +84,11 @@ impl GameState {
     }
 
     pub fn location(&self) -> Location {
-        self.location
+        self.bits.location()
+    }
+
+    pub(in crate::logic) fn set_location(&mut self, location: Location) {
+        self.bits.set_location(location);
     }
 
     pub fn classmates(&self) -> &Classmates {
@@ -58,22 +96,24 @@ impl GameState {
     }
 
     pub(in crate::logic) fn additional_computer_science_exams(&self) -> u8 {
-        self.bits & 0b000_11111
+        self.bits.additional_computer_science_exams()
     }
 
     pub(in crate::logic) fn add_additional_computer_science_exam(&mut self) {
-        let old_count = self.additional_computer_science_exams();
-        assert!(
-            old_count <= 31,
-            "additional_computer_science_exams overflow"
+        self.bits.set_additional_computer_science_exams(
+            self.bits.additional_computer_science_exams() + 1,
         );
-        self.bits &= 0b111_00000;
-        self.bits |= old_count + 1;
     }
 
     pub(in crate::logic) fn sasha_has_lecture_notes(&self, subject: Subject) -> bool {
-        assert!(SUBJECTS_WITH_LECTURE_NOTES.contains(&subject));
-        (self.bits >> (5 + subject as u8)) & 1 != 0
+        match subject {
+            Subject::AlgebraAndNumberTheory => {
+                self.bits.sasha_has_algebra_lecture_notes()
+            }
+            Subject::Calculus => self.bits.sasha_has_calculus_lecture_notes(),
+            Subject::GeometryAndTopology => self.bits.sasha_has_geometry_lecture_notes(),
+            _ => panic!("No lecture notes for this subject"),
+        }
     }
 
     pub(in crate::logic) fn set_sasha_has_lecture_notes(
@@ -81,11 +121,15 @@ impl GameState {
         subject: Subject,
         value: bool,
     ) {
-        assert!(SUBJECTS_WITH_LECTURE_NOTES.contains(&subject));
-        if value {
-            self.bits |= 1 << (5 + subject as u8)
-        } else {
-            self.bits &= !(1 << (5 + subject as u8))
+        match subject {
+            Subject::AlgebraAndNumberTheory => {
+                self.bits.set_sasha_has_algebra_lecture_notes(value)
+            }
+            Subject::Calculus => self.bits.set_sasha_has_calculus_lecture_notes(value),
+            Subject::GeometryAndTopology => {
+                self.bits.set_sasha_has_geometry_lecture_notes(value)
+            }
+            _ => panic!("No lecture notes for this subject"),
         }
     }
 }
@@ -106,10 +150,10 @@ impl Debug for GameState {
 
         f.debug_struct("GameState")
             .field("player", &self.player)
-            .field("current_day_index", &self.current_day_index)
-            .field("current_time", &self.current_time)
+            .field("current_day_index", &self.bits.current_day_index())
+            .field("current_time", &self.current_time())
             .field("timetable", &self.timetable)
-            .field("location", &self.location)
+            .field("location", &self.location())
             .field("classmates", &self.classmates)
             .field(
                 "additional_computer_science_exams",
@@ -130,6 +174,21 @@ pub enum Location {
 }
 
 impl Location {
+    const fn from_bits(bits: u8) -> Location {
+        match bits {
+            1 => Location::PUNK,
+            2 => Location::PDMI,
+            3 => Location::ComputerClass,
+            4 => Location::Dorm,
+            5 => Location::Mausoleum,
+            _ => panic!("Invalid location"),
+        }
+    }
+
+    const fn into_bits(self) -> u8 {
+        self as _
+    }
+
     pub fn is_exam_here_on_day(self, subject: Subject, today: &Day) -> bool {
         today
             .exam(subject)
@@ -160,25 +219,41 @@ mod tests {
         );
         let mut state =
             GameState::new(player, Timetable::random(&mut rng), Location::Dorm);
-        assert_eq!(state.bits, 0b111_00000);
+        assert_eq!(state.bits.0, 0b100_111_00_01000_000);
         assert!(state.sasha_has_lecture_notes(Subject::AlgebraAndNumberTheory));
         assert!(state.sasha_has_lecture_notes(Subject::Calculus));
         assert!(state.sasha_has_lecture_notes(Subject::GeometryAndTopology));
 
         state.set_sasha_has_lecture_notes(Subject::Calculus, false);
 
-        assert_eq!(state.bits, 0b101_00000);
+        assert_eq!(state.bits.0, 0b100_101_00_01000_000);
         assert!(state.sasha_has_lecture_notes(Subject::AlgebraAndNumberTheory));
         assert!(!state.sasha_has_lecture_notes(Subject::Calculus));
         assert!(state.sasha_has_lecture_notes(Subject::GeometryAndTopology));
 
         assert_eq!(state.additional_computer_science_exams(), 0);
         state.add_additional_computer_science_exam();
-        assert_eq!(state.bits, 0b101_00001);
+        assert_eq!(state.bits.0, 0b100_101_01_01000_000);
         assert_eq!(state.additional_computer_science_exams(), 1);
 
         state.add_additional_computer_science_exam();
-        assert_eq!(state.bits, 0b101_00010);
+        assert_eq!(state.bits.0, 0b100_101_10_01000_000);
         assert_eq!(state.additional_computer_science_exams(), 2);
+
+        state.next_day();
+        assert_eq!(state.bits.0, 0b100_101_10_01000_001);
+        assert_eq!(state.current_day_index(), 1);
+
+        state.next_hour();
+        assert_eq!(state.bits.0, 0b100_101_10_01001_001);
+        assert_eq!(state.current_time(), Time(9));
+
+        state.midnight();
+        assert_eq!(state.bits.0, 0b100_101_10_00000_001);
+        assert_eq!(state.current_time(), Time(0));
+
+        state.set_location(Location::PUNK);
+        assert_eq!(state.bits.0, 0b001_101_10_00000_001);
+        assert_eq!(state.location(), Location::PUNK);
     }
 }

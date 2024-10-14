@@ -5,7 +5,7 @@ pub(in crate::logic) async fn handle_router_action(
     state: &mut GameState,
     action: Action,
 ) {
-    assert_eq!(state.location, Location::PDMI);
+    assert_eq!(state.location(), Location::PDMI);
     match action {
         Action::GoToProfessor => exams::go_to_professor(g, state).await,
         Action::LookAtBulletinBoard => {

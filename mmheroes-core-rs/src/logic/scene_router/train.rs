@@ -22,8 +22,8 @@ pub enum TrainToPDMI {
 }
 
 pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameState) {
-    assert_ne!(state.location, Location::PDMI);
-    if state.current_time > Time(20) {
+    assert_ne!(state.location(), Location::PDMI);
+    if state.current_time() > Time(20) {
         g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
             state.clone(),
             NoPointToGoToPDMI,
@@ -34,7 +34,7 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
 
     let health_penalty = HealthLevel(g.rng.random(10));
     misc::decrease_health(state, health_penalty, CauseOfDeath::CorpseFoundInTheTrain);
-    state.location = Location::PDMI;
+    state.set_location(Location::PDMI);
     let caught_by_inspectors =
         if state.player.money < Money::roundtrip_train_ticket_cost() {
             let caught_by_inspectors = inspectors(&mut g.rng, state);

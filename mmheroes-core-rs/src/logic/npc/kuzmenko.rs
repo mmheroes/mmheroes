@@ -49,7 +49,7 @@ pub enum KuzmenkoInteraction {
 use KuzmenkoInteraction::*;
 
 fn additional_exam_day_index(rng: &mut random::Rng, state: &mut GameState) -> Option<u8> {
-    let tomorrow = state.current_day_index + 1;
+    let tomorrow = state.current_day_index() + 1;
     let saturday = 5;
     if tomorrow > saturday {
         return None;

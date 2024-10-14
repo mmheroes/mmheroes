@@ -186,11 +186,12 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
 
     fn run_classmate_routines(&mut self, state: &mut GameState) {
         let timetable = &state.timetable;
-        let day = timetable.day(state.current_day_index);
-        let time = state.current_time;
+        let day = timetable.day(state.current_day_index());
+        let time = state.current_time();
+        let location = state.location();
         let classmates = &mut state.classmates;
         for classmate in classmates.iter_mut() {
-            classmate.update(&mut self.rng, state.location, day, time);
+            classmate.update(&mut self.rng, location, day, time);
         }
     }
 
@@ -258,6 +259,7 @@ fn memory() {
     assert_eq!(size_of_val(&observable_game_state), 328);
     assert_eq!(size_of::<Player>(), 40);
     assert_eq!(size_of::<Action>(), 2);
+    assert_eq!(size_of::<GameState>(), 272);
     assert_eq!(size_of::<GameScreen>(), 280);
 
     let state_holder = StateHolder::new(GameMode::Normal);

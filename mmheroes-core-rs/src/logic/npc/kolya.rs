@@ -63,7 +63,7 @@ async fn solve_algebra_problems(
 }
 
 pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
-    assert_eq!(state.location, Location::Mausoleum);
+    assert_eq!(state.location(), Location::Mausoleum);
     if can_solve_algebra_problems(&mut g.rng, &mut state.player) {
         return solve_algebra_problems(g, state, SolvedAlgebraProblemsForFree).await;
     }

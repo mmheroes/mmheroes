@@ -1,8 +1,8 @@
 use crate::logic::actions::illegal_action;
 use crate::logic::entry_point::GameEnd;
 use crate::logic::{
-    scene_router, Action, BrainLevel, CauseOfDeath, CharismaLevel, Duration, GameScreen,
-    GameState, HealthLevel, InternalGameState, Location, Time,
+    scene_router, Action, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
+    HealthLevel, InternalGameState, Location,
 };
 
 pub(in crate::logic) fn decrease_health(
@@ -38,15 +38,15 @@ pub(in crate::logic) async fn hour_pass(
     // TODO: Поменять эти строки местами и не забыть отредактировать метод
     // Time::is_between_9_and_19()!
     g.run_classmate_routines(state);
-    state.current_time += Duration(1);
+    state.next_hour();
 
     if state.player.charisma <= CharismaLevel(0) {
         state.player.health = HealthLevel(0);
     }
 
-    if state.current_time.is_midnight() {
-        state.current_day_index += 1;
-        state.current_time = Time(0);
+    if state.current_time().is_midnight() {
+        state.next_day();
+        state.midnight();
         midnight(g, state).await;
     }
 }
@@ -55,7 +55,7 @@ pub(in crate::logic) async fn midnight(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
 ) {
-    match state.location {
+    match state.location() {
         Location::PUNK => todo!("sub_1E907"),
         Location::PDMI => todo!("sub_1E7F8"),
         Location::ComputerClass => {

@@ -39,21 +39,21 @@ pub enum Subject {
     PhysicalEducation = 5,
 }
 
-impl TryFrom<u8> for Subject {
-    type Error = ();
-
-    fn try_from(value: u8) -> Result<Self, Self::Error> {
-        let variant = match value {
+impl Subject {
+    pub(super) const fn from_bits(bits: u8) -> Subject {
+        match bits {
             0 => Subject::AlgebraAndNumberTheory,
             1 => Subject::Calculus,
             2 => Subject::GeometryAndTopology,
             3 => Subject::ComputerScience,
             4 => Subject::English,
             5 => Subject::PhysicalEducation,
-            _ => return Err(()),
-        };
-        assert_eq!(variant as u8, value);
-        Ok(variant)
+            _ => panic!("Invalid subject bits."),
+        }
+    }
+
+    pub(super) const fn into_bits(self) -> u8 {
+        self as u8
     }
 }
 

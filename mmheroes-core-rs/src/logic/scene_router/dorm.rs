@@ -6,7 +6,7 @@ pub(super) async fn handle_router_action(
     state: &mut GameState,
     action: Action,
 ) {
-    assert_eq!(state.location, Location::Dorm);
+    assert_eq!(state.location(), Location::Dorm);
     match action {
         Action::Study => study(g, state).await,
         Action::ViewTimetable => {
@@ -15,7 +15,7 @@ pub(super) async fn handle_router_action(
         Action::Rest => rest(g, state).await,
         Action::GoToBed => sleep(g, state).await,
         Action::GoFromDormToPunk => {
-            state.location = Location::PUNK;
+            state.set_location(Location::PUNK);
             misc::decrease_health(
                 state,
                 HealthLevel::location_change_large_penalty(),
@@ -24,7 +24,7 @@ pub(super) async fn handle_router_action(
         }
         Action::GoToPDMI => train::go_to_pdmi(g, state).await,
         Action::GoToMausoleum => {
-            state.location = Location::Mausoleum;
+            state.set_location(Location::Mausoleum);
             misc::decrease_health(
                 state,
                 HealthLevel::location_change_large_penalty(),
@@ -106,8 +106,9 @@ async fn study_subject(
         return;
     }
     let health = state.player.health;
+    let current_time = state.current_time();
     let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
-    *knowledge += if state.current_time.is_optimal_study_time() {
+    *knowledge += if current_time.is_optimal_study_time() {
         brain_or_stamina
     } else {
         brain_or_stamina * 2 / 3
@@ -123,7 +124,7 @@ async fn study_subject(
     if health_penalty < 0 || use_lecture_notes {
         health_penalty = 0;
     }
-    if state.current_time.is_suboptimal_study_time() {
+    if current_time.is_suboptimal_study_time() {
         health_penalty += 12;
     }
     misc::decrease_health(
@@ -151,7 +152,7 @@ pub(in crate::logic) async fn sleep(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
 ) {
-    if state.current_time > Time(3) && state.current_time < Time(20) {
+    if state.current_time() > Time(3) && state.current_time() < Time(20) {
         g.set_screen_and_wait_for_any_key(GameScreen::Sleep(state.clone()))
             .await;
     } else {

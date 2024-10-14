@@ -68,7 +68,7 @@ pub enum GrishaInteraction {
 use GrishaInteraction::*;
 
 pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
-    assert_eq!(state.location, Location::Mausoleum);
+    assert_eq!(state.location(), Location::Mausoleum);
     let mut has_enough_charisma =
         || state.player.charisma > g.rng.random(CharismaLevel(20));
     if !state.player.is_employed_at_terkom() && has_enough_charisma() {
