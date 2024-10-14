@@ -1,7 +1,7 @@
 use crate::logic::actions::illegal_action;
 use crate::logic::{
     misc, Action, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
-    HealthLevel, InternalGameState, Location,
+    InternalGameState, Location,
 };
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -176,11 +176,11 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
         ))
         .await;
         if drink_beer {
-            state.player.brain -= g.rng.random(2);
-            if state.player.brain <= BrainLevel(0) {
-                state.player.health = HealthLevel(0);
-                state.player.cause_of_death = Some(CauseOfDeath::DrankTooMuchBeer);
-            }
+            misc::decrease_brain(
+                state,
+                BrainLevel(g.rng.random(2)),
+                CauseOfDeath::DrankTooMuchBeer,
+            );
             state.player.charisma += g.rng.random(2);
         }
         if hour_pass {

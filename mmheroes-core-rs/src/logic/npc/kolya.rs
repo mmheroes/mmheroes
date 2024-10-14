@@ -2,7 +2,7 @@ use crate::logic::actions::illegal_action;
 use crate::logic::Subject::AlgebraAndNumberTheory;
 use crate::logic::{
     misc, Action, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
-    HealthLevel, InternalGameState, Location, Money, Player, SUBJECTS,
+    InternalGameState, Location, Money, Player, SUBJECTS,
 };
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -75,11 +75,7 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
             BrakeFluidNoMoney,
         ))
         .await;
-        state.player.brain -= 1;
-        if state.player.brain <= BrainLevel(0) {
-            state.player.health = HealthLevel(0);
-            state.player.cause_of_death = Some(CauseOfDeath::DrankTooMuch);
-        }
+        misc::decrease_brain(state, BrainLevel(1), CauseOfDeath::DrankTooMuch);
     } else {
         // "Знаешь, пиво, конечно, хорошо, но настойка овса - лучше!"
         // "Заказать Коле настойку овса?"

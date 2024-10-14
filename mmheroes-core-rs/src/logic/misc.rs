@@ -1,8 +1,8 @@
 use crate::logic::actions::illegal_action;
 use crate::logic::entry_point::GameEnd;
 use crate::logic::{
-    scene_router, Action, CauseOfDeath, CharismaLevel, Duration, GameScreen, GameState,
-    HealthLevel, InternalGameState, Location, Time,
+    scene_router, Action, BrainLevel, CauseOfDeath, CharismaLevel, Duration, GameScreen,
+    GameState, HealthLevel, InternalGameState, Location, Time,
 };
 
 pub(in crate::logic) fn decrease_health(
@@ -14,6 +14,18 @@ pub(in crate::logic) fn decrease_health(
         state.player.cause_of_death = Some(cause_of_death);
     } else {
         state.player.health -= delta;
+    }
+}
+
+pub(in crate::logic) fn decrease_brain(
+    state: &mut GameState,
+    delta: BrainLevel,
+    cause_of_death: CauseOfDeath,
+) {
+    state.player.brain -= delta;
+    if state.player.brain <= BrainLevel(0) {
+        state.player.health = HealthLevel(0);
+        state.player.cause_of_death = Some(cause_of_death);
     }
 }
 
