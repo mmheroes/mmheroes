@@ -482,12 +482,12 @@ pub fn create_game(seed: u64, state_holder: &StateHolder) -> impl Game + '_ {
 #[test]
 fn memory() {
     let observable_game_state = ObservableGameState::new(GameMode::Normal);
-    assert_eq!(size_of_val(&observable_game_state), 344);
+    assert_eq!(size_of_val(&observable_game_state), 328);
     assert_eq!(size_of::<Player>(), 40);
     assert_eq!(size_of::<Action>(), 2);
-    assert_eq!(size_of::<GameScreen>(), 296);
+    assert_eq!(size_of::<GameScreen>(), 280);
 
     let state_holder = StateHolder::new(GameMode::Normal);
     let game = create_game(0, &state_holder);
-    assert_eq!(size_of_val(&game), 1624);
+    assert_eq!(size_of_val(&game), 1584);
 }
