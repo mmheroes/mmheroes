@@ -120,6 +120,7 @@ macro_rules! initialize_game {
         let mut game_ui = $crate::TestGameUI::new(
             $state,
             game,
+            $seed,
             $high_scores,
             $crate::TestRendererRequestConsumer::new(),
         );

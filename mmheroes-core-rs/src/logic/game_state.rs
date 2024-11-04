@@ -2,7 +2,7 @@ use super::*;
 use bitfield_struct::bitfield;
 use core::fmt::{Debug, Formatter, Result as FmtResult};
 
-#[bitfield(u16, debug = false, default = false)]
+#[bitfield(u32, debug = false, default = false)]
 struct GameStateBits {
     #[bits(3)]
     current_day_index: u8,
@@ -24,6 +24,12 @@ struct GameStateBits {
 
     #[bits(3, default = Location::Dorm)]
     location: Location,
+
+    #[bits(1, default = true)]
+    terkom_has_places: bool,
+
+    #[bits(15)]
+    _padding: u32,
 }
 
 #[derive(Clone)]
@@ -132,6 +138,14 @@ impl GameState {
             _ => panic!("No lecture notes for this subject"),
         }
     }
+
+    pub(in crate::logic) fn terkom_has_places(&self) -> bool {
+        self.bits.terkom_has_places()
+    }
+
+    pub(in crate::logic) fn set_terkom_has_places(&mut self, value: bool) {
+        self.bits.set_terkom_has_places(value)
+    }
 }
 
 impl Debug for GameState {
@@ -160,6 +174,7 @@ impl Debug for GameState {
                 &self.additional_computer_science_exams(),
             )
             .field("sasha_has_lecture_notes", &LectureNotesInfoAdapter(self))
+            .field("terkom_has_places", &self.terkom_has_places())
             .finish()
     }
 }
@@ -219,41 +234,45 @@ mod tests {
         );
         let mut state =
             GameState::new(player, Timetable::random(&mut rng), Location::Dorm);
-        assert_eq!(state.bits.0, 0b100_111_00_01000_000);
+        assert_eq!(state.bits.0, 0b1_100_111_00_01000_000);
         assert!(state.sasha_has_lecture_notes(Subject::AlgebraAndNumberTheory));
         assert!(state.sasha_has_lecture_notes(Subject::Calculus));
         assert!(state.sasha_has_lecture_notes(Subject::GeometryAndTopology));
 
         state.set_sasha_has_lecture_notes(Subject::Calculus, false);
 
-        assert_eq!(state.bits.0, 0b100_101_00_01000_000);
+        assert_eq!(state.bits.0, 0b1_100_101_00_01000_000);
         assert!(state.sasha_has_lecture_notes(Subject::AlgebraAndNumberTheory));
         assert!(!state.sasha_has_lecture_notes(Subject::Calculus));
         assert!(state.sasha_has_lecture_notes(Subject::GeometryAndTopology));
 
         assert_eq!(state.additional_computer_science_exams(), 0);
         state.add_additional_computer_science_exam();
-        assert_eq!(state.bits.0, 0b100_101_01_01000_000);
+        assert_eq!(state.bits.0, 0b1_100_101_01_01000_000);
         assert_eq!(state.additional_computer_science_exams(), 1);
 
         state.add_additional_computer_science_exam();
-        assert_eq!(state.bits.0, 0b100_101_10_01000_000);
+        assert_eq!(state.bits.0, 0b1_100_101_10_01000_000);
         assert_eq!(state.additional_computer_science_exams(), 2);
 
         state.next_day();
-        assert_eq!(state.bits.0, 0b100_101_10_01000_001);
+        assert_eq!(state.bits.0, 0b1_100_101_10_01000_001);
         assert_eq!(state.current_day_index(), 1);
 
         state.next_hour();
-        assert_eq!(state.bits.0, 0b100_101_10_01001_001);
+        assert_eq!(state.bits.0, 0b1_100_101_10_01001_001);
         assert_eq!(state.current_time(), Time(9));
 
         state.midnight();
-        assert_eq!(state.bits.0, 0b100_101_10_00000_001);
+        assert_eq!(state.bits.0, 0b1_100_101_10_00000_001);
         assert_eq!(state.current_time(), Time(0));
 
         state.set_location(Location::PUNK);
-        assert_eq!(state.bits.0, 0b001_101_10_00000_001);
+        assert_eq!(state.bits.0, 0b1_001_101_10_00000_001);
         assert_eq!(state.location(), Location::PUNK);
+
+        state.set_terkom_has_places(false);
+        assert_eq!(state.bits.0, 0b0_001_101_10_00000_001);
+        assert!(!state.terkom_has_places());
     }
 }

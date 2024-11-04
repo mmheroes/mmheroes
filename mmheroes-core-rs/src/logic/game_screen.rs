@@ -1,4 +1,5 @@
 use super::*;
+use crate::logic::scene_router::terkom;
 
 #[derive(Debug)]
 pub enum GameScreen {
@@ -49,6 +50,9 @@ pub enum GameScreen {
 
     /// Взаимодействие с Кузьменко.
     KuzmenkoInteraction(GameState, npc::kuzmenko::KuzmenkoInteraction),
+
+    /// Работа в ТЕРКОМе
+    Terkom(GameState, terkom::Terkom),
 
     /// Экран "Идти к преподу"
     GoToProfessor(GameState),
@@ -125,6 +129,7 @@ impl GameScreen {
             | GrishaInteraction(state, _)
             | SashaInteraction(state, _)
             | KuzmenkoInteraction(state, _)
+            | Terkom(state, _)
             | GoToProfessor(state)
             | Exam(state, _)
             | SurfInternet(state, _)

@@ -33,15 +33,16 @@ pub(in crate::logic) async fn hour_pass(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
 ) {
-    // TODO: Lot of stuff going on here
-
-    // TODO: Поменять эти строки местами и не забыть отредактировать метод
-    // Time::is_between_9_and_19()!
+    state.set_terkom_has_places(true);
     g.run_classmate_routines(state);
     state.next_hour();
 
+    // TODO: Если сдаём экзамен по геометрии в ПОМИ, DJuG уменьшает здоровье.
+
+    // TODO: Написать на это тест
     if state.player.charisma <= CharismaLevel(0) {
         state.player.health = HealthLevel(0);
+        state.player.cause_of_death = Some(CauseOfDeath::Paranoia)
     }
 
     if state.current_time().is_midnight() {

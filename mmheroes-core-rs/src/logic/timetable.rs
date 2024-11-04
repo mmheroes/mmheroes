@@ -51,6 +51,10 @@ impl Time {
     pub fn is_cafe_open(self) -> bool {
         self.0 >= 10 && self.0 <= 18
     }
+
+    pub fn terkom_closing_time() -> Time {
+        Time(19)
+    }
 }
 
 impl Display for Time {

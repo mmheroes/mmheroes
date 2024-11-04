@@ -110,6 +110,7 @@ pub struct GameUI<'game, G, C: RendererRequestConsumer> {
     renderer: Renderer<C>,
     state_holder: &'game StateHolder,
     game: core::pin::Pin<&'game mut G>,
+    rng: crate::random::Rng,
     pub high_scores: [HighScore; high_scores::SCORE_COUNT],
 }
 
@@ -117,6 +118,7 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
     pub fn new(
         state_holder: &'game StateHolder,
         game: core::pin::Pin<&'game mut G>,
+        seed: u64,
         high_scores: Option<[HighScore; high_scores::SCORE_COUNT]>,
         renderer_request_consumer: C,
     ) -> Self {
@@ -125,6 +127,7 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
             renderer: Renderer::new(renderer_request_consumer),
             state_holder,
             game,
+            rng: crate::random::Rng::new(seed),
             high_scores: high_scores.unwrap_or(default_high_scores),
         }
     }
@@ -275,6 +278,13 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
                     *interaction,
                 )
             }
+            Terkom(state, terkom_screen) => screens::terkom::display_terkom(
+                &mut self.renderer,
+                self.state_holder.observable_state().available_actions(),
+                &mut self.rng,
+                state,
+                *terkom_screen,
+            ),
             GoToProfessor(state) => screens::scene_router::display_available_professors(
                 &mut self.renderer,
                 state,

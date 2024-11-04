@@ -5,6 +5,7 @@ mod exams;
 pub(in crate::logic) mod mausoleum;
 pub(in crate::logic) mod pdmi;
 pub(in crate::logic) mod punk;
+pub mod terkom;
 pub mod train;
 
 use super::*;
@@ -47,7 +48,9 @@ pub(super) fn available_actions(state: &GameState) -> ActionVec {
                 available_actions.push(Action::GoToCafePUNK);
             }
             add_classmates(&mut available_actions);
-            if state.player.is_employed_at_terkom() {
+            if state.player.is_employed_at_terkom()
+                && state.current_time() < Time::terkom_closing_time()
+            {
                 available_actions.push(Action::GoToWork);
             }
             available_actions.push(Action::IAmDone);

@@ -185,6 +185,7 @@ pub unsafe extern "C" fn mmheroes_game_create(
     memory.as_mut().game_ui.write(GameUI::new(
         state_holder,
         core::pin::Pin::new_unchecked(game),
+        seed,
         scores,
         renderer_request_consumer,
     ));

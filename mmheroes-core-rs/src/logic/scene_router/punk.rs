@@ -46,7 +46,7 @@ pub(super) async fn handle_router_action(
         }
         Action::GoToWork => {
             assert!(state.player.is_employed_at_terkom());
-            todo!("Пойти в ТЕРКОМ, поработать")
+            terkom::work(g, state).await;
         }
         _ => illegal_action!(action),
     }

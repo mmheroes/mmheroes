@@ -260,6 +260,7 @@ fn main() {
     let mut game_ui = GameUI::new(
         &observable_game_state,
         game,
+        seed,
         high_scores::load(),
         renderer_request_evaluator,
     );
