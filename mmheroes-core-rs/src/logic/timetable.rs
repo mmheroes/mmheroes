@@ -1,8 +1,9 @@
-pub use crate::logic::{Location, Subject, NUM_SUBJECTS, SUBJECTS};
+pub use crate::logic::{Location, Subject, SUBJECTS};
 
 use crate::logic::{GameScreen, GameState, InternalGameState};
 use core::fmt::{Display, Formatter};
 use core::ops::{Add, AddAssign, Sub};
+use strum::EnumCount;
 
 pub const NUM_DAYS: usize = 6;
 
@@ -170,7 +171,7 @@ impl Exam {
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Day {
     index: usize,
-    exams: [Option<Exam>; NUM_SUBJECTS],
+    exams: [Option<Exam>; Subject::COUNT],
 }
 
 impl Day {
@@ -210,7 +211,7 @@ impl Timetable {
     pub(crate) fn random(rng: &mut crate::random::Rng) -> Timetable {
         let mut days = [Day {
             index: 0,
-            exams: [None; NUM_SUBJECTS],
+            exams: [None; Subject::COUNT],
         }; NUM_DAYS];
 
         for (i, day) in days.iter_mut().enumerate() {

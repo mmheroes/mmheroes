@@ -1,4 +1,5 @@
 use super::*;
+use strum::{EnumCount, FromRepr};
 
 #[derive(Debug)]
 #[allow(non_snake_case)] // TODO: Remove this
@@ -29,26 +30,21 @@ impl SubjectInfo {
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, FromRepr, EnumCount)]
 pub enum Subject {
     AlgebraAndNumberTheory = 0,
-    Calculus = 1,
-    GeometryAndTopology = 2,
-    ComputerScience = 3,
-    English = 4,
-    PhysicalEducation = 5,
+    Calculus,
+    GeometryAndTopology,
+    ComputerScience,
+    English,
+    PhysicalEducation,
 }
 
 impl Subject {
     pub(super) const fn from_bits(bits: u8) -> Subject {
-        match bits {
-            0 => Subject::AlgebraAndNumberTheory,
-            1 => Subject::Calculus,
-            2 => Subject::GeometryAndTopology,
-            3 => Subject::ComputerScience,
-            4 => Subject::English,
-            5 => Subject::PhysicalEducation,
-            _ => panic!("Invalid subject bits."),
+        match Subject::from_repr(bits as usize) {
+            Some(subject) => subject,
+            None => panic!("Invalid subject bits."),
         }
     }
 
@@ -57,9 +53,7 @@ impl Subject {
     }
 }
 
-pub const NUM_SUBJECTS: usize = 6;
-
-pub struct Subjects([(Subject, SubjectInfo); NUM_SUBJECTS]);
+pub struct Subjects([(Subject, SubjectInfo); Subject::COUNT]);
 
 pub const SUBJECTS_WITH_LECTURE_NOTES: [Subject; 3] = [
     Subject::AlgebraAndNumberTheory,

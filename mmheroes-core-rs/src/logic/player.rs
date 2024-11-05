@@ -1,6 +1,7 @@
 use super::*;
 
 use bitflags::bitflags;
+use strum::EnumCount;
 
 bitflags! {
     #[repr(transparent)]
@@ -30,7 +31,7 @@ bitflags! {
 
 #[derive(Debug, Clone)]
 pub struct Player {
-    pub(in crate::logic) subjects: [SubjectStatus; NUM_SUBJECTS],
+    pub(in crate::logic) subjects: [SubjectStatus; Subject::COUNT],
 
     flags: PlayerFlags,
 

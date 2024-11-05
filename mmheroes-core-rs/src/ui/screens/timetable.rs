@@ -1,6 +1,7 @@
 use crate::logic::*;
 use crate::ui::renderer::{Column, Line, Renderer};
 use crate::ui::*;
+use strum::EnumCount;
 
 fn output_remaining_problems(
     r: &mut Renderer<impl RendererRequestConsumer>,
@@ -41,7 +42,7 @@ fn output_remaining_exams(
     r: &mut Renderer<impl RendererRequestConsumer>,
     number_of_exams: usize,
 ) {
-    assert!(number_of_exams <= NUM_SUBJECTS);
+    assert!(number_of_exams <= Subject::COUNT);
 
     let mut output = |a, b| {
         r.set_color(Color::White, Color::Black);
