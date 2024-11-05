@@ -366,6 +366,7 @@ pub(in crate::ui) fn display_kuzmenko_interaction(
     interaction: KuzmenkoInteraction,
 ) -> WaitingState {
     use crate::logic::npc::kuzmenko::KuzmenkoInteraction::*;
+    use crate::logic::npc::kuzmenko::KuzmenkoReply::*;
     r.clear_screen();
     scene_router::display_header_stats(r, state);
     r.move_cursor_to(7, 0);
@@ -393,20 +394,28 @@ pub(in crate::ui) fn display_kuzmenko_interaction(
             );
             return wait_for_any_key(r);
         }
-        FormatFloppy => "... отформатировать дискету так, чтобы 1ый сектор был 5ым ...",
-        FiltersInWindows => "А Вы нигде не видели литературы по фильтрам в Windows?",
-        ByteVisualization => {
+        RandomReply(FormatFloppy) => {
+            "... отформатировать дискету так, чтобы 1ый сектор был 5ым ..."
+        }
+        RandomReply(FiltersInWindows) => {
+            "А Вы нигде не видели литературы по фильтрам в Windows?"
+        }
+        RandomReply(ByteVisualization) => {
             "... написать визуализацию байта на ассемблере за 11 байт ..."
         }
-        OlegPliss => "У вас Олег Плисс ведет какие-нибудь занятия?",
-        BillGatesMustDie => "Bill Gates = must die = кабысдох (рус.).",
-        MonitorJournal => "Вы читали журнал \"Монитор\"? Хотя вряд ли...",
-        MmheroesBP7 => "Я слышал, что mmHeroes написана на BP 7.0.",
-        CSeminar => "Записывайтесь на мой семинар по языку Си!",
-        ThirdYear => "На третьем курсе я буду вести у вас спецвычпрактикум.",
-        STAR => "Интересно, когда они снова наладят STAR?",
-        GetYourselvesAnEmail => "Получите себе ящик rambler'e или на mail.ru !",
-        TerekhovSenior => "А разве Терехов-старший ничего не рассказывает про IBM PC?",
+        RandomReply(OlegPliss) => "У вас Олег Плисс ведет какие-нибудь занятия?",
+        RandomReply(BillGatesMustDie) => "Bill Gates = must die = кабысдох (рус.).",
+        RandomReply(MonitorJournal) => "Вы читали журнал \"Монитор\"? Хотя вряд ли...",
+        RandomReply(MmheroesBP7) => "Я слышал, что mmHeroes написана на BP 7.0.",
+        RandomReply(CSeminar) => "Записывайтесь на мой семинар по языку Си!",
+        RandomReply(ThirdYear) => "На третьем курсе я буду вести у вас спецвычпрактикум.",
+        RandomReply(STAR) => "Интересно, когда они снова наладят STAR?",
+        RandomReply(GetYourselvesAnEmail) => {
+            "Получите себе ящик rambler'e или на mail.ru !"
+        }
+        RandomReply(TerekhovSenior) => {
+            "А разве Терехов-старший ничего не рассказывает про IBM PC?"
+        }
     };
     writeln_colored!(WhiteBright, r, "\"{}\"", reply);
     wait_for_any_key(r)

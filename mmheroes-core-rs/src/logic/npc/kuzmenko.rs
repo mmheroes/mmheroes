@@ -3,12 +3,20 @@ use crate::logic::{
     Location, Subject, Time,
 };
 use crate::random;
+use strum::VariantArray;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum KuzmenkoInteraction {
     /// "Вы знаете, Климова можно найти в компьютерном классе 24-го мая с 10 по 11ч.."
-    AdditionalComputerScienceExam { day_index: u8 },
+    AdditionalComputerScienceExam {
+        day_index: u8,
+    },
 
+    RandomReply(KuzmenkoReply),
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, VariantArray)]
+pub enum KuzmenkoReply {
     /// "... отформатировать дискету так, чтобы 1ый сектор был 5ым ..."
     FormatFloppy,
 
@@ -93,26 +101,10 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
                 },
             )
         }
-        _ => {
-            let replies = [
-                FormatFloppy,
-                FiltersInWindows,
-                ByteVisualization,
-                OlegPliss,
-                BillGatesMustDie,
-                MonitorJournal,
-                MmheroesBP7,
-                CSeminar,
-                ThirdYear,
-                STAR,
-                GetYourselvesAnEmail,
-                TerekhovSenior,
-            ];
-            GameScreen::KuzmenkoInteraction(
-                state.clone(),
-                *g.rng.random_element(&replies),
-            )
-        }
+        _ => GameScreen::KuzmenkoInteraction(
+            state.clone(),
+            RandomReply(*g.rng.random_element(KuzmenkoReply::VARIANTS)),
+        ),
     };
     g.set_screen_and_wait_for_any_key(new_screen).await;
 }

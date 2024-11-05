@@ -4,7 +4,7 @@ use mmheroes_core::logic::{GameMode, GameScreen, Time};
 
 mod common;
 use common::*;
-use mmheroes_core::logic::kuzmenko::KuzmenkoInteraction;
+use mmheroes_core::logic::kuzmenko::{KuzmenkoInteraction, KuzmenkoReply};
 use mmheroes_core::logic::Subject::ComputerScience;
 
 macro_rules! assert_cs_exams {
@@ -52,7 +52,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::MonitorJournal
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::MonitorJournal)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -70,7 +70,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::OlegPliss
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::OlegPliss)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -106,7 +106,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::FormatFloppy
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::FormatFloppy)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -142,7 +142,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::OlegPliss
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::OlegPliss)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -160,7 +160,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::GetYourselvesAnEmail
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::GetYourselvesAnEmail)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -179,7 +179,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::BillGatesMustDie
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::BillGatesMustDie)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -197,7 +197,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::MmheroesBP7
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::MmheroesBP7)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -215,7 +215,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::ThirdYear
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::ThirdYear)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -233,7 +233,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::FiltersInWindows
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::FiltersInWindows)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -251,7 +251,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::FormatFloppy
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::FormatFloppy)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -269,7 +269,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::FiltersInWindows
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::FiltersInWindows)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -287,7 +287,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::STAR
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::STAR)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -305,7 +305,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::STAR
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::STAR)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -323,7 +323,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::CSeminar
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::CSeminar)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -341,7 +341,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::MmheroesBP7
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::MmheroesBP7)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
@@ -359,7 +359,7 @@ fn kuzmenko_cs_exam_every_day() {
         state.observable_state().screen(),
         GameScreen::KuzmenkoInteraction(
             state,
-            KuzmenkoInteraction::TerekhovSenior
+            KuzmenkoInteraction::RandomReply(KuzmenkoReply::TerekhovSenior)
         ) => {
             assert_eq!(state.current_time(), Time(10));
             assert_cs_exams!(state, day 0 none);
