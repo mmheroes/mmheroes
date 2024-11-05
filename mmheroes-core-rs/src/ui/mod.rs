@@ -278,6 +278,15 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
                     *interaction,
                 )
             }
+            DiamondInteraction(state, interaction, diamond_leaves) => {
+                screens::npc::display_diamond_interaction(
+                    &mut self.renderer,
+                    state,
+                    *interaction,
+                    self.state_holder.observable_state().available_actions(),
+                    *diamond_leaves,
+                )
+            }
             Terkom(state, terkom_screen) => screens::terkom::display_terkom(
                 &mut self.renderer,
                 self.state_holder.observable_state().available_actions(),

@@ -51,6 +51,10 @@ pub enum GameScreen {
     /// Взаимодействие с Кузьменко.
     KuzmenkoInteraction(GameState, npc::kuzmenko::KuzmenkoInteraction),
 
+    /// Взаимодействие с Diamond.
+    /// Третий аргумент означает, уходит ли Diamond после взаимодействия.
+    DiamondInteraction(GameState, npc::diamond::DiamondInteraction, bool),
+
     /// Работа в ТЕРКОМе
     Terkom(GameState, terkom::Terkom),
 
@@ -129,6 +133,7 @@ impl GameScreen {
             | GrishaInteraction(state, _)
             | SashaInteraction(state, _)
             | KuzmenkoInteraction(state, _)
+            | DiamondInteraction(state, _, _)
             | Terkom(state, _)
             | GoToProfessor(state)
             | Exam(state, _)

@@ -3,9 +3,7 @@ mod common;
 use assert_matches::assert_matches;
 use common::*;
 use mmheroes_core::logic::actions::PlayStyle;
-use mmheroes_core::logic::{
-    Action, CauseOfDeath, GameMode, GameScreen, HealthLevel, Location, Time,
-};
+use mmheroes_core::logic::{Action, CauseOfDeath, GameMode, GameScreen, Location, Time};
 
 #[test]
 fn cafe_punk() {
@@ -113,7 +111,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(13));
             assert_characteristics!(
                 state,
-                health: 78,
+                health: 75,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -131,7 +129,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(14));
             assert_characteristics!(
                 state,
-                health: 81,
+                health: 78,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -147,10 +145,9 @@ fn cafe_punk() {
         GameScreen::SceneRouter(state) => {
             assert_eq!(state.location(), Location::PUNK);
             assert_eq!(state.current_time(), Time(14));
-            assert_eq!(state.player().health(), HealthLevel(81));
             assert_characteristics!(
                 state,
-                health: 81,
+                health: 78,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -168,7 +165,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(18));
             assert_characteristics!(
                 state,
-                health: 93,
+                health: 92,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -190,7 +187,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(19));
             assert_characteristics!(
                 state,
-                health: 94,
+                health: 93,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -225,7 +222,7 @@ fn cafe_punk_limited_menu() {
                 assert_eq!(state.current_time(), Time(18));
                 assert_characteristics!(
                     state,
-                    health: 132,
+                    health: 135,
                     money: 4,
                     brain: 5,
                     stamina: 4,
@@ -264,7 +261,7 @@ fn cafe_punk_limited_menu() {
                 assert_eq!(state.current_time(), Time(18));
                 assert_characteristics!(
                     state,
-                    health: 135,
+                    health: 138,
                     money: 2,
                     brain: 5,
                     stamina: 4,

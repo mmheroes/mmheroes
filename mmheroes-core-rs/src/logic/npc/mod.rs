@@ -1,3 +1,4 @@
+pub mod diamond;
 pub mod grisha;
 pub mod kolya;
 pub mod kuzmenko;
@@ -115,7 +116,20 @@ impl ClassmateInfo {
                     }
                 }
             }
-            Diamond => { /* TODO */ }
+            Diamond => {
+                self.current_location = if time.is_between_9_and_19() {
+                    ClassmateLocation::Location(Location::ComputerClass)
+                } else {
+                    ClassmateLocation::Nowhere
+                };
+                for (subject, _) in SUBJECTS.iter().rev() {
+                    if current_location.is_exam_here_on_day(*subject, today)
+                        && rng.random(10) > 5
+                    {
+                        self.current_location = ClassmateLocation::Exam(*subject);
+                    }
+                }
+            }
             RAI => {
                 self.current_location = if current_location.is_exam_here_now(
                     Subject::AlgebraAndNumberTheory,
@@ -279,7 +293,7 @@ pub(super) async fn interact_with_classmate(
     match classmate {
         Kolya => kolya::interact(g, state).await,
         Pasha => pasha::interact(g, state).await,
-        Diamond => todo!("Diamond"),
+        Diamond => diamond::interact(g, state).await,
         RAI => todo!("RAI"),
         Misha => todo!("Misha"),
         Serj => todo!("Serj"),

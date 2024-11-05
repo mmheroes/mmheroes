@@ -1,6 +1,7 @@
 use super::*;
 use bitfield_struct::bitfield;
 use core::fmt::{Debug, Formatter, Result as FmtResult};
+use strum::EnumCount;
 use strum::FromRepr;
 
 #[bitfield(u32, debug = false, default = false)]
@@ -29,8 +30,26 @@ struct GameStateBits {
     #[bits(1, default = true)]
     terkom_has_places: bool,
 
-    #[bits(15)]
+    #[bits(3, default = None, from = exam_in_progress_from_bits, into = exam_in_progress_into_bits)]
+    exam_in_progress: Option<Subject>,
+
+    #[bits(12)]
     _padding: u32,
+}
+
+const fn exam_in_progress_from_bits(bits: u8) -> Option<Subject> {
+    if bits >= Subject::COUNT as u8 {
+        None
+    } else {
+        Some(Subject::from_bits(bits))
+    }
+}
+
+const fn exam_in_progress_into_bits(subject: Option<Subject>) -> u8 {
+    match subject {
+        None => Subject::COUNT as u8,
+        Some(s) => s.into_bits(),
+    }
 }
 
 #[derive(Clone)]
@@ -92,6 +111,14 @@ impl GameState {
 
     pub fn location(&self) -> Location {
         self.bits.location()
+    }
+
+    pub fn exam_in_progress(&self) -> Option<Subject> {
+        self.bits.exam_in_progress()
+    }
+
+    pub(in crate::logic) fn set_exam_in_progress(&mut self, subject: Option<Subject>) {
+        self.bits.set_exam_in_progress(subject);
     }
 
     pub(in crate::logic) fn set_location(&mut self, location: Location) {
@@ -231,45 +258,53 @@ mod tests {
         );
         let mut state =
             GameState::new(player, Timetable::random(&mut rng), Location::Dorm);
-        assert_eq!(state.bits.0, 0b1_100_111_00_01000_000);
+        assert_eq!(state.bits.0, 0b110_1_100_111_00_01000_000);
         assert!(state.sasha_has_lecture_notes(Subject::AlgebraAndNumberTheory));
         assert!(state.sasha_has_lecture_notes(Subject::Calculus));
         assert!(state.sasha_has_lecture_notes(Subject::GeometryAndTopology));
 
         state.set_sasha_has_lecture_notes(Subject::Calculus, false);
 
-        assert_eq!(state.bits.0, 0b1_100_101_00_01000_000);
+        assert_eq!(state.bits.0, 0b110_1_100_101_00_01000_000);
         assert!(state.sasha_has_lecture_notes(Subject::AlgebraAndNumberTheory));
         assert!(!state.sasha_has_lecture_notes(Subject::Calculus));
         assert!(state.sasha_has_lecture_notes(Subject::GeometryAndTopology));
 
         assert_eq!(state.additional_computer_science_exams(), 0);
         state.add_additional_computer_science_exam();
-        assert_eq!(state.bits.0, 0b1_100_101_01_01000_000);
+        assert_eq!(state.bits.0, 0b110_1_100_101_01_01000_000);
         assert_eq!(state.additional_computer_science_exams(), 1);
 
         state.add_additional_computer_science_exam();
-        assert_eq!(state.bits.0, 0b1_100_101_10_01000_000);
+        assert_eq!(state.bits.0, 0b110_1_100_101_10_01000_000);
         assert_eq!(state.additional_computer_science_exams(), 2);
 
         state.next_day();
-        assert_eq!(state.bits.0, 0b1_100_101_10_01000_001);
+        assert_eq!(state.bits.0, 0b110_1_100_101_10_01000_001);
         assert_eq!(state.current_day_index(), 1);
 
         state.next_hour();
-        assert_eq!(state.bits.0, 0b1_100_101_10_01001_001);
+        assert_eq!(state.bits.0, 0b110_1_100_101_10_01001_001);
         assert_eq!(state.current_time(), Time(9));
 
         state.midnight();
-        assert_eq!(state.bits.0, 0b1_100_101_10_00000_001);
+        assert_eq!(state.bits.0, 0b110_1_100_101_10_00000_001);
         assert_eq!(state.current_time(), Time(0));
 
         state.set_location(Location::PUNK);
-        assert_eq!(state.bits.0, 0b1_001_101_10_00000_001);
+        assert_eq!(state.bits.0, 0b110_1_001_101_10_00000_001);
         assert_eq!(state.location(), Location::PUNK);
 
         state.set_terkom_has_places(false);
-        assert_eq!(state.bits.0, 0b0_001_101_10_00000_001);
+        assert_eq!(state.bits.0, 0b110_0_001_101_10_00000_001);
         assert!(!state.terkom_has_places());
+
+        state.set_exam_in_progress(Some(Subject::English));
+        assert_eq!(state.bits.0, 0b100_0_001_101_10_00000_001);
+        assert_eq!(state.exam_in_progress(), Some(Subject::English));
+
+        state.set_exam_in_progress(Some(Subject::Calculus));
+        assert_eq!(state.bits.0, 0b001_0_001_101_10_00000_001);
+        assert_eq!(state.exam_in_progress(), Some(Subject::Calculus));
     }
 }

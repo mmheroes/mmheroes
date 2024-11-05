@@ -120,6 +120,10 @@ impl Player {
         self.flags.contains(PlayerFlags::HAS_MMHEROES_FLOPPY)
     }
 
+    pub(in crate::logic) fn set_has_mmheroes_floppy(&mut self) {
+        self.flags.insert(PlayerFlags::HAS_MMHEROES_FLOPPY)
+    }
+
     pub fn has_internet(&self) -> bool {
         self.flags.contains(PlayerFlags::HAS_INTERNET)
     }

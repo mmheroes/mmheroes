@@ -93,6 +93,14 @@ pub enum TrainTicketAction {
 
 action_conversion!(TrainTicketAction, TrainTicket);
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum MmheroesFloppyAction {
+    WantToTestNewMMHEROES,
+    DontWantToTestNewMMHEROES,
+}
+
+action_conversion!(MmheroesFloppyAction, MmheroesFloppy);
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     AnyKey,
@@ -145,6 +153,7 @@ pub enum Action {
     RestInCafePUNK,
     ShouldntHaveComeToCafePUNK,
     RestInCafePDMI,
+    MmheroesFloppy(MmheroesFloppyAction),
     IAmDone,
     GameEnd(GameEndAction),
     WhatToDo,

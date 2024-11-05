@@ -1,3 +1,4 @@
+use crate::logic::diamond::DiamondInteraction;
 use crate::logic::npc::{
     grisha::GrishaInteraction, kolya::KolyaInteraction, kuzmenko::KuzmenkoInteraction,
     pasha::PashaInteraction, sasha::SashaInteraction,
@@ -409,4 +410,123 @@ pub(in crate::ui) fn display_kuzmenko_interaction(
     };
     writeln_colored!(WhiteBright, r, "\"{}\"", reply);
     wait_for_any_key(r)
+}
+
+pub(crate) fn display_diamond_interaction(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    state: &GameState,
+    interaction: DiamondInteraction,
+    available_actions: &[Action],
+    diamond_leaves: bool,
+) -> WaitingState {
+    use crate::logic::npc::diamond::DiamondInteraction::*;
+    use crate::logic::npc::diamond::DiamondReply::*;
+
+    let mut start = || {
+        r.clear_screen();
+        scene_router::display_header_stats(r, state);
+        r.move_cursor_to(7, 0);
+        writeln_colored!(
+            YellowBright,
+            r,
+            "Wow! Ты только что встретил автора <Heroes of MAT-MEX == MMHEROES>!"
+        );
+        writeln!(r);
+        write!(r, "Diamond:");
+    };
+
+    match interaction {
+        WannaTestNewMMHEROES => {
+            start();
+            writeln!(r, "\"Хочешь по-тестить новую версию Heroes of MAT-MEX?\"");
+            scene_router::display_short_today_timetable(
+                r,
+                11,
+                state.current_day(),
+                state.player(),
+            );
+            r.move_cursor_to(11, 0);
+            dialog(r, available_actions)
+        }
+        HereIsTheFloppy => {
+            r.move_cursor_to(15, 0);
+            write_colored!(White, r, "\"Ну и ладушки! Вот тебе дискетка...\"");
+            wait_for_any_key(r)
+        }
+        SorryForBothering => {
+            r.move_cursor_to(15, 0);
+            write_colored!(White, r, "\"Извини, что побеспокоил.\"");
+            wait_for_any_key(r)
+        }
+        Reply(reply) => {
+            start();
+            let text = match reply {
+                KolyaWillHelpWithAlgebra => "Коля поможет с алгеброй.",
+                MishaWillTellEveryoneHowGoodYouAre => {
+                    "Миша расскажет всем, какой ты хороший."
+                }
+                PashaIsYourHeadman => "Паша - твой староста.",
+                BetterAvoidDJuG => "С DJuGом лучше не сталкиваться.",
+                RAIWontLeaveYouAlone => "RAI не отстанет, лучше решить ему чего-нибудь.",
+                KolyaIsAlwaysInMausoleum => {
+                    "Коля все время сидит в мавзолее и оттягивается."
+                }
+                WatchYourHealth => "Следи за своим здоровьем!!!",
+                IfYouMeetSashaTalkToHim => {
+                    "Если встретишь Сашу - ОБЯЗАТЕЛЬНО заговори с ним."
+                }
+                IfTroubleThinkingTalkWithRAI => {
+                    "Если плохо думается, попробуй поговорить с RAI."
+                }
+                BeSureYouCanDrinkBeforeGoingToKolya => {
+                    "Идя к Коле, будь уверен, что можешь пить с ним."
+                }
+                ExpectSurprisesOnEnglishExam => {
+                    "Получая зачет по английскому, будь готов к неожиданностям."
+                }
+                TalksWithSerj => "Иногда разговоры с Сержем приносят ощутимую пользу.",
+                AndrewCanHelpButNotAlways => "Эндрю может помочь, но не всегда...",
+                KuzmenkoKnowsAboutKlimov => {
+                    "Кузьменко иногда знает о Климове больше, чем сам Климов."
+                }
+                DontRushWritingBugReports => {
+                    "Не спеши слать гневные письма о багах:\
+                    \nзагляни на mmheroes.chat.ru,\
+                    \nможет быть, все уже в порядке!"
+                }
+                SerjSometimesAppearsInMausoleum => {
+                    "Серж тоже иногда забегает в мавзолей."
+                }
+                DontOverstudyTopology => {
+                    "Не переучи топологию, а то Подкорытов-младший не поймет."
+                }
+                YouCanGetAJobInTERKOM => "Можешь устроиться в ТЕРКОМ по знакомству.",
+                GrishaWorksAtTERKOM => "Гриша работает ( ;*) ) в ТЕРКОМе.",
+                YouCanEarnMoneyAtTERKOM => "В ТЕРКОМЕ можно заработать какие-то деньги.",
+                GrishaSometimesAppearsInMausoleum => "Гриша иногда бывает в Мавзолее.",
+                DontLikeTimetable => {
+                    "Не нравится расписание? Подумай о чем-нибудь парадоксальном."
+                }
+                NiLPaysForHelpBut => "NiL дает деньги за помощь, но...",
+                DontKnowWhenLinuxPortWillBeReady => {
+                    "Честно, не знаю, когда будет готов порт под Linux..."
+                }
+                NeedNewFeaturesForMMHEROES => {
+                    "Срочно! Нужны новые фишки для \"Зачетной недели\" !"
+                }
+                SendIdeasAndBugReports => {
+                    "Пожелания, идеи, bug report'ы шлите на mmheroes@chat.ru !"
+                }
+                SendGreetingsToKostyaBulenkov => {
+                    "Встретишь Костю Буленкова - передай ему большой привет!"
+                }
+                ThanksVanyaPavlik => "Большое спасибо Ване Павлику за mmheroes.chat.ru !",
+            };
+            writeln_colored!(WhiteBright, r, "\"{}\"", text);
+            if diamond_leaves {
+                writeln_colored!(White, r, "Diamond убегает по своим делам ...");
+            }
+            wait_for_any_key(r)
+        }
+    }
 }

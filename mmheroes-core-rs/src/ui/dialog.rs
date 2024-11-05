@@ -155,6 +155,12 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::RestInCafePUNK => "Просто посижу с приятелями.",
         Action::ShouldntHaveComeToCafePUNK => "Я вообще зря сюда зашел.",
         Action::RestInCafePDMI => "Пойти в кафе",
+        Action::MmheroesFloppy(actions::MmheroesFloppyAction::WantToTestNewMMHEROES) => {
+            "ДА, КОНЕЧНО, ОЧЕНЬ ХОЧУ!"
+        }
+        Action::MmheroesFloppy(
+            actions::MmheroesFloppyAction::DontWantToTestNewMMHEROES,
+        ) => "Нет, у меня нет на это времени...",
         Action::TerkomEmployment(actions::TerkomEmploymentAction::Accept) => {
             "Да, мне бы не помешало."
         }
