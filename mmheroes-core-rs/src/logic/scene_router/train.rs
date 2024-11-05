@@ -1,4 +1,5 @@
 use super::*;
+use crate::logic::actions::TrainTicketAction;
 use crate::random::Rng;
 use TrainToPDMI::*;
 
@@ -45,43 +46,45 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
                     CauseOfDeath::KilledByInspectors,
                 );
             }
-            g.set_screen(GameScreen::TrainToPDMI(
+            g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
                 state.clone(),
                 GatecrashBecauseNoMoney {
                     caught_by_inspectors,
                 },
-            ));
+            ))
+            .await;
             caught_by_inspectors
         } else {
-            g.set_screen_and_available_actions(
-                GameScreen::TrainToPDMI(state.clone(), PromptToBuyTickets),
-                [Action::GatecrashTrain, Action::BuyRoundtripTrainTicket],
-            );
-            match g.wait_for_action().await {
-                Action::GatecrashTrain => {
+            match g
+                .set_screen_and_wait_for_action::<TrainTicketAction>(
+                    GameScreen::TrainToPDMI(state.clone(), PromptToBuyTickets),
+                )
+                .await
+            {
+                TrainTicketAction::GatecrashTrain => {
                     let caught_by_inspectors = inspectors(&mut g.rng, state);
                     // Здоровье не уменьшается если поймали контролёры!
-                    g.set_screen(GameScreen::TrainToPDMI(
+                    g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
                         state.clone(),
                         GatecrashByChoice {
                             caught_by_inspectors,
                         },
-                    ));
+                    ))
+                    .await;
                     caught_by_inspectors
                 }
-                Action::BuyRoundtripTrainTicket => {
-                    g.set_screen(GameScreen::TrainToPDMI(
+                TrainTicketAction::BuyRoundtripTrainTicket => {
+                    g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
                         state.clone(),
                         BoughtRoundtripTicket,
-                    ));
+                    ))
+                    .await;
                     state.player.money -= Money::roundtrip_train_ticket_cost();
                     state.player.set_has_roundtrip_train_ticket();
                     false
                 }
-                action => illegal_action!(action),
             }
         };
-    g.wait_for_any_key().await;
     misc::hour_pass(g, state).await;
     if caught_by_inspectors {
         misc::hour_pass(g, state).await;

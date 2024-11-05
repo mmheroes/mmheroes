@@ -41,6 +41,7 @@ use assert_matches::*;
 use core::cell::{Ref, RefCell};
 use core::future::Future;
 use core::pin::Pin;
+use strum::IntoEnumIterator;
 
 /// Максимальное число возможных вариантов на главном экране.
 pub const MAX_OPTIONS_IN_SCENE_ROUTER: usize = 12;
@@ -116,9 +117,24 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         self.state_holder.observable_state.borrow_mut().screen = new_screen;
     }
 
+    async fn set_screen_and_wait_for_action<
+        T: TryFrom<Action> + Into<Action> + IntoEnumIterator,
+    >(
+        &self,
+        new_screen: GameScreen,
+    ) -> T {
+        let available_actions = T::iter().map(T::into).collect();
+        self.set_screen_and_action_vec(new_screen, available_actions);
+        let action = self.wait_for_action().await;
+        action
+            .try_into()
+            .unwrap_or_else(|_| illegal_action!(action))
+    }
+
     async fn set_screen_and_wait_for_any_key(&self, new_screen: GameScreen) {
         self.set_screen(new_screen);
-        self.wait_for_any_key().await;
+        self.set_available_actions_from_vec(ActionVec::from([Action::AnyKey]));
+        self.wait_for_action().await;
     }
 
     fn set_screen_and_action_vec(&self, new_screen: GameScreen, actions: ActionVec) {
@@ -132,18 +148,6 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             .observable_state
             .borrow_mut()
             .available_actions = actions
-    }
-
-    fn set_screen_and_available_actions<const N: usize>(
-        &self,
-        new_screen: GameScreen,
-        actions: [Action; N],
-    ) {
-        self.set_screen_and_action_vec(new_screen, ActionVec::from(actions))
-    }
-
-    fn set_available_actions<const N: usize>(&self, actions: [Action; N]) {
-        self.set_available_actions_from_vec(ActionVec::from(actions))
     }
 
     fn initialize_player(&mut self, style: actions::PlayStyle) -> Player {
@@ -207,11 +211,6 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         }
         action
     }
-
-    async fn wait_for_any_key(&self) {
-        self.set_available_actions([Action::AnyKey]);
-        self.wait_for_action().await;
-    }
 }
 
 pub trait Game {
@@ -264,5 +263,5 @@ fn memory() {
 
     let state_holder = StateHolder::new(GameMode::Normal);
     let game = create_game(0, &state_holder);
-    assert_eq!(size_of_val(&game), 1584);
+    assert_eq!(size_of_val(&game), 1568);
 }

@@ -1,7 +1,7 @@
-use crate::logic::actions::illegal_action;
+use crate::logic::actions::{ActionVec, TryAgainAction};
 use crate::logic::entry_point::GameEnd;
 use crate::logic::{
-    scene_router, Action, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
+    scene_router, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
     HealthLevel, InternalGameState, Location,
 };
 
@@ -71,21 +71,19 @@ pub(in crate::logic) async fn game_end(
     g: &mut InternalGameState<'_>,
     state: &GameState,
 ) -> GameEnd {
-    g.set_screen(GameScreen::GameEnd(state.clone()));
-    g.wait_for_any_key().await;
+    g.set_screen_and_wait_for_any_key(GameScreen::GameEnd(state.clone()))
+        .await;
     // Хочешь попробовать снова? Да или нет.
-    g.set_screen_and_available_actions(
-        GameScreen::WannaTryAgain,
-        [Action::WantToTryAgain, Action::DontWantToTryAgain],
-    );
-    match g.wait_for_action().await {
-        Action::WantToTryAgain => GameEnd::Restart,
-        Action::DontWantToTryAgain => {
+    match g
+        .set_screen_and_wait_for_action::<TryAgainAction>(GameScreen::WannaTryAgain)
+        .await
+    {
+        TryAgainAction::WantToTryAgain => GameEnd::Restart,
+        TryAgainAction::DontWantToTryAgain => {
             g.set_screen_and_wait_for_any_key(GameScreen::Disclaimer)
                 .await;
-            g.set_screen_and_available_actions(GameScreen::Terminal, []);
+            g.set_screen_and_action_vec(GameScreen::Terminal, ActionVec::new());
             GameEnd::Exit
         }
-        action => illegal_action!(action),
     }
 }

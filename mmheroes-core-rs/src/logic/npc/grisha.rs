@@ -1,6 +1,6 @@
-use crate::logic::actions::illegal_action;
+use crate::logic::actions::TerkomEmploymentAction;
 use crate::logic::{
-    misc, Action, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
+    misc, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
     InternalGameState, Location,
 };
 
@@ -72,15 +72,13 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
     let mut has_enough_charisma =
         || state.player.charisma > g.rng.random(CharismaLevel(20));
     if !state.player.is_employed_at_terkom() && has_enough_charisma() {
-        g.set_screen_and_available_actions(
-            GameScreen::GrishaInteraction(state.clone(), PromptEmploymentAtTerkom),
-            [
-                Action::AcceptEmploymentAtTerkom,
-                Action::DeclineEmploymentAtTerkom,
-            ],
-        );
-        match g.wait_for_action().await {
-            Action::AcceptEmploymentAtTerkom => {
+        match g
+            .set_screen_and_wait_for_action::<TerkomEmploymentAction>(
+                GameScreen::GrishaInteraction(state.clone(), PromptEmploymentAtTerkom),
+            )
+            .await
+        {
+            TerkomEmploymentAction::Accept => {
                 g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(
                     state.clone(),
                     CongratulationsYouAreNowEmployed,
@@ -88,14 +86,13 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
                 .await;
                 state.player.set_employed_at_terkom();
             }
-            Action::DeclineEmploymentAtTerkom => {
+            TerkomEmploymentAction::Decline => {
                 g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(
                     state.clone(),
                     AsYouWantButDontOverstudy,
                 ))
                 .await;
             }
-            action => illegal_action!(action),
         }
     } else if !state.player.has_internet() && has_enough_charisma() {
         g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(

@@ -1,7 +1,29 @@
 use crate::logic::{Classmate, Subject};
 use crate::util::TinyVec;
+use strum::EnumIter;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+macro_rules! action_conversion {
+    ($sub_action:ty, $action:ident) => {
+        impl core::convert::From<$sub_action> for $crate::logic::Action {
+            fn from(value: $sub_action) -> Self {
+                Self::$action(value)
+            }
+        }
+
+        impl core::convert::TryFrom<$crate::logic::Action> for $sub_action {
+            type Error = ();
+
+            fn try_from(action: $crate::logic::Action) -> Result<Self, Self::Error> {
+                match action {
+                    $crate::logic::Action::$action(value) => Ok(value),
+                    _ => Err(()),
+                }
+            }
+        }
+    };
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
 pub enum PlayStyle {
     RandomStudent,
     CleverStudent,
@@ -10,7 +32,7 @@ pub enum PlayStyle {
     GodMode,
 }
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
 pub enum HelpAction {
     WhatToDoAtAll,
     AboutScreen,
@@ -21,11 +43,60 @@ pub enum HelpAction {
     ThanksButNothing,
 }
 
+action_conversion!(HelpAction, Help);
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum TerkomEmploymentAction {
+    Accept,
+    Decline,
+}
+
+action_conversion!(TerkomEmploymentAction, TerkomEmployment);
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum UseLectureNotesAction {
+    Yes,
+    No,
+}
+
+action_conversion!(UseLectureNotesAction, UseLectureNotes);
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum YesOrNoAction {
+    Yes,
+    No,
+}
+
+action_conversion!(YesOrNoAction, YesOrNo);
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum GameEndAction {
+    NoIAmNotDone,
+    IAmCertainlyDone,
+}
+
+action_conversion!(GameEndAction, GameEnd);
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum TryAgainAction {
+    WantToTryAgain,
+    DontWantToTryAgain,
+}
+
+action_conversion!(TryAgainAction, TryAgain);
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum TrainTicketAction {
+    GatecrashTrain,
+    BuyRoundtripTrainTicket,
+}
+
+action_conversion!(TrainTicketAction, TrainTicket);
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     AnyKey,
-    Yes,
-    No,
+    YesOrNo(YesOrNoAction),
     InteractWithClassmate(Classmate),
     Exam(Subject),
     DontGoToProfessor,
@@ -36,8 +107,7 @@ pub enum Action {
         lecture_notes_available: bool,
     },
     DontStudy,
-    UseLectureNotes(Subject),
-    DontUseLectureNotes(Subject),
+    UseLectureNotes(UseLectureNotesAction),
     RequestLectureNotesFromSasha(Subject),
     DontNeedAnythingFromSasha,
     ViewTimetable,
@@ -49,14 +119,12 @@ pub enum Action {
     GoFromMausoleumToPunk,
     RestByOurselvesInMausoleum,
     NoRestIsNoGood,
-    AcceptEmploymentAtTerkom,
-    DeclineEmploymentAtTerkom,
+    TerkomEmployment(TerkomEmploymentAction),
     GoToComputerClass,
     LeaveComputerClass,
     GoToPDMI,
     GoToPUNKFromPDMI,
-    BuyRoundtripTrainTicket,
-    GatecrashTrain,
+    TrainTicket(TrainTicketAction),
     GoToMausoleum,
     GoToCafePUNK,
     SurfInternet,
@@ -78,12 +146,10 @@ pub enum Action {
     ShouldntHaveComeToCafePUNK,
     RestInCafePDMI,
     IAmDone,
-    NoIAmNotDone,
-    IAmCertainlyDone,
+    GameEnd(GameEndAction),
     WhatToDo,
     Help(HelpAction),
-    WantToTryAgain,
-    DontWantToTryAgain,
+    TryAgain(TryAgainAction),
 }
 
 pub(in crate::logic) type ActionVec = TinyVec<Action, 16>;

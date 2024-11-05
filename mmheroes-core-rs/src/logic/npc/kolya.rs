@@ -1,7 +1,7 @@
-use crate::logic::actions::illegal_action;
+use crate::logic::actions::YesOrNoAction;
 use crate::logic::Subject::AlgebraAndNumberTheory;
 use crate::logic::{
-    misc, Action, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
+    misc, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
     InternalGameState, Location, Money, Player, SUBJECTS,
 };
 
@@ -79,12 +79,13 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
     } else {
         // "Знаешь, пиво, конечно, хорошо, но настойка овса - лучше!"
         // "Заказать Коле настойку овса?"
-        g.set_screen_and_available_actions(
-            GameScreen::KolyaInteraction(state.clone(), PromptOatTincture),
-            [Action::Yes, Action::No],
-        );
-        match g.wait_for_action().await {
-            Action::Yes => {
+        match g
+            .set_screen_and_wait_for_action::<YesOrNoAction>(
+                GameScreen::KolyaInteraction(state.clone(), PromptOatTincture),
+            )
+            .await
+        {
+            YesOrNoAction::Yes => {
                 if can_solve_algebra_problems(&mut g.rng, &mut state.player) {
                     solve_algebra_problems(g, state, SolvedAlgebraProblemsForOatTincture)
                         .await;
@@ -97,7 +98,7 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
                 }
                 state.player.money -= Money::oat_tincture_cost();
             }
-            Action::No => {
+            YesOrNoAction::No => {
                 g.set_screen_and_wait_for_any_key(GameScreen::KolyaInteraction(
                     state.clone(),
                     BrakeFluidBecauseRefused,
@@ -107,7 +108,6 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
                 // Баг в оригинальной реализации.
                 state.player.brain -= 1;
             }
-            action => illegal_action!(action),
         }
     }
 }

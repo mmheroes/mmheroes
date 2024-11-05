@@ -44,8 +44,8 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         }
     };
     let option_name = match action {
-        Action::Yes => "Да",
-        Action::No => "Нет",
+        Action::YesOrNo(actions::YesOrNoAction::Yes) => "Да",
+        Action::YesOrNo(actions::YesOrNoAction::No) => "Нет",
         Action::InteractWithClassmate(classmate) => {
             set_color(r, Color::YellowBright);
             write!(r, "{}", classmate_name(classmate));
@@ -81,8 +81,12 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
             return;
         }
         Action::DontStudy => "Ни к чему",
-        Action::UseLectureNotes(_) => "Воспользуюсь конспектом",
-        Action::DontUseLectureNotes(_) => "Буду учиться, как умею",
+        Action::UseLectureNotes(actions::UseLectureNotesAction::Yes) => {
+            "Воспользуюсь конспектом"
+        }
+        Action::UseLectureNotes(actions::UseLectureNotesAction::No) => {
+            "Буду учиться, как умею"
+        }
         Action::RequestLectureNotesFromSasha(subject) => subject_name(subject),
         Action::DontNeedAnythingFromSasha => "Ничего не надо",
         Action::ViewTimetable => "Посмотреть расписание",
@@ -98,8 +102,8 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::LeaveComputerClass => "Покинуть класс",
         Action::GoToPDMI => "Поехать в ПОМИ",
         Action::GoToPUNKFromPDMI => "Поехать в ПУНК",
-        Action::GatecrashTrain => "Ехать зайцем",
-        Action::BuyRoundtripTrainTicket => {
+        Action::TrainTicket(actions::TrainTicketAction::GatecrashTrain) => "Ехать зайцем",
+        Action::TrainTicket(actions::TrainTicketAction::BuyRoundtripTrainTicket) => {
             set_color(r, Color::CyanBright);
             return write!(
                 r,
@@ -151,17 +155,25 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::RestInCafePUNK => "Просто посижу с приятелями.",
         Action::ShouldntHaveComeToCafePUNK => "Я вообще зря сюда зашел.",
         Action::RestInCafePDMI => "Пойти в кафе",
-        Action::AcceptEmploymentAtTerkom => "Да, мне бы не помешало.",
-        Action::DeclineEmploymentAtTerkom => "Нет, я лучше поучусь уще чуток.",
+        Action::TerkomEmployment(actions::TerkomEmploymentAction::Accept) => {
+            "Да, мне бы не помешало."
+        }
+        Action::TerkomEmployment(actions::TerkomEmploymentAction::Decline) => {
+            "Нет, я лучше поучусь уще чуток."
+        }
         Action::IAmDone => {
             set_color(r, Color::BlueBright);
             write!(r, "С меня хватит!");
             return;
         }
-        Action::NoIAmNotDone => "Нет, не хочу!",
-        Action::IAmCertainlyDone => "Я же сказал: с меня хватит!",
-        Action::WantToTryAgain => "ДА!!! ДА!!! ДА!!!",
-        Action::DontWantToTryAgain => "Нет... Нет... Не-э-эт...",
+        Action::GameEnd(actions::GameEndAction::NoIAmNotDone) => "Нет, не хочу!",
+        Action::GameEnd(actions::GameEndAction::IAmCertainlyDone) => {
+            "Я же сказал: с меня хватит!"
+        }
+        Action::TryAgain(actions::TryAgainAction::WantToTryAgain) => "ДА!!! ДА!!! ДА!!!",
+        Action::TryAgain(actions::TryAgainAction::DontWantToTryAgain) => {
+            "Нет... Нет... Не-э-эт..."
+        }
         Action::WhatToDo => {
             set_color(r, Color::BlueBright);
             write!(r, "ЧТО ДЕЛАТЬ ???");

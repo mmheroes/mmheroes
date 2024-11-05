@@ -9,6 +9,7 @@ pub mod terkom;
 pub mod train;
 
 use super::*;
+use crate::logic::actions::GameEndAction;
 
 pub(super) fn available_actions(state: &GameState) -> ActionVec {
     // TODO: assert that no exam is in progress
@@ -155,13 +156,13 @@ async fn i_am_done(
     g: &mut InternalGameState<'_>,
     state: &GameState,
 ) -> Option<entry_point::GameEnd> {
-    g.set_screen_and_available_actions(
-        GameScreen::IAmDone(state.clone()),
-        [Action::NoIAmNotDone, Action::IAmCertainlyDone],
-    );
-    match g.wait_for_action().await {
-        Action::NoIAmNotDone => None,
-        Action::IAmCertainlyDone => Some(misc::game_end(g, state).await),
-        action => illegal_action!(action),
+    match g
+        .set_screen_and_wait_for_action::<GameEndAction>(GameScreen::IAmDone(
+            state.clone(),
+        ))
+        .await
+    {
+        GameEndAction::NoIAmNotDone => None,
+        GameEndAction::IAmCertainlyDone => Some(misc::game_end(g, state).await),
     }
 }

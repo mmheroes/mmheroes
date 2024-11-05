@@ -1,5 +1,5 @@
 use super::*;
-use crate::logic::actions::HelpAction;
+use crate::logic::actions::{HelpAction, UseLectureNotesAction};
 
 pub(super) async fn handle_router_action(
     g: &mut InternalGameState<'_>,
@@ -66,17 +66,14 @@ async fn study(g: &mut InternalGameState<'_>, state: &mut GameState) {
         .status_for_subject(subject_to_study)
         .has_lecture_notes();
     let use_lecture_notes = if lecture_notes_available {
-        g.set_screen_and_available_actions(
-            GameScreen::PromptUseLectureNotes(state.clone()),
-            [
-                Action::UseLectureNotes(subject_to_study),
-                Action::DontUseLectureNotes(subject_to_study),
-            ],
-        );
-        match g.wait_for_action().await {
-            Action::UseLectureNotes(_) => true,
-            Action::DontUseLectureNotes(_) => false,
-            action => illegal_action!(action),
+        match g
+            .set_screen_and_wait_for_action::<UseLectureNotesAction>(
+                GameScreen::PromptUseLectureNotes(state.clone()),
+            )
+            .await
+        {
+            UseLectureNotesAction::Yes => true,
+            UseLectureNotesAction::No => false,
         }
     } else {
         false
@@ -172,21 +169,8 @@ async fn show_help(g: &mut InternalGameState<'_>, state: &GameState) {
             HelpAction::AboutThisProgram => GameScreen::AboutThisProgram(state.clone()),
             HelpAction::ThanksButNothing => return,
         };
-        g.set_screen_and_available_actions(
-            help_screen,
-            [
-                Action::Help(HelpAction::WhatToDoAtAll),
-                Action::Help(HelpAction::AboutScreen),
-                Action::Help(HelpAction::WhereToGoAndWhy),
-                Action::Help(HelpAction::AboutProfessors),
-                Action::Help(HelpAction::AboutCharacters),
-                Action::Help(HelpAction::AboutThisProgram),
-                Action::Help(HelpAction::ThanksButNothing),
-            ],
-        );
-        help_action = match g.wait_for_action().await {
-            Action::Help(help_action) => help_action,
-            action => illegal_action!(action),
-        }
+        help_action = g
+            .set_screen_and_wait_for_action::<HelpAction>(help_screen)
+            .await;
     }
 }
