@@ -1,6 +1,7 @@
 use super::*;
 use bitfield_struct::bitfield;
 use core::fmt::{Debug, Formatter, Result as FmtResult};
+use strum::FromRepr;
 
 #[bitfield(u32, debug = false, default = false)]
 struct GameStateBits {
@@ -179,7 +180,7 @@ impl Debug for GameState {
     }
 }
 
-#[derive(Clone, Copy, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, Eq, PartialEq, Debug, FromRepr)]
 pub enum Location {
     PUNK = 1,
     PDMI = 2,
@@ -190,13 +191,9 @@ pub enum Location {
 
 impl Location {
     const fn from_bits(bits: u8) -> Location {
-        match bits {
-            1 => Location::PUNK,
-            2 => Location::PDMI,
-            3 => Location::ComputerClass,
-            4 => Location::Dorm,
-            5 => Location::Mausoleum,
-            _ => panic!("Invalid location"),
+        match Location::from_repr(bits as usize) {
+            Some(location) => location,
+            None => panic!("Invalid location"),
         }
     }
 
