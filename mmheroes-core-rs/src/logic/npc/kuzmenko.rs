@@ -68,8 +68,8 @@ fn additional_exam_day_index(rng: &mut random::Rng, state: &mut GameState) -> Op
         let has_enough_charisma = state.player.charisma > rng.random(CharismaLevel(18));
         let can_add_exam = day.exam(Subject::ComputerScience).is_none();
         if has_enough_charisma && can_add_exam {
-            let exam_start_time = Time(10 + rng.random(5));
-            let exam_end_time = exam_start_time + Duration(1 + rng.random(2));
+            let exam_start_time = Time(rng.random_in_range(10..15));
+            let exam_end_time = exam_start_time + Duration(rng.random_in_range(1..3));
             let additional_exam = timetable::Exam::new(
                 Subject::ComputerScience,
                 exam_start_time,
@@ -103,7 +103,7 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
         }
         _ => GameScreen::KuzmenkoInteraction(
             state.clone(),
-            RandomReply(*g.rng.random_element(KuzmenkoReply::VARIANTS)),
+            RandomReply(g.rng.random_variant()),
         ),
     };
     g.set_screen_and_wait_for_any_key(new_screen).await;

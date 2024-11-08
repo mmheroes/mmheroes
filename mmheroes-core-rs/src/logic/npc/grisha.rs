@@ -3,6 +3,7 @@ use crate::logic::{
     misc, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
     InternalGameState, Location,
 };
+use strum::VariantArray;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum GrishaInteraction {
@@ -19,50 +20,59 @@ pub enum GrishaInteraction {
     /// "Кстати, я тут знаю один качественно работающий прокси-сервер..."
     ProxyAddress,
 
+    RandomReply {
+        reply: GrishaReply,
+        drink_beer: bool,
+        hour_pass: bool,
+    },
+}
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, VariantArray)]
+pub enum GrishaReply {
     /// "Хочу халявы!"
-    WantFreebie { drink_beer: bool, hour_pass: bool },
+    WantFreebie,
 
     /// "Прийди же, о халява!"
-    FreebieComeToMe { drink_beer: bool, hour_pass: bool },
+    FreebieComeToMe,
 
     /// "Халява есть - ее не может не быть."
-    FreebieExists { drink_beer: bool, hour_pass: bool },
+    FreebieExists,
 
     /// "Давай организуем клуб любетелей халявы!"
-    LetsOrganizeFreebieLoversClub { drink_beer: bool, hour_pass: bool },
+    LetsOrganizeFreebieLoversClub,
 
     /// "Чтобы получить диплом, учиться совершенно необязательно!"
-    NoNeedToStudyToGetDiploma { drink_beer: bool, hour_pass: bool },
+    NoNeedToStudyToGetDiploma,
 
     /// "Ну вот, ты готовился... Помогло это тебе?"
-    YouStudiedDidItHelp { drink_beer: bool, hour_pass: bool },
+    YouStudiedDidItHelp,
 
     /// "На третьем курсе на лекции уже никто не ходит. Почти никто."
-    ThirdYearStudentsDontAttendLectures { drink_beer: bool, hour_pass: bool },
+    ThirdYearStudentsDontAttendLectures,
 
     /// "Вот, бери пример с Коли."
-    TakeExampleFromKolya { drink_beer: bool, hour_pass: bool },
+    TakeExampleFromKolya,
 
     /// "Ненавижу Льва Толстого! Вчера "Войну и мир" <йк> ксерил..."
-    HateLevTolstoy { drink_beer: bool, hour_pass: bool },
+    HateLevTolstoy,
 
     /// "А в ПОМИ лучше вообще не ездить!"
-    DontGoToPDMI { drink_beer: bool, hour_pass: bool },
+    DontGoToPDMI,
 
     /// "Имена главных халявчиков и алкоголиков висят на баобабе."
-    NamesOfFreebieLovers { drink_beer: bool, hour_pass: bool },
+    NamesOfFreebieLovers,
 
     /// "Правильно, лучше посидим здесь и оттянемся!"
-    SitHereAndChill { drink_beer: bool, hour_pass: bool },
+    SitHereAndChill,
 
     /// "Конспектировать ничего не надо. В мире есть ксероксы!"
-    NoNeedToTakeLectureNotes { drink_beer: bool, hour_pass: bool },
+    NoNeedToTakeLectureNotes,
 
     /// "А с четвертого курса вылететь уже почти невозможно."
-    CantBeExpelledInFourthYear { drink_beer: bool, hour_pass: bool },
+    CantBeExpelledInFourthYear,
 
     /// "Вот у механиков - у них халява!"
-    MechanicsHaveFreebie { drink_beer: bool, hour_pass: bool },
+    MechanicsHaveFreebie,
 }
 
 use GrishaInteraction::*;
@@ -104,72 +114,14 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
     } else {
         let drink_beer = g.rng.random(3) > 0;
         let hour_pass = g.rng.roll_dice(3);
-        let replies = [
-            WantFreebie {
-                drink_beer,
-                hour_pass,
-            },
-            FreebieComeToMe {
-                drink_beer,
-                hour_pass,
-            },
-            FreebieExists {
-                drink_beer,
-                hour_pass,
-            },
-            LetsOrganizeFreebieLoversClub {
-                drink_beer,
-                hour_pass,
-            },
-            NoNeedToStudyToGetDiploma {
-                drink_beer,
-                hour_pass,
-            },
-            YouStudiedDidItHelp {
-                drink_beer,
-                hour_pass,
-            },
-            ThirdYearStudentsDontAttendLectures {
-                drink_beer,
-                hour_pass,
-            },
-            TakeExampleFromKolya {
-                drink_beer,
-                hour_pass,
-            },
-            HateLevTolstoy {
-                drink_beer,
-                hour_pass,
-            },
-            DontGoToPDMI {
-                drink_beer,
-                hour_pass,
-            },
-            NamesOfFreebieLovers {
-                drink_beer,
-                hour_pass,
-            },
-            SitHereAndChill {
-                drink_beer,
-                hour_pass,
-            },
-            NoNeedToTakeLectureNotes {
-                drink_beer,
-                hour_pass,
-            },
-            CantBeExpelledInFourthYear {
-                drink_beer,
-                hour_pass,
-            },
-            MechanicsHaveFreebie {
-                drink_beer,
-                hour_pass,
-            },
-        ];
-        let reply = *g.rng.random_element(&replies);
+        let reply = g.rng.random_variant();
         g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(
             state.clone(),
-            reply,
+            RandomReply {
+                reply,
+                drink_beer,
+                hour_pass,
+            },
         ))
         .await;
         if drink_beer {

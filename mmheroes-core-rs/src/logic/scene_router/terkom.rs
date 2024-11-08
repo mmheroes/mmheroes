@@ -124,7 +124,7 @@ fn earned_money(rng: &mut crate::random::Rng, player: &Player) -> Money {
     income = rng.random(income);
     income += 1;
     while income > 4 {
-        income = rng.random(income - 3) + 2;
+        income = rng.random_in_range(2..(income - 1));
     }
     Money(income)
 }

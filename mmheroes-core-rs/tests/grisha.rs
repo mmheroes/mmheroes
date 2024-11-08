@@ -3,7 +3,7 @@ mod common;
 use assert_matches::assert_matches;
 use common::*;
 use mmheroes_core::logic::actions::PlayStyle;
-use mmheroes_core::logic::grisha::GrishaInteraction;
+use mmheroes_core::logic::grisha::{GrishaInteraction, GrishaReply};
 use mmheroes_core::logic::{Action, CauseOfDeath, Classmate, GameMode, GameScreen, Time};
 
 #[test]
@@ -40,7 +40,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::ThirdYearStudentsDontAttendLectures {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::ThirdYearStudentsDontAttendLectures,
                 drink_beer: true,
                 hour_pass: true,
             }
@@ -212,7 +213,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::TakeExampleFromKolya {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::TakeExampleFromKolya,
                 drink_beer: false,
                 hour_pass: false,
             }
@@ -254,7 +256,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::NamesOfFreebieLovers {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::NamesOfFreebieLovers,
                 drink_beer: true,
                 hour_pass: false,
             }
@@ -296,7 +299,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::NoNeedToStudyToGetDiploma {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::NoNeedToStudyToGetDiploma,
                 drink_beer: false,
                 hour_pass: false,
             }
@@ -338,7 +342,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::SitHereAndChill {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::SitHereAndChill,
                 drink_beer: true,
                 hour_pass: false,
             }
@@ -380,7 +385,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::YouStudiedDidItHelp {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::YouStudiedDidItHelp,
                 drink_beer: false,
                 hour_pass: false,
             }
@@ -422,7 +428,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::HateLevTolstoy {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::HateLevTolstoy,
                 drink_beer: true,
                 hour_pass: false,
             }
@@ -464,7 +471,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::NoNeedToStudyToGetDiploma {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::NoNeedToStudyToGetDiploma,
                 drink_beer: false,
                 hour_pass: false,
             }
@@ -506,7 +514,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::MechanicsHaveFreebie {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::MechanicsHaveFreebie,
                 drink_beer: true,
                 hour_pass: false,
             }
@@ -548,7 +557,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::ThirdYearStudentsDontAttendLectures {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::ThirdYearStudentsDontAttendLectures,
                 drink_beer: false,
                 hour_pass: false,
             }
@@ -590,7 +600,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::DontGoToPDMI {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::DontGoToPDMI,
                 drink_beer: true,
                 hour_pass: false,
             }
@@ -632,7 +643,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::NoNeedToStudyToGetDiploma {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::NoNeedToStudyToGetDiploma,
                 drink_beer: true,
                 hour_pass: false,
             }
@@ -674,7 +686,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::FreebieComeToMe {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::FreebieComeToMe,
                 drink_beer: true,
                 hour_pass: true,
             }
@@ -716,7 +729,8 @@ fn grisha() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::NamesOfFreebieLovers {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::NamesOfFreebieLovers,
                 drink_beer: true,
                 hour_pass: true,
             }
@@ -791,7 +805,8 @@ fn grisha_refuse_terkom() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::CantBeExpelledInFourthYear {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::CantBeExpelledInFourthYear,
                 drink_beer: true,
                 hour_pass: false,
             }
@@ -880,7 +895,8 @@ fn grisha_refuse_terkom() {
         state.observable_state().screen(),
         GameScreen::GrishaInteraction(
             state,
-            GrishaInteraction::NamesOfFreebieLovers {
+            GrishaInteraction::RandomReply {
+                reply: GrishaReply::NamesOfFreebieLovers,
                 drink_beer: false,
                 hour_pass: true,
             }

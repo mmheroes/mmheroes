@@ -1,4 +1,5 @@
 use crate::logic::diamond::DiamondInteraction;
+use crate::logic::grisha::GrishaReply;
 use crate::logic::npc::{
     grisha::GrishaInteraction, kolya::KolyaInteraction, kuzmenko::KuzmenkoInteraction,
     pasha::PashaInteraction, sasha::SashaInteraction,
@@ -131,25 +132,10 @@ pub(in crate::ui) fn display_grisha_interaction(
     interaction: GrishaInteraction,
 ) -> WaitingState {
     use GrishaInteraction::*;
+    use GrishaReply::*;
 
     match interaction {
-        PromptEmploymentAtTerkom
-        | ProxyAddress
-        | WantFreebie { .. }
-        | FreebieComeToMe { .. }
-        | FreebieExists { .. }
-        | LetsOrganizeFreebieLoversClub { .. }
-        | NoNeedToStudyToGetDiploma { .. }
-        | YouStudiedDidItHelp { .. }
-        | ThirdYearStudentsDontAttendLectures { .. }
-        | TakeExampleFromKolya { .. }
-        | HateLevTolstoy { .. }
-        | DontGoToPDMI { .. }
-        | NamesOfFreebieLovers { .. }
-        | SitHereAndChill { .. }
-        | NoNeedToTakeLectureNotes { .. }
-        | CantBeExpelledInFourthYear { .. }
-        | MechanicsHaveFreebie { .. } => {
+        PromptEmploymentAtTerkom | ProxyAddress | RandomReply { .. } => {
             r.clear_screen();
             scene_router::display_header_stats(r, state);
             r.move_cursor_to(7, 0);
@@ -158,7 +144,7 @@ pub(in crate::ui) fn display_grisha_interaction(
         CongratulationsYouAreNowEmployed | AsYouWantButDontOverstudy => (),
     }
 
-    let (reply, drink_beer, hour_pass) = match interaction {
+    match interaction {
         PromptEmploymentAtTerkom => {
             writeln_colored!(
                 YellowBright,
@@ -166,7 +152,7 @@ pub(in crate::ui) fn display_grisha_interaction(
                 "\"А ты не хочешь устроиться в ТЕРКОМ? Может, кое-чего подзаработаешь...\""
             );
             writeln!(r);
-            return dialog(r, available_actions);
+            dialog(r, available_actions)
         }
         CongratulationsYouAreNowEmployed => {
             r.move_cursor_to(13, 0);
@@ -175,7 +161,7 @@ pub(in crate::ui) fn display_grisha_interaction(
                 r,
                 "\"Поздравляю, теперь ты можешь идти в \"контору\"!\""
             );
-            return wait_for_any_key(r);
+            wait_for_any_key(r)
         }
         AsYouWantButDontOverstudy => {
             r.move_cursor_to(13, 0);
@@ -184,7 +170,7 @@ pub(in crate::ui) fn display_grisha_interaction(
                 r,
                 "\"Как хочешь. Только смотри, не заучись там ...\""
             );
-            return wait_for_any_key(r);
+            wait_for_any_key(r)
         }
         ProxyAddress => {
             writeln_colored!(
@@ -194,116 +180,59 @@ pub(in crate::ui) fn display_grisha_interaction(
             );
             writeln!(r);
             writeln_colored!(White, r, "Ты записываешь адрес. Вдруг пригодится?");
-            return wait_for_any_key(r);
+            wait_for_any_key(r)
         }
-        WantFreebie {
+        RandomReply {
+            reply,
             drink_beer,
             hour_pass,
-        } => ("Хочу халявы!", drink_beer, hour_pass),
-        FreebieComeToMe {
-            drink_beer,
-            hour_pass,
-        } => ("Прийди же, о халява!", drink_beer, hour_pass),
-        FreebieExists {
-            drink_beer,
-            hour_pass,
-        } => ("Халява есть - ее не может не быть.", drink_beer, hour_pass),
-        LetsOrganizeFreebieLoversClub {
-            drink_beer,
-            hour_pass,
-        } => (
-            "Давай организуем клуб любетелей халявы!",
-            drink_beer,
-            hour_pass,
-        ),
-        NoNeedToStudyToGetDiploma {
-            drink_beer,
-            hour_pass,
-        } => (
-            "Чтобы получить диплом, учиться совершенно необязательно!",
-            drink_beer,
-            hour_pass,
-        ),
-        YouStudiedDidItHelp {
-            drink_beer,
-            hour_pass,
-        } => (
-            "Ну вот, ты готовился... Помогло это тебе?",
-            drink_beer,
-            hour_pass,
-        ),
-        ThirdYearStudentsDontAttendLectures {
-            drink_beer,
-            hour_pass,
-        } => (
-            "На третьем курсе на лекции уже никто не ходит. Почти никто.",
-            drink_beer,
-            hour_pass,
-        ),
-        TakeExampleFromKolya {
-            drink_beer,
-            hour_pass,
-        } => ("Вот, бери пример с Коли.", drink_beer, hour_pass),
-        HateLevTolstoy {
-            drink_beer,
-            hour_pass,
-        } => (
-            "Ненавижу Льва Толстого! Вчера \"Войну и мир\" <йк> ксерил...",
-            drink_beer,
-            hour_pass,
-        ),
-        DontGoToPDMI {
-            drink_beer,
-            hour_pass,
-        } => ("А в ПОМИ лучше вообще не ездить!", drink_beer, hour_pass),
-        NamesOfFreebieLovers {
-            drink_beer,
-            hour_pass,
-        } => (
-            "Имена главных халявчиков и алкоголиков висят на баобабе.",
-            drink_beer,
-            hour_pass,
-        ),
-        SitHereAndChill {
-            drink_beer,
-            hour_pass,
-        } => (
-            "Правильно, лучше посидим здесь и оттянемся!",
-            drink_beer,
-            hour_pass,
-        ),
-        NoNeedToTakeLectureNotes {
-            drink_beer,
-            hour_pass,
-        } => (
-            "Конспектировать ничего не надо. В мире есть ксероксы!",
-            drink_beer,
-            hour_pass,
-        ),
-        CantBeExpelledInFourthYear {
-            drink_beer,
-            hour_pass,
-        } => (
-            "А с четвертого курса вылететь уже почти невозможно.",
-            drink_beer,
-            hour_pass,
-        ),
-        MechanicsHaveFreebie {
-            drink_beer,
-            hour_pass,
-        } => ("Вот у механиков - у них халява!", drink_beer, hour_pass),
-    };
-
-    write_colored!(White, r, "Гриша:");
-    writeln_colored!(YellowBright, r, "\"{}\"", reply);
-    if drink_beer {
-        writeln_colored!(White, r, "И еще по пиву...");
+        } => {
+            let text = match reply {
+                WantFreebie => "Хочу халявы!",
+                FreebieComeToMe => "Прийди же, о халява!",
+                FreebieExists => "Халява есть - ее не может не быть.",
+                LetsOrganizeFreebieLoversClub => {
+                    "Давай организуем клуб любетелей халявы!"
+                }
+                NoNeedToStudyToGetDiploma => {
+                    "Чтобы получить диплом, учиться совершенно необязательно!"
+                }
+                YouStudiedDidItHelp => "Ну вот, ты готовился... Помогло это тебе?",
+                ThirdYearStudentsDontAttendLectures => {
+                    "На третьем курсе на лекции уже никто не ходит. Почти никто."
+                }
+                TakeExampleFromKolya => "Вот, бери пример с Коли.",
+                HateLevTolstoy => {
+                    "Ненавижу Льва Толстого! Вчера \"Войну и мир\" <йк> ксерил..."
+                }
+                DontGoToPDMI => "А в ПОМИ лучше вообще не ездить!",
+                NamesOfFreebieLovers => {
+                    "Имена главных халявчиков и алкоголиков висят на баобабе."
+                }
+                SitHereAndChill => "Правильно, лучше посидим здесь и оттянемся!",
+                NoNeedToTakeLectureNotes => {
+                    "Конспектировать ничего не надо. В мире есть ксероксы!"
+                }
+                CantBeExpelledInFourthYear => {
+                    "А с четвертого курса вылететь уже почти невозможно."
+                }
+                MechanicsHaveFreebie => "Вот у механиков - у них халява!",
+            };
+            write_colored!(White, r, "Гриша:");
+            writeln_colored!(YellowBright, r, "\"{}\"", text);
+            if drink_beer {
+                writeln_colored!(White, r, "И еще по пиву...");
+            }
+            if hour_pass {
+                writeln_colored!(
+                    White,
+                    r,
+                    "И еще один час прошел в бесплодных разговорах..."
+                );
+            }
+            wait_for_any_key(r)
+        }
     }
-    if hour_pass {
-        writeln_colored!(White, r, "И еще один час прошел в бесплодных разговорах...");
-    }
-
-    wait_for_any_key(r)
 }
 
 pub(in crate::ui) fn display_sasha_interaction(

@@ -1,4 +1,5 @@
 use core::ops::{Bound, RangeBounds};
+use strum::VariantArray;
 
 pub(crate) struct Rng {
     state: u64,
@@ -88,6 +89,10 @@ impl Rng {
 
     pub(crate) fn random_element<'a, T>(&mut self, slice: &'a [T]) -> &'a T {
         &slice[self.random(slice.len() as u64) as usize]
+    }
+
+    pub(crate) fn random_variant<T: VariantArray + Clone + Copy>(&mut self) -> T {
+        *self.random_element(T::VARIANTS)
     }
 
     pub(crate) fn roll_dice<B: TryFrom<u64> + TryInto<u64> + Copy>(
