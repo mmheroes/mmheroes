@@ -51,6 +51,10 @@ impl Subject {
     pub(super) const fn into_bits(self) -> u8 {
         self as u8
     }
+
+    pub(super) fn all_subjects() -> impl DoubleEndedIterator<Item = Subject> {
+        SUBJECTS.iter().map(|(subject, _)| *subject)
+    }
 }
 
 pub struct Subjects([(Subject, SubjectInfo); Subject::COUNT]);

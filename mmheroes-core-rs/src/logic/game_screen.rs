@@ -55,6 +55,10 @@ pub enum GameScreen {
     /// Третий аргумент означает, уходит ли Diamond после взаимодействия.
     DiamondInteraction(GameState, npc::diamond::DiamondInteraction, bool),
 
+    /// Взаимодействие с Сержем.
+    /// Третий аргумент означает, уходит ли Серж после взаимодействия.
+    SerjInteraction(GameState, npc::serj::SerjInteraction, bool),
+
     /// Работа в ТЕРКОМе
     Terkom(GameState, terkom::Terkom),
 
@@ -134,6 +138,7 @@ impl GameScreen {
             | SashaInteraction(state, _)
             | KuzmenkoInteraction(state, _)
             | DiamondInteraction(state, _, _)
+            | SerjInteraction(state, _, _)
             | Terkom(state, _)
             | GoToProfessor(state)
             | Exam(state, _)

@@ -4,6 +4,7 @@ pub mod kolya;
 pub mod kuzmenko;
 pub mod pasha;
 pub mod sasha;
+pub mod serj;
 
 use super::*;
 
@@ -71,86 +72,67 @@ impl ClassmateInfo {
 
     pub(in crate::logic) fn update(
         &mut self,
-        rng: &mut crate::random::Rng,
+        rng: &mut random::Rng,
         current_location: Location,
         today: &Day,
         time: Time,
     ) {
+        let typically_in = |location: Location, classmate: &mut ClassmateInfo| {
+            classmate.current_location = if time.is_between_9_and_19() {
+                ClassmateLocation::Location(location)
+            } else {
+                ClassmateLocation::Nowhere
+            }
+        };
+
         match self.classmate {
             Kolya => {
-                self.current_location = if time.is_between_9_and_19() {
-                    ClassmateLocation::Location(Location::Mausoleum)
-                } else {
-                    ClassmateLocation::Nowhere
-                }
+                typically_in(Location::Mausoleum, self);
             }
             Pasha => {
-                self.current_location = if time.is_between_9_and_19() {
-                    ClassmateLocation::Location(Location::PUNK)
-                } else {
-                    ClassmateLocation::Nowhere
-                };
-
-                let subjects = [
-                    Subject::AlgebraAndNumberTheory,
-                    Subject::Calculus,
-                    Subject::GeometryAndTopology,
-                ];
-
-                let mut at_least_one_exam_is_today = false;
-                let mut pasha_is_present_at_some_exam = false;
-
-                loop {
-                    for subject in subjects.iter().cloned() {
-                        if current_location.is_exam_here_on_day(subject, today) {
-                            at_least_one_exam_is_today = true;
-                            if rng.random(10) > 5 {
-                                pasha_is_present_at_some_exam = true;
-                                self.current_location = ClassmateLocation::Exam(subject)
-                            }
-                        }
-                    }
-
-                    if pasha_is_present_at_some_exam || !at_least_one_exam_is_today {
-                        break;
-                    }
-                }
+                typically_in(Location::PUNK, self);
+                maybe_on_exam(rng, current_location, today, self, || {
+                    [
+                        Subject::AlgebraAndNumberTheory,
+                        Subject::Calculus,
+                        Subject::GeometryAndTopology,
+                    ]
+                });
             }
             Diamond => {
-                self.current_location = if time.is_between_9_and_19() {
-                    ClassmateLocation::Location(Location::ComputerClass)
-                } else {
-                    ClassmateLocation::Nowhere
-                };
-                for (subject, _) in SUBJECTS.iter().rev() {
-                    if current_location.is_exam_here_on_day(*subject, today)
+                typically_in(Location::ComputerClass, self);
+                for subject in Subject::all_subjects().rev() {
+                    if current_location.is_exam_here_on_day(subject, today)
                         && rng.random(10) > 5
                     {
-                        self.current_location = ClassmateLocation::Exam(*subject);
+                        self.current_location = ClassmateLocation::Exam(subject);
                     }
                 }
             }
             RAI => {
-                self.current_location = if current_location.is_exam_here_now(
+                typically_in(Location::ComputerClass, self);
+                if current_location.is_exam_here_now(
                     Subject::AlgebraAndNumberTheory,
                     today,
                     time,
                 ) {
-                    ClassmateLocation::Exam(Subject::AlgebraAndNumberTheory)
+                    self.current_location =
+                        ClassmateLocation::Exam(Subject::AlgebraAndNumberTheory)
                 } else if current_location.is_exam_here_now(
                     Subject::Calculus,
                     today,
                     time,
                 ) {
-                    ClassmateLocation::Exam(Subject::Calculus)
-                } else if time.is_between_9_and_19() {
-                    ClassmateLocation::Location(Location::ComputerClass)
-                } else {
-                    ClassmateLocation::Nowhere
-                }
+                    self.current_location = ClassmateLocation::Exam(Subject::Calculus)
+                };
             }
             Misha => { /* TODO */ }
-            Serj => { /* TODO */ }
+            Serj => {
+                typically_in(Location::PUNK, self);
+                maybe_on_exam(rng, current_location, today, self, || {
+                    Subject::all_subjects().rev()
+                });
+            }
             Sasha => {
                 self.current_location = if time.is_between_9_and_19() && rng.roll_dice(4)
                 {
@@ -177,6 +159,33 @@ impl ClassmateInfo {
                     ClassmateLocation::Nowhere
                 }
             }
+        }
+    }
+}
+
+fn maybe_on_exam<'a, I: IntoIterator<Item = Subject>>(
+    rng: &mut random::Rng,
+    current_location: Location,
+    today: &Day,
+    classmate: &mut ClassmateInfo,
+    mut possible_subjects: impl FnMut() -> I,
+) {
+    let mut at_least_one_exam_is_today = false;
+    let mut is_present_at_some_exam = false;
+
+    loop {
+        for subject in possible_subjects().into_iter() {
+            if current_location.is_exam_here_on_day(subject, today) {
+                at_least_one_exam_is_today = true;
+                if rng.random(10) > 5 {
+                    is_present_at_some_exam = true;
+                    classmate.current_location = ClassmateLocation::Exam(subject)
+                }
+            }
+        }
+
+        if is_present_at_some_exam || !at_least_one_exam_is_today {
+            break;
         }
     }
 }
@@ -296,7 +305,7 @@ pub(super) async fn interact_with_classmate(
         Diamond => diamond::interact(g, state).await,
         RAI => todo!("RAI"),
         Misha => todo!("Misha"),
-        Serj => todo!("Serj"),
+        Serj => serj::interact(g, state).await,
         Sasha => sasha::interact(g, state).await,
         NiL => todo!("NiL"),
         Kuzmenko => kuzmenko::interact(g, state).await,

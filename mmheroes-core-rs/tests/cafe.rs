@@ -40,7 +40,7 @@ fn cafe_punk() {
     );
 
     // Получаем деньги у Паши, снова идём в кафе
-    replay_game(game_ui, "↓r3↑2r6↓r");
+    replay_game(game_ui, "↓r4↑2r6↓r");
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::CafePUNK(state) => {
@@ -93,7 +93,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(12));
             assert_characteristics!(
                 state,
-                health: 67,
+                health: 66,
                 money: 44,
                 brain: 5,
                 stamina: 4,
@@ -111,7 +111,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(13));
             assert_characteristics!(
                 state,
-                health: 75,
+                health: 74,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -129,7 +129,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(14));
             assert_characteristics!(
                 state,
-                health: 78,
+                health: 77,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -147,7 +147,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(14));
             assert_characteristics!(
                 state,
-                health: 78,
+                health: 77,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -165,7 +165,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(18));
             assert_characteristics!(
                 state,
-                health: 92,
+                health: 88,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -187,7 +187,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(19));
             assert_characteristics!(
                 state,
-                health: 93,
+                health: 89,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -208,7 +208,7 @@ fn cafe_punk_limited_menu() {
         replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
         // Отдыхаем до 10:00, идём на факультет и получаем стипендию
-        replay_game(game_ui, "2↓r2↓r4↓r3↑2r");
+        replay_game(game_ui, "2↓r2↓r4↓r4↑2r");
 
         // Идём в кафе, заказываем пока не останется 4 рубля
         for _ in 0..7 {
@@ -222,7 +222,7 @@ fn cafe_punk_limited_menu() {
                 assert_eq!(state.current_time(), Time(18));
                 assert_characteristics!(
                     state,
-                    health: 135,
+                    health: 133,
                     money: 4,
                     brain: 5,
                     stamina: 4,
@@ -248,7 +248,7 @@ fn cafe_punk_limited_menu() {
         replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
         // Отдыхаем до 10:00, идём на факультет и получаем стипендию
-        replay_game(game_ui, "2↓r2↓r4↓r3↑2r");
+        replay_game(game_ui, "2↓r2↓r4↓r4↑2r");
 
         // Идём в кафе, заказываем пока не останется 2 рубля
         for _ in 0..8 {
@@ -261,7 +261,7 @@ fn cafe_punk_limited_menu() {
                 assert_eq!(state.current_time(), Time(18));
                 assert_characteristics!(
                     state,
-                    health: 138,
+                    health: 136,
                     money: 2,
                     brain: 5,
                     stamina: 4,

@@ -287,6 +287,14 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
                     *diamond_leaves,
                 )
             }
+            SerjInteraction(state, interaction, serj_leaves) => {
+                screens::npc::display_serj_interaction(
+                    &mut self.renderer,
+                    state,
+                    *interaction,
+                    *serj_leaves,
+                )
+            }
             Terkom(state, terkom_screen) => screens::terkom::display_terkom(
                 &mut self.renderer,
                 self.state_holder.observable_state().available_actions(),

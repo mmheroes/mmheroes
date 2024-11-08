@@ -2,7 +2,7 @@ use crate::logic::diamond::DiamondInteraction;
 use crate::logic::grisha::GrishaReply;
 use crate::logic::npc::{
     grisha::GrishaInteraction, kolya::KolyaInteraction, kuzmenko::KuzmenkoInteraction,
-    pasha::PashaInteraction, sasha::SashaInteraction,
+    pasha::PashaInteraction, sasha::SashaInteraction, serj::SerjInteraction,
 };
 use crate::logic::*;
 use crate::ui::{renderer::Renderer, screens::scene_router, *};
@@ -467,4 +467,80 @@ pub(crate) fn display_diamond_interaction(
             wait_for_any_key(r)
         }
     }
+}
+
+pub(crate) fn display_serj_interaction(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    state: &GameState,
+    interaction: SerjInteraction,
+    serj_leaves: bool,
+) -> WaitingState {
+    use crate::logic::npc::serj::{SerjInteraction::*, SerjReply::*};
+    r.clear_screen();
+    scene_router::display_header_stats(r, state);
+    r.move_cursor_to(7, 0);
+    write_colored!(White, r, "Серж: ");
+    let reply = match interaction {
+        HaveSomeKefir => "На, глотни кефирчику.",
+        IKnowWhereToCutInThePark => "Я знаю, где срезать в парке на физ-ре!",
+        RandomReply(GuiMmheroes) => {
+            "Помнится, когда-то была еще графическая версия mmHeroes..."
+        }
+        RandomReply(IWasABetaTester) => {
+            "Я был бета-тестером первой версии mmHeroes (тогда еще CRWMM19)!"
+        }
+        RandomReply(HowGreatThatDiamondWroteANewVersion) => {
+            "Как здорово, что Diamond написал новую версию!"
+        }
+        RandomReply(HaveYouAlreadyGotStipendFromPasha) => "Ты уже получил деньги у Паши?",
+        RandomReply(TryEasyExamsFirst) => "Попробуй для начала легкие зачеты.",
+        RandomReply(HaventYouPassedEnglishExam) => {
+            "Ты еще не получил зачет по английскому?"
+        }
+        RandomReply(WantToRestAnywhereGetMoney) => {
+            "Хочешь отдыхать, где угодно? Заимей деньги!"
+        }
+        RandomReply(MoneyCantBuyHappiness) => {
+            "Не в деньгах счастье. Но они действуют успокаивающе."
+        }
+        RandomReply(AlwaysCrowdedOnVsemirnov) => "На Всемирнове всегда толпа народу.",
+        RandomReply(VlaschenkoIsOriginalLady) => "Влащенко - дама весьма оригинальная.",
+        RandomReply(WhenWillNewVersionBeReady) => {
+            "Интересно, когда будет готова следующая версия?"
+        }
+        RandomReply(HealthInCafe) => {
+            "Здоровье в кафе повышается в зависимости от наличия денег."
+        }
+        RandomReply(IfOnlyIKnewProxyAddress) => "Если бы я знал адрес хорошего proxy...",
+        RandomReply(StarIsKaput) => {
+            "STAR временно накрылся. Хорошо бы узнать адрес другого proxy..."
+        }
+        RandomReply(GrishaKnowsProxyAddress) => {
+            "Я подозреваю, что Гриша знает адресок теркомовского proxy."
+        }
+        RandomReply(DiamondSpendsAllHisFreeTimeOnTheGame) => {
+            "А Diamond все свободное время дописывает свою игрушку!"
+        }
+        RandomReply(NextTermTerekhovJrWillTeachCS) => {
+            "В следующем семестре информатику будет вести Терехов-младший."
+        }
+        RandomReply(DiamondWantsToRewriteItInJava) => {
+            "Diamond хочет переписать это все на Java."
+        }
+        RandomReply(MishaWillTellYouTheStrategy) => {
+            "Миша проконсультирует тебя о стратегии."
+        }
+        RandomReply(TalkWithDiamondHeKnowsALot) => {
+            "Поговори с Diamond'ом, он много ценного скажет."
+        }
+        RandomReply(FightUntilTheEnd) => "Борись до конца!",
+        RandomReply(SometimesThereIsFreebieWithDubtsov) => {
+            "У Дубцова иногда бывает халява."
+        }
+    };
+    writeln_colored!(WhiteBright, r, "\"{}\"", reply);
+    if serj_leaves {
+        writeln_colored!(White, r, "Серж уходит куда-то по своим делам ...");
+    }
+    wait_for_any_key(r)
 }
