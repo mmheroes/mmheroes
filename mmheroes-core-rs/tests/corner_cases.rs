@@ -5,6 +5,40 @@ use assert_matches::*;
 use mmheroes_core::logic::actions::PlayStyle;
 use mmheroes_core::logic::*;
 
+#[test]
+fn welcome_screen() {
+    initialize_game!((0, GameMode::SelectInitialParameters) => state, game_ui);
+    assert_ui!(
+        game_ui,
+        r#"
+                                                Нам понятен этот смех
+                                                Не попавших на Мат-Мех
+                                                  (надпись на парте)
+
+
+
+ H H  EEE  RR    O   EEE  SS       M   M  A   A TTTTT       M   M  EEE  X   X
+ H H  E    R R  O O  E   S         MM MM  AAAAA   T         MM MM    E   X X
+ HHH  EE   RR   O O  EE   S    OF  M M M  A   A   T    &&&  M M M   EE    X
+ H H  E    R R  O O  E     S       M   M   A A    T         M   M    E   X X
+ H H  EEE  R R   O   EEE SS        M   M    A     T         M   E  EEE  X   X
+
+
+
+                             ГЕРОИ МАТА И МЕХА ;)
+
+
+(P) CrWMM Development Team, 2001.
+Версия gamma3.14.
+Загляните на нашу страничку: mmheroes.chat.ru !
+
+
+
+Нажми любую клавишу ...▁
+"#
+    );
+}
+
 /// Проверяем что экран выбора стиля игры показывается после перезапуска
 #[test]
 fn initial_parameters_screen_shown_when_rerunning() {
