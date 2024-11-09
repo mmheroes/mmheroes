@@ -43,6 +43,10 @@ impl<C: RendererRequestConsumer> Renderer<C> {
         }
     }
 
+    pub(in crate::ui) fn request_consumer(&self) -> &C {
+        &self.request_consumer
+    }
+
     pub(in crate::ui) fn clear_screen(&mut self) {
         self.column = 0;
         self.line = 0;

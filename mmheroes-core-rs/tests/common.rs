@@ -5,60 +5,87 @@ use mmheroes_core::ui::recording::{InputRecordingParser, InputRecordingParserErr
 use mmheroes_core::ui::renderer::RendererRequestConsumer;
 use mmheroes_core::ui::*;
 
-#[allow(dead_code)]
-enum OwningRendererRequest {
-    ClearScreen,
-    Flush,
-    WriteString(String),
-    MoveCursor {
-        line: u8,
-        column: u8,
-    },
-    SetColor {
-        foreground: Color,
-        background: Color,
-    },
-    Sleep(Milliseconds),
-}
+const WIDTH: usize = 80;
+const HEIGHT: usize = 24;
+
+type Canvas = [[char; WIDTH]; HEIGHT];
 
 pub struct TestRendererRequestConsumer {
-    requests: Vec<OwningRendererRequest>,
+    canvas: Canvas,
+    line: usize,
+    column: usize,
+    foreground_color: Color,
+    background_color: Color,
 }
 
+#[allow(clippy::new_without_default, clippy::inherent_to_string)]
 impl TestRendererRequestConsumer {
+    fn make_canvas() -> Canvas {
+        [[' '; WIDTH]; HEIGHT]
+    }
+
     pub fn new() -> Self {
         Self {
-            requests: Vec::new(),
+            canvas: Self::make_canvas(),
+            line: 0,
+            column: 0,
+            foreground_color: Color::White,
+            background_color: Color::Black,
         }
     }
 
-    #[allow(dead_code)]
-    fn requests(&self) -> &[OwningRendererRequest] {
-        &*self.requests
+    pub fn to_string(&self) -> String {
+        let mut output = String::new();
+        for i in 0..HEIGHT {
+            let mut tmp = String::new();
+            for j in 0..WIDTH {
+                if self.line == i && self.column == j {
+                    tmp.push('▁');
+                } else {
+                    tmp.push(self.canvas[i][j]);
+                }
+            }
+            tmp = tmp.trim_end().to_string();
+            output.push_str(&tmp);
+            output.push('\n');
+        }
+        output
     }
 }
 
 impl RendererRequestConsumer for TestRendererRequestConsumer {
     fn consume_request(&mut self, request: RendererRequest) {
-        let owning_request = match request {
-            RendererRequest::ClearScreen => OwningRendererRequest::ClearScreen,
-            RendererRequest::Flush => OwningRendererRequest::Flush,
+        match request {
+            RendererRequest::ClearScreen => {
+                self.canvas = Self::make_canvas();
+                self.line = 0;
+                self.column = 0;
+            }
+            RendererRequest::Flush => (),
             RendererRequest::WriteStr(s) => {
-                OwningRendererRequest::WriteString(String::from(s))
+                for c in s.chars() {
+                    if c == '\n' {
+                        self.line += 1;
+                        self.column = 0;
+                    } else {
+                        self.canvas[self.line][self.column] = c;
+                        self.column += 1;
+                    }
+                }
             }
             RendererRequest::MoveCursor { line, column } => {
-                OwningRendererRequest::MoveCursor { line, column }
+                self.line = line as usize;
+                self.column = column as usize;
             }
             RendererRequest::SetColor {
                 foreground,
                 background,
-            } => OwningRendererRequest::SetColor {
-                foreground,
-                background,
-            },
-            RendererRequest::Sleep(ms) => OwningRendererRequest::Sleep(ms),
+            } => {
+                self.foreground_color = foreground;
+                self.background_color = background;
+            }
+            RendererRequest::Sleep(_) => (),
         };
-        self.requests.push(owning_request)
     }
 }
 
@@ -236,4 +263,14 @@ macro_rules! assert_subject_knowledge {
             },
         );
     }};
+}
+
+#[macro_export]
+macro_rules! assert_ui {
+    ($game_ui:expr, $expected:literal) => {
+        assert_eq!(
+            $game_ui.request_consumer().to_string().trim_end(),
+            $expected[1..].trim_end(),
+        );
+    };
 }

@@ -359,6 +359,10 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
         self.renderer.waiting_state = Some(new_waiting_state);
         true
     }
+
+    pub fn request_consumer(&self) -> &C {
+        self.renderer.request_consumer()
+    }
 }
 
 fn sleep(r: &mut Renderer<impl RendererRequestConsumer>, ms: Milliseconds) {
