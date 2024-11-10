@@ -1,39 +1,46 @@
 use super::*;
-
-use bitflags::bitflags;
+use bitfield_struct::bitfield;
 use strum::EnumCount;
 
-bitflags! {
-    #[repr(transparent)]
-    #[derive(Debug, Clone, Copy)]
-    struct PlayerFlags: u16 {
+#[bitfield(u16, debug = true, default = false)]
+struct PlayerBits {
+    /// Получил ли персонаж дискету с новой версией MMHEROES от Diamond
+    #[bits(1)]
+    has_mmheroes_floppy: bool,
 
-        /// Получил ли персонаж дискету с новой версией MMHEROES от Diamond
-        const HAS_MMHEROES_FLOPPY = 1 << 0;
+    #[bits(1)]
+    has_internet: bool,
 
-        const HAS_INTERNET = 1 << 1;
+    #[bits(1)]
+    is_invited: bool,
 
-        const IS_INVITED = 1 << 2;
+    #[bits(1)]
+    inception: bool,
 
-        const INCEPTION = 1 << 3;
+    #[bits(1)]
+    is_employed_at_terkom: bool,
 
-        const IS_EMPLOYED_AT_TERKOM = 1 << 4;
+    #[bits(1)]
+    got_stipend: bool,
 
-        const GOT_STIPEND = 1 << 5;
+    #[bits(1)]
+    has_roundtrip_train_ticket: bool,
 
-        const HAS_ROUNDTRIP_TRAIN_TICKET = 1 << 6;
+    #[bits(1)]
+    knows_djug: bool,
 
-        const KNOWS_DJUG = 1 << 7;
+    #[bits(7)]
+    _padding: u16,
 
-        const GOD_MODE = 1 << 15;
-    }
+    #[bits(1)]
+    god_mode: bool,
 }
 
 #[derive(Debug, Clone)]
 pub struct Player {
     pub(in crate::logic) subjects: [SubjectStatus; Subject::COUNT],
 
-    flags: PlayerFlags,
+    bits: PlayerBits,
 
     /// Запах чеснока изо рта
     #[allow(dead_code)]
@@ -57,8 +64,6 @@ impl Player {
         charisma: CharismaLevel,
         mut knowledge: impl FnMut(Subject) -> BrainLevel,
     ) -> Player {
-        let mut flags = PlayerFlags::empty();
-        flags.set(PlayerFlags::GOD_MODE, god_mode);
         let player = Player {
             subjects: [
                 SubjectStatus::new(
@@ -80,7 +85,7 @@ impl Player {
                     knowledge(Subject::PhysicalEducation),
                 ),
             ],
-            flags,
+            bits: PlayerBits::new().with_god_mode(god_mode),
             garlic: 0,
             health,
             money: Money(0),
@@ -113,31 +118,31 @@ impl Player {
     }
 
     pub fn is_god_mode(&self) -> bool {
-        self.flags.contains(PlayerFlags::GOD_MODE)
+        self.bits.god_mode()
     }
 
     pub fn has_mmheroes_floppy(&self) -> bool {
-        self.flags.contains(PlayerFlags::HAS_MMHEROES_FLOPPY)
+        self.bits.has_mmheroes_floppy()
     }
 
     pub(in crate::logic) fn set_has_mmheroes_floppy(&mut self) {
-        self.flags.insert(PlayerFlags::HAS_MMHEROES_FLOPPY)
+        self.bits.set_has_mmheroes_floppy(true);
     }
 
     pub fn has_internet(&self) -> bool {
-        self.flags.contains(PlayerFlags::HAS_INTERNET)
+        self.bits.has_internet()
     }
 
     pub(in crate::logic) fn set_has_internet(&mut self) {
-        self.flags.insert(PlayerFlags::HAS_INTERNET)
+        self.bits.set_has_internet(true);
     }
 
     pub fn is_employed_at_terkom(&self) -> bool {
-        self.flags.contains(PlayerFlags::IS_EMPLOYED_AT_TERKOM)
+        self.bits.is_employed_at_terkom()
     }
 
     pub(in crate::logic) fn set_employed_at_terkom(&mut self) {
-        self.flags.insert(PlayerFlags::IS_EMPLOYED_AT_TERKOM)
+        self.bits.set_is_employed_at_terkom(true);
     }
 
     pub fn health(&self) -> HealthLevel {
@@ -149,19 +154,19 @@ impl Player {
     }
 
     pub fn got_stipend(&self) -> bool {
-        self.flags.contains(PlayerFlags::GOT_STIPEND)
+        self.bits.got_stipend()
     }
 
     pub(in crate::logic) fn set_got_stipend(&mut self) {
-        self.flags.insert(PlayerFlags::GOT_STIPEND);
+        self.bits.set_got_stipend(true);
     }
 
     pub fn has_roundtrip_train_ticket(&self) -> bool {
-        self.flags.contains(PlayerFlags::HAS_ROUNDTRIP_TRAIN_TICKET)
+        self.bits.has_roundtrip_train_ticket()
     }
 
     pub(in crate::logic) fn set_has_roundtrip_train_ticket(&mut self) {
-        self.flags.insert(PlayerFlags::HAS_ROUNDTRIP_TRAIN_TICKET)
+        self.bits.set_has_roundtrip_train_ticket(true);
     }
 
     pub fn brain(&self) -> BrainLevel {

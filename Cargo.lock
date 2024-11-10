@@ -115,7 +115,6 @@ version = "0.1.0"
 dependencies = [
  "assert_matches",
  "bitfield-struct",
- "bitflags",
  "strum",
  "unicode-segmentation",
 ]
