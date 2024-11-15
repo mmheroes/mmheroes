@@ -11,7 +11,7 @@ pub enum GameScreen {
     InitialParameters,
 
     /// Экран с предысторией ("ты просыпаешься от звонка будильника...")
-    Ding(Player), // TODO: Remove Player
+    Ding,
 
     /// Экран с расписанием.
     Timetable(GameState),
@@ -146,8 +146,9 @@ impl GameScreen {
             | RestInMausoleum(state)
             | CafePUNK(state)
             | TrainToPDMI(state, _) => Some(state),
-            Intro | InitialParameters | Ding(_) | WannaTryAgain | Disclaimer
-            | Terminal => None,
+            Intro | InitialParameters | Ding | WannaTryAgain | Disclaimer | Terminal => {
+                None
+            }
         }
     }
 }

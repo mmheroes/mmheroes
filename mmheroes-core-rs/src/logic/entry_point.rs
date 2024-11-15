@@ -11,8 +11,7 @@ pub(super) async fn run(g: &mut InternalGameState<'_>) {
     loop {
         let play_style = select_play_style(g).await;
         let player = g.initialize_player(play_style);
-        g.set_screen_and_wait_for_any_key(GameScreen::Ding(player.clone()))
-            .await;
+        g.set_screen_and_wait_for_any_key(GameScreen::Ding).await;
         let state = GameState::new(
             player.clone(),
             Timetable::random(&mut g.rng),

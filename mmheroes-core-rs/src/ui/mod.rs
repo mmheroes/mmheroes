@@ -197,8 +197,8 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
                 self.state_holder.observable_state().available_actions(),
                 self.state_holder.observable_state().mode(),
             ),
-            Ding(_) => screens::initial::display_ding(&mut self.renderer),
-            GameScreen::Timetable(state) => {
+            Ding => screens::initial::display_ding(&mut self.renderer),
+            Timetable(state) => {
                 screens::timetable::display_timetable(&mut self.renderer, state)
             }
             SceneRouter(state) => screens::scene_router::display_scene_router(

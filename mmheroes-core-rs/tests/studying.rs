@@ -16,7 +16,7 @@ fn overstudy_to_zero_health() {
             if matches!(state.player().cause_of_death(), Some(CauseOfDeath::Overstudied))
     );
     replay_game(game_ui, "2r");
-    assert_matches!(state.observable_state().screen(), GameScreen::Ding(_));
+    assert_matches!(state.observable_state().screen(), GameScreen::Ding);
     replay_game(game_ui, "2r");
     assert_matches!(
         state.observable_state().screen(),
