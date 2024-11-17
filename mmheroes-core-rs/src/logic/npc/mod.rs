@@ -132,7 +132,14 @@ impl ClassmateInfo {
                     self.current_location = ClassmateLocation::Exam(Subject::Calculus)
                 };
             }
-            Misha => { /* TODO */ }
+            Misha => {
+                typically_in(Location::PUNK, self);
+                maybe_on_exam(rng, current_location, today, self, || {
+                    Subject::all_subjects()
+                        .rev()
+                        .filter(|&subject| subject != Subject::PhysicalEducation)
+                })
+            }
             Serj => {
                 typically_in(Location::PUNK, self);
                 maybe_on_exam(rng, current_location, today, self, || {

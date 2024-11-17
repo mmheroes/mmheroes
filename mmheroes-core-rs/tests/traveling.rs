@@ -264,7 +264,7 @@ fn go_to_pdmi_with_money_but_without_ticket_not_caught_by_inspectors() {
     replay_game(game_ui, "2↓r2↓r");
 
     // Получаем у Паши стипендию
-    replay_game(game_ui, "4↓r4↑2r");
+    replay_game(game_ui, "4↓r7↓2r");
 
     // Едем в ПОМИ
     replay_game(game_ui, "3↓r");
@@ -308,7 +308,7 @@ fn go_to_pdmi_with_money_but_without_ticket_caught_by_inspectors() {
     replay_game(game_ui, "2↓r2↓r");
 
     // Получаем у Паши стипендию
-    replay_game(game_ui, "4↓r4↑2r");
+    replay_game(game_ui, "4↓r7↓2r");
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
@@ -365,7 +365,7 @@ fn go_to_pdmi_with_ticket() {
     replay_game(game_ui, "2↓r2↓r");
 
     // Получаем у Паши стипендию
-    replay_game(game_ui, "4↓r4↑2r");
+    replay_game(game_ui, "4↓r7↓2r");
 
     // Едем в ПОМИ
     replay_game(game_ui, "3↓r");
@@ -443,7 +443,7 @@ fn go_from_punk_to_computer_class() {
     );
 
     // Идём в компьютерный класс
-    replay_game(game_ui, "2↑r");
+    replay_game(game_ui, "5↓r");
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
@@ -472,7 +472,7 @@ fn go_from_punk_to_computer_class() {
     );
 
     // Снова идём в компьютерный класс
-    replay_game(game_ui, "4↓r5↑r");
+    replay_game(game_ui, "4↓r5↓r");
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {

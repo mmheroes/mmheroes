@@ -29,7 +29,7 @@ fn overstudy_to_zero_health() {
 #[test]
 fn study_with_negative_brain_level() {
     initialize_game!((1641336778475, GameMode::Normal) => state, game_ui);
-    replay_game(game_ui, "3r2↓r2↓r4↓r3↑2r4↓r3↑r↓2r3↑r↓2r4↓r↓2r3↑r↑2r3↑r↑2r3↑r↑2r3↑2r3↑2r2↑2r3↑2r3↑2r2↑r↓3r2↓2r");
+    replay_game(game_ui, "3r2↓r2↓r4↓r7↓2r4↓r3↑r↓2r3↑r↓2r4↓r↓2r3↑r↑2r3↑r↑2r3↑r↑2r3↑2r3↑2r2↑2r3↑2r3↑2r2↑r↓3r2↓2r");
     assert_matches!(state.observable_state().screen(), GameScreen::Study(state) => {
         assert_eq!(state.player().brain(), BrainLevel(-1));
         assert_eq!(

@@ -64,7 +64,7 @@ fn pasha() {
         .contains(&Action::InteractWithClassmate(Pasha)));
 
     // Подходим к Паше
-    replay_game(game_ui, "4↑r");
+    replay_game(game_ui, "7↓r");
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::PashaInteraction(state, PashaInteraction::Stipend) => {
@@ -109,7 +109,7 @@ fn pasha() {
     );
 
     // Подходим к Паше снова
-    replay_game(game_ui, "4↑r");
+    replay_game(game_ui, "7↓r");
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::PashaInteraction(state, PashaInteraction::Inspiration) => {

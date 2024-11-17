@@ -222,7 +222,7 @@ fn altruism() {
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Отдыхаем до 10:00 и идём в ПУНК, забираем стипендию и идём в Мавзолей
-    replay_game(game_ui, "2↓r2↓r4↓r4↑2r4↓r");
+    replay_game(game_ui, "2↓r2↓r4↓r7↓2r4↓r");
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
@@ -362,7 +362,7 @@ fn refuse_to_buy_oat_tincture() {
     replay_until_dorm(state, game_ui, PlayStyle::ImpudentStudent);
 
     // Отдыхаем до 10:00 и идём в ПУНК, забираем стипендию и идём в Мавзолей
-    replay_game(game_ui, "2↓r2↓r4↓r4↑2r4↓r");
+    replay_game(game_ui, "2↓r2↓r4↓r7↓2r4↓r");
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
@@ -441,7 +441,7 @@ fn solves_algebra_problems_for_oat_tincture() {
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
 
     // Отдыхаем до 10:00 и идём в ПУНК, забираем стипендию и идём в Мавзолей
-    replay_game(game_ui, "2↓r2↓r4↓r3↑2r4↓r");
+    replay_game(game_ui, "2↓r2↓r4↓r7↓2r4↓r");
     assert_matches!(
         state.observable_state().screen(),
         GameScreen::SceneRouter(state) => {
