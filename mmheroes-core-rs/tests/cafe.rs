@@ -93,7 +93,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(12));
             assert_characteristics!(
                 state,
-                health: 66,
+                health: 68,
                 money: 44,
                 brain: 5,
                 stamina: 4,
@@ -111,7 +111,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(13));
             assert_characteristics!(
                 state,
-                health: 74,
+                health: 75,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -129,7 +129,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(14));
             assert_characteristics!(
                 state,
-                health: 77,
+                health: 78,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -147,7 +147,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(14));
             assert_characteristics!(
                 state,
-                health: 77,
+                health: 78,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -165,7 +165,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(18));
             assert_characteristics!(
                 state,
-                health: 88,
+                health: 92,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -187,7 +187,7 @@ fn cafe_punk() {
             assert_eq!(state.current_time(), Time(19));
             assert_characteristics!(
                 state,
-                health: 89,
+                health: 94,
                 money: 38,
                 brain: 5,
                 stamina: 4,
@@ -222,7 +222,7 @@ fn cafe_punk_limited_menu() {
                 assert_eq!(state.current_time(), Time(18));
                 assert_characteristics!(
                     state,
-                    health: 133,
+                    health: 136,
                     money: 4,
                     brain: 5,
                     stamina: 4,
@@ -261,7 +261,7 @@ fn cafe_punk_limited_menu() {
                 assert_eq!(state.current_time(), Time(18));
                 assert_characteristics!(
                     state,
-                    health: 136,
+                    health: 139,
                     money: 2,
                     brain: 5,
                     stamina: 4,

@@ -147,7 +147,13 @@ impl ClassmateInfo {
                     ClassmateLocation::Nowhere
                 }
             }
-            NiL => { /* TODO */ }
+            NiL => maybe_on_exam(rng, current_location, today, self, || {
+                [
+                    Subject::AlgebraAndNumberTheory,
+                    Subject::Calculus,
+                    Subject::GeometryAndTopology,
+                ]
+            }),
             Kuzmenko => {
                 self.current_location = if time.is_between_9_and_19() && rng.roll_dice(4)
                 {
