@@ -1,5 +1,6 @@
 use super::*;
 use crate::util::bitset::BitSet;
+use core::cmp::{max, min};
 use strum::VariantArray;
 
 pub(super) async fn go_to_professor(
@@ -33,10 +34,9 @@ pub(super) async fn enter_exam(
         exam_intro(g, state, subject).await;
     }
     state.player.set_last_exam(subject);
-    if state.player.health <= HealthLevel(0) || state.player.cause_of_death.is_some() {
-        // TODO: Is this branch ever taken?
-        return;
-    }
+    assert!(
+        state.player.health > HealthLevel(0) && state.player().cause_of_death().is_none(),
+    );
     exam(g, state, subject).await;
 }
 
@@ -289,8 +289,60 @@ async fn suffer_exam(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     subject: Subject,
-) -> ExamResult {
-    todo!()
+) {
+    let charisma = state.player.charisma;
+    let subject_info = &SUBJECTS[subject];
+    let mental_capacity = state.player.status_for_subject(subject).knowledge
+        + g.rng.random(state.player.brain)
+        - subject_info.mental_load
+        - g.rng.random(BrainLevel(max(5 - state.player.health.0, 0)));
+
+    let mut solved_problems = if mental_capacity > BrainLevel(0) {
+        ((mental_capacity.0 as f32).sqrt()
+            / subject_info.single_problem_mental_factor as f32)
+            .round() as u8
+    } else {
+        0
+    };
+
+    solved_problems = min(
+        subject_info.required_problems
+            - state.player.status_for_subject(subject).problems_done(),
+        solved_problems,
+    );
+
+    let knowledge_penalty = g.rng.random(subject_info.mental_load)
+        - g.rng.random(BrainLevel(state.player.stamina.0));
+    let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
+    *knowledge -= knowledge_penalty.clamp(BrainLevel(0), *knowledge);
+
+    let too_smart =
+        subject == Subject::GeometryAndTopology && charisma.0 * 2 + 26 < knowledge.0;
+    if too_smart {
+        solved_problems = 0;
+    }
+
+    g.set_screen_and_wait_for_any_key(GameScreen::ExamSuffering {
+        solved_problems,
+        too_smart,
+    })
+    .await;
+
+    state
+        .player
+        .status_for_subject_mut(subject)
+        .more_problems_solved(solved_problems);
+
+    let health_penalty = max(
+        subject_info.health_penalty - g.rng.random(HealthLevel(state.player.stamina.0)),
+        HealthLevel(0),
+    );
+    misc::decrease_health(
+        state,
+        health_penalty,
+        CauseOfDeath::TorturedByProfessor(subject),
+    );
+    misc::hour_pass(g, state).await;
 }
 
 async fn exam_passed(
@@ -298,7 +350,7 @@ async fn exam_passed(
     state: &mut GameState,
     subject: Subject,
 ) -> ExamResult {
-    todo!()
+    todo!("exam_passed")
 }
 
 async fn exam_ends(
@@ -306,7 +358,7 @@ async fn exam_ends(
     state: &mut GameState,
     subject: Subject,
 ) -> ExamResult {
-    todo!()
+    todo!("exam_ends")
 }
 
 async fn classmate_wants_something(
@@ -314,5 +366,5 @@ async fn classmate_wants_something(
     state: &mut GameState,
     subject: Subject,
 ) -> ExamResult {
-    todo!()
+    todo!("classmate_wants_something")
 }

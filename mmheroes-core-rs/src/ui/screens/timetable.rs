@@ -13,28 +13,18 @@ fn output_remaining_problems(
         .required_problems()
         .saturating_sub(subject_status.problems_done());
     if let Some(passed_day) = subject_status.passed_exam_day(timetable) {
-        r.set_color(Color::WhiteBright, Color::Black);
-        write!(r, "ЗАЧЕТ");
+        write_colored!(WhiteBright, r, "ЗАЧЕТ");
         r.move_cursor_to(line + 1, column);
         write!(r, "{}", day_date(passed_day))
     } else if problems_remaining == 0 {
-        r.set_color(Color::White, Color::Black);
-        write!(r, "Подойти с");
+        write_colored!(White, r, "Подойти с");
         r.move_cursor_to(line + 1, column);
         write!(r, "зачеткой")
     } else {
-        r.set_color(Color::White, Color::Black);
-        write!(r, "Осталось");
+        write_colored!(White, r, "Осталось");
         r.move_cursor_to(line + 1, column);
-        r.set_color(Color::WhiteBright, Color::Black);
-        write!(r, "{}", problems_remaining);
-        r.set_color(Color::White, Color::Black);
-        match problems_remaining {
-            0 => unreachable!(),
-            1 => write!(r, " задание"),
-            2..=4 => write!(r, " задания"),
-            _ => write!(r, " заданий"),
-        }
+        write_colored!(WhiteBright, r, "{}", problems_remaining);
+        write_colored!(White, r, " {}", problems_inflected(problems_remaining));
     }
 }
 

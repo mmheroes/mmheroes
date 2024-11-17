@@ -71,6 +71,12 @@ pub enum GameScreen {
     /// Экран сдачи зачёта.
     Exam(GameState, Subject),
 
+    /// Попытка сдать зачёт
+    ExamSuffering {
+        solved_problems: u8,
+        too_smart: bool,
+    },
+
     // TODO: Добавить больше параметров. Сейчас поддерживается только "не тянет поспать"
     /// Сон.
     Sleep(GameState),
@@ -149,8 +155,14 @@ impl GameScreen {
             | RestInMausoleum(state)
             | CafePUNK(state)
             | TrainToPDMI(state, _) => Some(state),
-            Intro | InitialParameters | Ding | ExamIntro(_) | WannaTryAgain
-            | Disclaimer | Terminal => None,
+            Intro
+            | InitialParameters
+            | Ding
+            | ExamIntro(_)
+            | ExamSuffering { .. }
+            | WannaTryAgain
+            | Disclaimer
+            | Terminal => None,
         }
     }
 }

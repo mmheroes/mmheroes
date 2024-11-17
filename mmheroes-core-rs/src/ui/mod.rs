@@ -316,6 +316,14 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
                 self.state_holder.observable_state().available_actions(),
                 *subject,
             ),
+            ExamSuffering {
+                solved_problems,
+                too_smart,
+            } => screens::exam::display_suffering(
+                &mut self.renderer,
+                *solved_problems,
+                *too_smart,
+            ),
             SurfInternet(state, found_program) => {
                 screens::scene_router::display_surfing_internet(
                     &mut self.renderer,
@@ -469,5 +477,13 @@ pub fn classmate_name(classmate: Classmate) -> &'static str {
         Classmate::DJuG => "DJuG",
         Classmate::Andrew => "Эндрю",
         Classmate::Grisha => "Гриша",
+    }
+}
+
+fn problems_inflected(problems: u8) -> &'static str {
+    match problems {
+        1 => "задание",
+        2..=4 => "задания",
+        _ => "заданий",
     }
 }

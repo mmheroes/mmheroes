@@ -10,15 +10,17 @@ pub struct SubjectInfo {
     pub(in crate::logic) exam_max_duration: Duration,
     pub(in crate::logic) exam_places: [Location; 3],
 
-    // TODO: Rename these fields
-    #[allow(dead_code)]
-    pub(in crate::logic) member0xFA: i16,
+    /// Чем больше это число, тем больше знаний, интеллекта и здоровья нужно для того,
+    /// чтобы преподаватель зачёл задачу.
+    pub(in crate::logic) mental_load: BrainLevel,
 
-    #[allow(dead_code)]
-    pub(in crate::logic) member0xFC: i16, // Минимальный уровень познания?
+    /// Чем больше это число, тем больше выносливости нужно чтобы не терять здоровье
+    /// при попытке сдать зачёт.
+    pub(in crate::logic) health_penalty: HealthLevel,
 
-    #[allow(dead_code)]
-    pub(in crate::logic) member0x100: i16,
+    /// Чем больше это число, тем больше mental capacity нужно для того,
+    /// чтобы зачли _одну_ задачу.
+    pub(in crate::logic) single_problem_mental_factor: i16,
 
     /// Какой уровень знаний соответствует какой оценке по шкале этого препода.
     pub(in crate::logic) assessment_bounds: [(BrainLevel, KnowledgeAssessment); 3],
@@ -90,9 +92,9 @@ impl Subjects {
                     exam_min_duration: Duration(2),
                     exam_max_duration: Duration(4),
                     exam_places: [PUNK, PUNK, PDMI],
-                    member0xFA: 10,
-                    member0xFC: 17,
-                    member0x100: 3,
+                    mental_load: BrainLevel(10),
+                    health_penalty: HealthLevel(17),
+                    single_problem_mental_factor: 3,
                     assessment_bounds: [
                         (BrainLevel(11), Bad),
                         (BrainLevel(21), Satisfactory),
@@ -108,9 +110,9 @@ impl Subjects {
                     exam_min_duration: Duration(2),
                     exam_max_duration: Duration(3),
                     exam_places: [PUNK, PUNK, PUNK],
-                    member0xFA: 8,
-                    member0xFC: 14,
-                    member0x100: 2,
+                    mental_load: BrainLevel(8),
+                    health_penalty: HealthLevel(14),
+                    single_problem_mental_factor: 2,
                     assessment_bounds: [
                         (BrainLevel(9), Bad),
                         (BrainLevel(19), Satisfactory),
@@ -126,9 +128,9 @@ impl Subjects {
                     exam_min_duration: Duration(1),
                     exam_max_duration: Duration(3),
                     exam_places: [PUNK, PDMI, PDMI],
-                    member0xFA: 4,
-                    member0xFC: 8,
-                    member0x100: 3,
+                    mental_load: BrainLevel(4),
+                    health_penalty: HealthLevel(8),
+                    single_problem_mental_factor: 3,
                     assessment_bounds: [
                         (BrainLevel(6), Bad),
                         (BrainLevel(11), Satisfactory),
@@ -144,9 +146,9 @@ impl Subjects {
                     exam_min_duration: Duration(1),
                     exam_max_duration: Duration(2),
                     exam_places: [ComputerClass, ComputerClass, ComputerClass],
-                    member0xFA: 5,
-                    member0xFC: 6,
-                    member0x100: 3,
+                    mental_load: BrainLevel(5),
+                    health_penalty: HealthLevel(6),
+                    single_problem_mental_factor: 3,
                     assessment_bounds: [
                         (BrainLevel(10), Bad),
                         (BrainLevel(16), Satisfactory),
@@ -162,9 +164,9 @@ impl Subjects {
                     exam_min_duration: Duration(2),
                     exam_max_duration: Duration(2),
                     exam_places: [PUNK, PUNK, PUNK],
-                    member0xFA: 7,
-                    member0xFC: 10,
-                    member0x100: 1,
+                    mental_load: BrainLevel(7),
+                    health_penalty: HealthLevel(10),
+                    single_problem_mental_factor: 1,
                     assessment_bounds: [
                         (BrainLevel(5), Bad),
                         (BrainLevel(9), Satisfactory),
@@ -180,9 +182,9 @@ impl Subjects {
                     exam_min_duration: Duration(1),
                     exam_max_duration: Duration(1),
                     exam_places: [PUNK, PUNK, PUNK],
-                    member0xFA: 7,
-                    member0xFC: 20,
-                    member0x100: 1,
+                    mental_load: BrainLevel(7),
+                    health_penalty: HealthLevel(20),
+                    single_problem_mental_factor: 1,
                     assessment_bounds: [
                         (BrainLevel(5), Bad),
                         (BrainLevel(9), Satisfactory),

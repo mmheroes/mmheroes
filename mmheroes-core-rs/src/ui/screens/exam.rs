@@ -3,7 +3,10 @@ use crate::logic::{Action, GameState, Subject, SUBJECTS};
 use crate::ui::dialog::dialog;
 use crate::ui::renderer::{Renderer, RendererRequestConsumer};
 use crate::ui::screens::scene_router;
-use crate::ui::{classmate_name, professor_name, Color, WaitingState};
+use crate::ui::{
+    classmate_name, problems_inflected, professor_name, wait_for_any_key, Color,
+    WaitingState,
+};
 
 pub(in crate::ui) fn display_exam_intro(
     r: &mut Renderer<impl RendererRequestConsumer>,
@@ -221,4 +224,31 @@ pub(in crate::ui) fn display_exam_scene(
     }
     r.move_cursor_to(11, 0);
     dialog(r, available_actions)
+}
+
+pub(in crate::ui) fn display_suffering(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    solved_problems: u8,
+    too_smart: bool,
+) -> WaitingState {
+    r.move_cursor_to(19, 0);
+    if too_smart {
+        write_colored!(White, r, "Подкорытов:");
+        write_colored!(
+            WhiteBright,
+            r,
+            "\"Чего-то я не понимаю... Похоже, Вы меня лечите...\""
+        );
+    } else {
+        write_colored!(MagentaBright, r, "Мучаешься ...\n");
+    }
+    r.move_cursor_to(20, 0);
+    if solved_problems > 0 {
+        write_colored!(Green, r, "Тебе зачли еще ");
+        write_colored!(WhiteBright, r, "{}", solved_problems);
+        write_colored!(Green, r, " {}!", problems_inflected(solved_problems));
+    } else {
+        write_colored!(RedBright, r, "Твои мучения были напрасны.");
+    }
+    wait_for_any_key(r)
 }

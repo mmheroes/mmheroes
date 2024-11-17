@@ -1,4 +1,5 @@
 use super::*;
+use std::cmp::Ordering;
 
 macro_rules! define_characteristic {
     ($name:ident) => {
@@ -32,6 +33,13 @@ macro_rules! define_characteristic {
             }
         }
 
+        impl core::ops::Sub for $name {
+            type Output = Self;
+            fn sub(self, rhs: Self) -> Self {
+                Self(self.0 - rhs.0)
+            }
+        }
+
         impl core::ops::SubAssign for $name {
             fn sub_assign(&mut self, rhs: Self) {
                 self.0 -= rhs.0
@@ -41,6 +49,18 @@ macro_rules! define_characteristic {
         impl core::ops::SubAssign<i16> for $name {
             fn sub_assign(&mut self, rhs: i16) {
                 self.0 -= rhs
+            }
+        }
+
+        impl core::cmp::PartialEq<i16> for $name {
+            fn eq(&self, other: &i16) -> bool {
+                self.0 == *other
+            }
+        }
+
+        impl core::cmp::PartialOrd<i16> for $name {
+            fn partial_cmp(&self, other: &i16) -> Option<Ordering> {
+                i16::partial_cmp(&self.0, other)
             }
         }
 
