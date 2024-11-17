@@ -102,6 +102,14 @@ pub enum MmheroesFloppyAction {
 action_conversion!(MmheroesFloppyAction, MmheroesFloppy);
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
+pub enum NpcApproachAction {
+    Ignore,
+    TalkToClassmate(Classmate),
+}
+
+action_conversion!(NpcApproachAction, NpcApproach);
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     AnyKey,
     YesOrNo(YesOrNoAction),
@@ -142,6 +150,7 @@ pub enum Action {
     ExitTerkom,
     GoToProfessor,
     SufferMore,
+    NpcApproach(NpcApproachAction),
     ExitExam,
     GoToWork,
     LookAtBaobab,

@@ -310,19 +310,10 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
             ExamIntro(intro) => {
                 screens::exam::display_exam_intro(&mut self.renderer, *intro)
             }
-            Exam(state, subject) => screens::exam::display_exam_scene(
+            Exam(scene) => screens::exam::display_exam(
                 &mut self.renderer,
-                state,
                 self.state_holder.observable_state().available_actions(),
-                *subject,
-            ),
-            ExamSuffering {
-                solved_problems,
-                too_smart,
-            } => screens::exam::display_suffering(
-                &mut self.renderer,
-                *solved_problems,
-                *too_smart,
+                scene,
             ),
             SurfInternet(state, found_program) => {
                 screens::scene_router::display_surfing_internet(

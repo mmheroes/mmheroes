@@ -1,4 +1,4 @@
-use crate::logic::scene_router::exams::{BenefitsOfRunning, ExamIntro};
+use crate::logic::scene_router::exams::{BenefitsOfRunning, ExamIntro, ExamScene};
 use crate::logic::{Action, GameState, Subject, SUBJECTS};
 use crate::ui::dialog::dialog;
 use crate::ui::renderer::{Renderer, RendererRequestConsumer};
@@ -153,20 +153,61 @@ pub(in crate::ui) fn display_exam_intro(
     WaitingState::PressAnyKey
 }
 
-pub(in crate::ui) fn display_exam_scene(
+pub(in crate::ui) fn display_exam(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    available_actions: &[Action],
+    scene: &ExamScene,
+) -> WaitingState {
+    match scene {
+        ExamScene::Router(state, subject)
+        | ExamScene::ClassmateWantsSomething(state, subject, _) => {
+            display_exam_header(r, state, *subject)
+        }
+        _ => (),
+    }
+    match scene {
+        ExamScene::Router(state, subject) => {
+            display_exam_router(r, state, available_actions, *subject)
+        }
+        ExamScene::ExamSuffering {
+            solved_problems,
+            too_smart,
+        } => display_suffering(r, *solved_problems, *too_smart),
+        ExamScene::ClassmateWantsSomething(state, _, classmate) => {
+            writeln!(r);
+            writeln_colored!(
+                White,
+                r,
+                "К тебе пристает {}. Что будешь делать?",
+                classmate_name(*classmate)
+            );
+            let line = r.get_cursor_position().0 + 2;
+            scene_router::display_short_today_timetable(
+                r,
+                line,
+                state.current_day(),
+                state.player(),
+            );
+            r.move_cursor_to(line, 0);
+            dialog(r, available_actions)
+        }
+        ExamScene::IgnoredClassmate { feeling_bad } => {
+            if *feeling_bad {
+                r.move_cursor_to(21, 0);
+                writeln_colored!(White, r, "Тебе как-то нехорошо ...");
+            }
+            wait_for_any_key(r)
+        }
+    }
+}
+
+fn display_exam_header(
     r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
-    available_actions: &[Action],
     subject: Subject,
-) -> WaitingState {
+) {
     r.clear_screen();
     scene_router::display_header_stats(r, state);
-    scene_router::display_short_today_timetable(
-        r,
-        11,
-        state.current_day(),
-        state.player(),
-    );
     let problems_done = state.player().status_for_subject(subject).problems_done();
     let problems_required = SUBJECTS[subject].required_problems();
     if problems_done >= problems_required {
@@ -210,7 +251,17 @@ pub(in crate::ui) fn display_exam_scene(
             }
         }
     }
+}
 
+pub(in crate::ui) fn display_exam_router(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    state: &GameState,
+    available_actions: &[Action],
+    subject: Subject,
+) -> WaitingState {
+    display_exam_header(r, state, subject);
+    let problems_done = state.player().status_for_subject(subject).problems_done();
+    let problems_required = SUBJECTS[subject].required_problems();
     r.move_cursor_to(6, 0);
     if problems_done == 0 {
         writeln_colored!(White, r, "У тебя еще ничего не зачтено.")
@@ -222,6 +273,12 @@ pub(in crate::ui) fn display_exam_scene(
     } else {
         writeln_colored!(Green, r, "У тебя уже все зачтено.")
     }
+    scene_router::display_short_today_timetable(
+        r,
+        11,
+        state.current_day(),
+        state.player(),
+    );
     r.move_cursor_to(11, 0);
     dialog(r, available_actions)
 }

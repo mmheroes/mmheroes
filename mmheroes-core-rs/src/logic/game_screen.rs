@@ -1,4 +1,5 @@
 use super::*;
+use crate::logic::scene_router::exams::ExamScene;
 use crate::logic::scene_router::terkom;
 
 #[derive(Debug)]
@@ -69,13 +70,7 @@ pub enum GameScreen {
     ExamIntro(scene_router::exams::ExamIntro),
 
     /// Экран сдачи зачёта.
-    Exam(GameState, Subject),
-
-    /// Попытка сдать зачёт
-    ExamSuffering {
-        solved_problems: u8,
-        too_smart: bool,
-    },
+    Exam(scene_router::exams::ExamScene),
 
     // TODO: Добавить больше параметров. Сейчас поддерживается только "не тянет поспать"
     /// Сон.
@@ -150,19 +145,14 @@ impl GameScreen {
             | SerjInteraction(state, _, _)
             | Terkom(state, _)
             | GoToProfessor(state)
-            | Exam(state, _)
+            | Exam(ExamScene::Router(state, _))
+            | Exam(ExamScene::ClassmateWantsSomething(state, _, _))
             | SurfInternet(state, _)
             | RestInMausoleum(state)
             | CafePUNK(state)
             | TrainToPDMI(state, _) => Some(state),
-            Intro
-            | InitialParameters
-            | Ding
-            | ExamIntro(_)
-            | ExamSuffering { .. }
-            | WannaTryAgain
-            | Disclaimer
-            | Terminal => None,
+            Intro | InitialParameters | Ding | ExamIntro(_) | Exam(_) | WannaTryAgain
+            | Disclaimer | Terminal => None,
         }
     }
 }

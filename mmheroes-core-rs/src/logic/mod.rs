@@ -131,6 +131,24 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             .unwrap_or_else(|_| illegal_action!(action))
     }
 
+    async fn set_screen_and_wait_for_action_vec<
+        A: TryFrom<Action> + Into<Action>,
+        const LEN: usize,
+    >(
+        &self,
+        new_screen: GameScreen,
+        available_actions: [A; LEN],
+    ) -> A {
+        self.set_screen_and_action_vec(
+            new_screen,
+            ActionVec::from_iter(available_actions.map(A::into)),
+        );
+        let action = self.wait_for_action().await;
+        action
+            .try_into()
+            .unwrap_or_else(|_| illegal_action!(action))
+    }
+
     async fn set_screen_and_wait_for_any_key(&self, new_screen: GameScreen) {
         self.set_screen(new_screen);
         self.set_available_actions_from_vec(ActionVec::from([Action::AnyKey]));
@@ -301,6 +319,6 @@ mod memory_tests {
     fn whole_game_memory() {
         let state_holder = StateHolder::new(GameMode::Normal);
         let game = create_game(0, &state_holder);
-        assert_eq!(size_of_val(&game), 1552);
+        assert_eq!(size_of_val(&game), 1656);
     }
 }

@@ -46,6 +46,13 @@ fn display_game_end_dead(
             };
             writeln!(r, "{} замучил{}.", professor_name(subject), verb_ending)
         }
+        BetterNotIgnoreClassmate(classmate) => {
+            writeln!(
+                r,
+                "{} лучше игнорировать не надо.",
+                classmate_name(classmate)
+            );
+        }
         Paranoia => writeln!(r, "Бурно прогрессирующая паранойя."),
         TimeOut => writeln!(r, "Время вышло."),
         Suicide => writeln!(r, "Вышел сам."),

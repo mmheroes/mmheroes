@@ -1,4 +1,5 @@
 use super::*;
+use crate::logic::actions::NpcApproachAction;
 use crate::util::bitset::BitSet;
 use core::cmp::{max, min};
 use strum::VariantArray;
@@ -190,6 +191,24 @@ enum ExamResult {
     Exit,
 }
 
+#[derive(Debug, Clone)]
+pub enum ExamScene {
+    /// Экран выбора действий во время зачёта
+    Router(GameState, Subject),
+
+    /// Попытка сдать зачёт
+    ExamSuffering {
+        solved_problems: u8,
+        too_smart: bool,
+    },
+
+    /// Во время сдачи зачёта пристаёт NPC
+    ClassmateWantsSomething(GameState, Subject, Classmate),
+
+    /// Выбрали игнорировать NPC.
+    IgnoredClassmate { feeling_bad: bool },
+}
+
 async fn exam(g: &mut InternalGameState<'_>, state: &mut GameState, subject: Subject) {
     loop {
         let day_index = state.current_day_index();
@@ -222,7 +241,7 @@ async fn exam(g: &mut InternalGameState<'_>, state: &mut GameState, subject: Sub
         ));
         available_actions.push(Action::ExitExam);
         g.set_screen_and_action_vec(
-            GameScreen::Exam(state.clone(), subject),
+            GameScreen::Exam(ExamScene::Router(state.clone(), subject)),
             available_actions,
         );
         match g.wait_for_action().await {
@@ -267,7 +286,7 @@ async fn npc_try_approach(
             }
             if state.player.charisma.0 / 2 > times_approached {
                 approached_classmates.add(classmate);
-                classmate_wants_something(g, state, subject).await;
+                classmate_wants_something(g, state, subject, classmate).await;
 
                 if state.current_time() >= state.current_day().exam(subject).unwrap().to()
                     && exam_ends(g, state, subject).await == ExamResult::Exit
@@ -322,10 +341,10 @@ async fn suffer_exam(
         solved_problems = 0;
     }
 
-    g.set_screen_and_wait_for_any_key(GameScreen::ExamSuffering {
+    g.set_screen_and_wait_for_any_key(GameScreen::Exam(ExamScene::ExamSuffering {
         solved_problems,
         too_smart,
-    })
+    }))
     .await;
 
     state
@@ -365,6 +384,44 @@ async fn classmate_wants_something(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     subject: Subject,
-) -> ExamResult {
-    todo!("classmate_wants_something")
+    classmate: Classmate,
+) {
+    if classmate == Classmate::RAI && subject == Subject::ComputerScience {
+        // RAI не пристаёт на зачёте по информатике.
+        return;
+    }
+
+    let selected_action = g
+        .set_screen_and_wait_for_action_vec(
+            GameScreen::Exam(ExamScene::ClassmateWantsSomething(
+                state.clone(),
+                subject,
+                classmate,
+            )),
+            [
+                NpcApproachAction::Ignore,
+                NpcApproachAction::TalkToClassmate(classmate),
+            ],
+        )
+        .await;
+
+    match selected_action {
+        NpcApproachAction::Ignore => {
+            let feeling_bad = classmate.health_penalty() > 0;
+            g.set_screen_and_wait_for_any_key(GameScreen::Exam(
+                ExamScene::IgnoredClassmate { feeling_bad },
+            ))
+            .await;
+            if feeling_bad {
+                misc::decrease_health(
+                    state,
+                    classmate.health_penalty(),
+                    CauseOfDeath::BetterNotIgnoreClassmate(classmate),
+                );
+            }
+        }
+        NpcApproachAction::TalkToClassmate(_) => {
+            interact_with_classmate(g, state, classmate, Some(subject)).await;
+        }
+    }
 }

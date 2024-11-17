@@ -1,4 +1,5 @@
 use super::subjects::Subject;
+use crate::logic::Classmate;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum CauseOfDeath {
@@ -55,6 +56,9 @@ pub enum CauseOfDeath {
 
     /// <препод> замучил.
     TorturedByProfessor(Subject),
+
+    /// <NPC> лучше игнорировать не надо.
+    BetterNotIgnoreClassmate(Classmate),
 
     /// Бурно прогрессирующая паранойя
     Paranoia,

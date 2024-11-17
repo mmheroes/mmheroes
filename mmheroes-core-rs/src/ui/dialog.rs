@@ -169,6 +169,12 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::TerkomEmployment(actions::TerkomEmploymentAction::Decline) => {
             "Нет, я лучше поучусь уще чуток."
         }
+        Action::NpcApproach(actions::NpcApproachAction::Ignore) => {
+            "Пытаться игнорировать"
+        }
+        Action::NpcApproach(actions::NpcApproachAction::TalkToClassmate(classmate)) => {
+            classmate_name(classmate)
+        }
         Action::IAmDone => {
             set_color(r, Color::BlueBright);
             write!(r, "С меня хватит!");
