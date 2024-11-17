@@ -1,3 +1,4 @@
+pub(in crate::ui) mod exam;
 pub(in crate::ui) mod game_end;
 pub(in crate::ui) mod help;
 pub(in crate::ui) mod high_scores;

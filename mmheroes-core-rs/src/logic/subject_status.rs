@@ -88,7 +88,6 @@ impl SubjectStatus {
         self.passed_exam_day_index().map(|i| timetable.day(i))
     }
 
-    #[allow(dead_code)]
     pub(in crate::logic) fn set_passed_exam_day_index(&mut self, day_index: u8) {
         assert!(day_index < NOT_PASSED as u8, "Too big day index");
         assert!(

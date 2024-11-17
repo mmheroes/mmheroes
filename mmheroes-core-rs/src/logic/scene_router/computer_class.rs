@@ -7,7 +7,7 @@ pub(super) async fn handle_router_action(
 ) {
     assert_eq!(state.location(), Location::ComputerClass);
     match action {
-        Action::Exam(Subject::ComputerScience) => todo!("Экзамен по информатике"),
+        Action::Exam(subject) => exams::enter_exam(g, state, subject).await,
         Action::GoFromPunkToDorm => {
             state.set_location(Location::Dorm);
         }

@@ -1,7 +1,6 @@
 use super::*;
 use bitfield_struct::bitfield;
 use core::fmt::{Debug, Formatter, Result as FmtResult};
-use strum::EnumCount;
 use strum::FromRepr;
 
 #[bitfield(u32, debug = false, default = false)]
@@ -30,26 +29,11 @@ struct GameStateBits {
     #[bits(1, default = true)]
     terkom_has_places: bool,
 
-    #[bits(3, default = None, from = exam_in_progress_from_bits, into = exam_in_progress_into_bits)]
+    #[bits(3, default = None, from = subject_from_bits, into = subject_into_bits)]
     exam_in_progress: Option<Subject>,
 
     #[bits(12)]
     _padding: u32,
-}
-
-const fn exam_in_progress_from_bits(bits: u8) -> Option<Subject> {
-    if bits >= Subject::COUNT as u8 {
-        None
-    } else {
-        Some(Subject::from_bits(bits))
-    }
-}
-
-const fn exam_in_progress_into_bits(subject: Option<Subject>) -> u8 {
-    match subject {
-        None => Subject::COUNT as u8,
-        Some(s) => s.into_bits(),
-    }
 }
 
 #[derive(Clone)]
@@ -83,6 +67,10 @@ impl GameState {
         self.timetable.day(self.current_day_index())
     }
 
+    pub(in crate::logic) fn current_day_mut(&mut self) -> &mut Day {
+        self.timetable.day_mut(self.current_day_index())
+    }
+
     pub(in crate::logic) fn next_day(&mut self) {
         self.bits
             .set_current_day_index(self.bits.current_day_index() + 1);
@@ -113,10 +101,12 @@ impl GameState {
         self.bits.location()
     }
 
+    // TODO: Попробовать убрать этот метод
     pub fn exam_in_progress(&self) -> Option<Subject> {
         self.bits.exam_in_progress()
     }
 
+    // TODO: Попробовать убрать этот метод
     pub(in crate::logic) fn set_exam_in_progress(&mut self, subject: Option<Subject>) {
         self.bits.set_exam_in_progress(subject);
     }

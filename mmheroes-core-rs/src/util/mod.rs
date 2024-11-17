@@ -5,6 +5,7 @@ pub mod tiny_string;
 pub use tiny_string::*;
 
 pub(crate) mod async_support;
+pub(crate) mod bitset;
 
 /// В переданной шкале пар [scale] находит первую пару, первый элемент которой строго
 /// больше чем [value], и возвращает второй элемент этой пары. Если такая пара не найдена,

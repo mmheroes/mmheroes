@@ -65,6 +65,9 @@ pub enum GameScreen {
     /// Экран "Идти к преподу"
     GoToProfessor(GameState),
 
+    /// Опциональный экран с прелюдией к сдаче зачёта
+    ExamIntro(scene_router::exams::ExamIntro),
+
     /// Экран сдачи зачёта.
     Exam(GameState, Subject),
 
@@ -146,9 +149,8 @@ impl GameScreen {
             | RestInMausoleum(state)
             | CafePUNK(state)
             | TrainToPDMI(state, _) => Some(state),
-            Intro | InitialParameters | Ding | WannaTryAgain | Disclaimer | Terminal => {
-                None
-            }
+            Intro | InitialParameters | Ding | ExamIntro(_) | WannaTryAgain
+            | Disclaimer | Terminal => None,
         }
     }
 }

@@ -119,6 +119,8 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::SurfInternetAtTerkom => "Посидеть часок в Inet'e",
         Action::ExitTerkom => "Выйти отсюда на \"свежий воздух\"",
         Action::GoToProfessor => "Идти к преподу",
+        Action::SufferMore => "Мучаться дальше",
+        Action::ExitExam => "Бросить это дело",
         Action::GoToWork => "Пойти в ТЕРКОМ, поработать",
         Action::LookAtBaobab => "Посмотреть на баобаб",
         Action::LookAtBulletinBoard => "Посмотреть на доску объявлений",

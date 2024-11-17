@@ -42,7 +42,7 @@ pub enum Subject {
 
 impl Subject {
     pub(super) const fn from_bits(bits: u8) -> Subject {
-        match Subject::from_repr(bits as usize) {
+        match subject_from_bits(bits) {
             Some(subject) => subject,
             None => panic!("Invalid subject bits."),
         }
@@ -54,6 +54,17 @@ impl Subject {
 
     pub(super) fn all_subjects() -> impl DoubleEndedIterator<Item = Subject> {
         SUBJECTS.iter().map(|(subject, _)| *subject)
+    }
+}
+
+pub(super) const fn subject_from_bits(bits: u8) -> Option<Subject> {
+    Subject::from_repr(bits as usize)
+}
+
+pub(super) const fn subject_into_bits(subject: Option<Subject>) -> u8 {
+    match subject {
+        None => Subject::COUNT as u8,
+        Some(s) => s as u8,
     }
 }
 

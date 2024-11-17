@@ -29,7 +29,11 @@ struct PlayerBits {
     #[bits(1)]
     knows_djug: bool,
 
-    #[bits(7)]
+    /// Последний зачёт, который пытался сдать игрок. Он может присниться.
+    #[bits(3, default = None, from = subject_from_bits, into = subject_into_bits)]
+    last_exam: Option<Subject>,
+
+    #[bits(4)]
     _padding: u16,
 
     #[bits(1)]
@@ -43,7 +47,6 @@ pub struct Player {
     bits: PlayerBits,
 
     /// Запах чеснока изо рта
-    #[allow(dead_code)]
     pub(in crate::logic) garlic: i16,
 
     pub(in crate::logic) health: HealthLevel,
@@ -167,6 +170,15 @@ impl Player {
 
     pub(in crate::logic) fn set_has_roundtrip_train_ticket(&mut self) {
         self.bits.set_has_roundtrip_train_ticket(true);
+    }
+
+    #[allow(dead_code)]
+    pub(in crate::logic) fn last_exam(&self) -> Option<Subject> {
+        self.bits.last_exam()
+    }
+
+    pub(in crate::logic) fn set_last_exam(&mut self, subject: Subject) {
+        self.bits.set_last_exam(Some(subject))
     }
 
     pub fn brain(&self) -> BrainLevel {

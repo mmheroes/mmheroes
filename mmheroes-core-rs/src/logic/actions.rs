@@ -141,6 +141,8 @@ pub enum Action {
     SurfInternetAtTerkom,
     ExitTerkom,
     GoToProfessor,
+    SufferMore,
+    ExitExam,
     GoToWork,
     LookAtBaobab,
     LookAtBulletinBoard,

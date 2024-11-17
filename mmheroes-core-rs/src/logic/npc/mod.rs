@@ -7,10 +7,11 @@ pub mod sasha;
 pub mod serj;
 
 use super::*;
+use strum::VariantArray;
 
-#[derive(Debug, Copy, Clone, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq, VariantArray)]
 pub enum Classmate {
-    Kolya,
+    Kolya = 0,
     Pasha,
     Diamond,
     RAI,
@@ -24,8 +25,13 @@ pub enum Classmate {
     Grisha,
 }
 
+impl From<Classmate> for u16 {
+    fn from(value: Classmate) -> u16 {
+        value as u16
+    }
+}
+
 impl Classmate {
-    #[allow(dead_code)]
     pub(in crate::logic) fn health_penalty(self) -> HealthLevel {
         match self {
             Kolya | Pasha | Diamond | Kuzmenko | DJuG | Andrew | Grisha | Misha
@@ -34,7 +40,7 @@ impl Classmate {
         }
     }
 
-    #[allow(dead_code)]
+    /// «Вероятность» того, что человек будет приставать во время сдачи зачёта.
     pub(in crate::logic) fn annoyance(self) -> i16 {
         match self {
             Kolya | Pasha | Diamond | Serj | Sasha | Kuzmenko | DJuG | Andrew
@@ -163,7 +169,7 @@ impl ClassmateInfo {
     }
 }
 
-fn maybe_on_exam<'a, I: IntoIterator<Item = Subject>>(
+fn maybe_on_exam<I: IntoIterator<Item = Subject>>(
     rng: &mut random::Rng,
     current_location: Location,
     today: &Day,
@@ -191,7 +197,7 @@ fn maybe_on_exam<'a, I: IntoIterator<Item = Subject>>(
 }
 
 #[derive(Debug, Clone)]
-pub struct Classmates([ClassmateInfo; 12]);
+pub struct Classmates([ClassmateInfo; Classmate::VARIANTS.len()]);
 
 impl Classmates {
     pub(in crate::logic) fn new() -> Classmates {

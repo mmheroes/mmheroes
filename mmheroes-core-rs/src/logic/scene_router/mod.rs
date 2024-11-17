@@ -1,7 +1,7 @@
 mod cafe;
 pub(in crate::logic) mod computer_class;
 pub(in crate::logic) mod dorm;
-mod exams;
+pub mod exams;
 pub(in crate::logic) mod mausoleum;
 pub(in crate::logic) mod pdmi;
 pub(in crate::logic) mod punk;
@@ -12,14 +12,13 @@ use super::*;
 use crate::logic::actions::GameEndAction;
 
 pub(super) fn available_actions(state: &GameState) -> ActionVec {
-    // TODO: assert that no exam is in progress
+    assert!(state.exam_in_progress().is_none());
     let location = state.location();
 
     let add_classmates = |available_actions: &mut ActionVec| {
-        for classmate_info in state.classmates.filter_by_location(location) {
-            available_actions
-                .push(Action::InteractWithClassmate(classmate_info.classmate()));
-        }
+        available_actions.extend(state.classmates.filter_by_location(location).map(
+            |classmate_info| Action::InteractWithClassmate(classmate_info.classmate()),
+        ));
     };
 
     match location {

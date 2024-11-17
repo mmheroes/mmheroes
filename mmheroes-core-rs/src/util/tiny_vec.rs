@@ -132,6 +132,14 @@ impl<T, const CAPACITY: usize> FromIterator<T> for TinyVec<T, CAPACITY> {
     }
 }
 
+impl<T, const CAPACITY: usize> Extend<T> for TinyVec<T, CAPACITY> {
+    fn extend<I: IntoIterator<Item = T>>(&mut self, iter: I) {
+        for element in iter {
+            self.push(element);
+        }
+    }
+}
+
 impl<T, const CAPACITY: usize> Drop for TinyVec<T, CAPACITY> {
     fn drop(&mut self) {
         self.clear()

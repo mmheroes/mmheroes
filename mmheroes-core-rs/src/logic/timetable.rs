@@ -155,12 +155,18 @@ impl Exam {
         self.subject
     }
 
+    /// Время начала зачёта
     pub fn from(&self) -> Time {
         self.from
     }
 
+    /// Время окончания зачёта
     pub fn to(&self) -> Time {
         self.to
+    }
+
+    pub(in crate::logic) fn one_hour_more(&mut self) {
+        self.to += Duration(1);
     }
 
     pub fn location(&self) -> Location {
@@ -177,6 +183,10 @@ pub struct Day {
 impl Day {
     pub fn exam(&self, subject: Subject) -> Option<&Exam> {
         self.exams[subject as usize].as_ref()
+    }
+
+    pub(in crate::logic) fn exam_mut(&mut self, subject: Subject) -> Option<&mut Exam> {
+        self.exams[subject as usize].as_mut()
     }
 
     pub(in crate::logic) fn add_exam(&mut self, exam: Exam) {
