@@ -42,7 +42,7 @@ pub(super) async fn handle_router_action(
                 state.classmates[classmate].current_location(),
                 ClassmateLocation::Location(Location::PUNK)
             );
-            interact_with_classmate(g, state, classmate).await
+            interact_with_classmate(g, state, classmate, None).await
         }
         Action::GoToWork => {
             assert!(state.player.is_employed_at_terkom());

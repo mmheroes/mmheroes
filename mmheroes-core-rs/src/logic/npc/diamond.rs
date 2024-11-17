@@ -107,7 +107,11 @@ pub enum DiamondReply {
     ThanksVanyaPavlik,
 }
 
-pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
+pub(super) async fn interact(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+    exam_in_progress: Option<Subject>,
+) {
     if !state.player().has_mmheroes_floppy()
         && state.location() == Location::ComputerClass
         && g.rng.roll_dice(8)
@@ -145,7 +149,7 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
 
     let reply = g.rng.random_variant();
 
-    let diamond_leaves = state.exam_in_progress().is_none() && g.rng.roll_dice(2);
+    let diamond_leaves = exam_in_progress.is_none() && g.rng.roll_dice(2);
     g.set_screen_and_wait_for_any_key(GameScreen::DiamondInteraction(
         state.clone(),
         Reply(reply),

@@ -84,7 +84,11 @@ pub enum SerjReply {
 use crate::logic::Subject::PhysicalEducation;
 use SerjInteraction::*;
 
-pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
+pub(super) async fn interact(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+    exam_in_progress: Option<Subject>,
+) {
     let serj_leaves = state.player.charisma < g.rng.random(CharismaLevel(9));
 
     if g.rng.random(state.player.charisma.0) > g.rng.random_in_range(2..5)
@@ -100,7 +104,7 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
         state.player.health += state.player.charisma.0;
         state.player.health += g.rng.random(state.player.charisma.0);
 
-        if let Some(current_subject) = state.exam_in_progress() {
+        if let Some(current_subject) = exam_in_progress {
             let knowledge = &mut state
                 .player
                 .status_for_subject_mut(current_subject)

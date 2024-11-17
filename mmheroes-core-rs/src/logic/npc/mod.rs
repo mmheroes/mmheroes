@@ -304,14 +304,15 @@ pub(super) async fn interact_with_classmate(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     classmate: Classmate,
+    exam_in_progress: Option<Subject>,
 ) {
     match classmate {
         Kolya => kolya::interact(g, state).await,
         Pasha => pasha::interact(g, state).await,
-        Diamond => diamond::interact(g, state).await,
+        Diamond => diamond::interact(g, state, exam_in_progress).await,
         RAI => todo!("RAI"),
         Misha => todo!("Misha"),
-        Serj => serj::interact(g, state).await,
+        Serj => serj::interact(g, state, exam_in_progress).await,
         Sasha => sasha::interact(g, state).await,
         NiL => todo!("NiL"),
         Kuzmenko => kuzmenko::interact(g, state).await,

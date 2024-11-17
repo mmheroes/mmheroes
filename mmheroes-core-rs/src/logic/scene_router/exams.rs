@@ -184,27 +184,32 @@ async fn exam_intro(
     }
 }
 
+#[derive(Eq, PartialEq, Copy, Clone)]
+enum ExamResult {
+    Continue,
+    Exit,
+}
+
 async fn exam(g: &mut InternalGameState<'_>, state: &mut GameState, subject: Subject) {
-    state.set_exam_in_progress(Some(subject));
     loop {
         let day_index = state.current_day_index();
         let status = state.player.status_for_subject_mut(subject);
         if status.problems_done() >= SUBJECTS[subject].required_problems {
             status.set_passed_exam_day_index(day_index);
-            exam_passed(g, state, subject).await;
-            if state.exam_in_progress().is_none()
+            if exam_passed(g, state, subject).await == ExamResult::Exit
                 || state.player().cause_of_death().is_some()
             {
-                break;
+                return;
             }
         }
-        if state.current_time() >= state.current_day().exam(subject).unwrap().to() {
-            // TODO: Is this branch ever taken?
-            exam_ends(g, state, subject).await;
-            break;
+        if state.current_time() >= state.current_day().exam(subject).unwrap().to()
+            && exam_ends(g, state, subject).await == ExamResult::Exit
+        {
+            return;
         }
-        npc_try_approach(g, state, subject).await;
-        // TODO: Если экзамен закончился, выходим из цикла
+        if npc_try_approach(g, state, subject).await == ExamResult::Exit {
+            return;
+        }
 
         let mut available_actions = ActionVec::new();
         if !state.player.status_for_subject(subject).passed() {
@@ -225,16 +230,14 @@ async fn exam(g: &mut InternalGameState<'_>, state: &mut GameState, subject: Sub
                 suffer_exam(g, state, subject).await;
             }
             Action::InteractWithClassmate(classmate) => {
-                interact_with_classmate(g, state, classmate).await;
+                interact_with_classmate(g, state, classmate, Some(subject)).await;
             }
             Action::ExitExam => {
-                state.set_exam_in_progress(None);
-                break;
+                return;
             }
             action => illegal_action!(action),
         }
     }
-    state.set_exam_in_progress(None);
 }
 
 /// С некоторой вероятностью во время сдачи зачёта к игроку могут пристать NPC.
@@ -242,13 +245,13 @@ async fn npc_try_approach(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     subject: Subject,
-) {
+) -> ExamResult {
     let mut approached_classmates = BitSet::new();
     let garlic = state.player.garlic;
     loop {
         let times_approached = approached_classmates.count() as i16;
         if state.player.charisma.0 / 2 <= times_approached || times_approached > 3 {
-            return;
+            break;
         }
         for &classmate in Classmate::VARIANTS {
             if approached_classmates.contains(classmate) {
@@ -267,27 +270,26 @@ async fn npc_try_approach(
                 classmate_wants_something(g, state, subject).await;
 
                 if state.current_time() >= state.current_day().exam(subject).unwrap().to()
+                    && exam_ends(g, state, subject).await == ExamResult::Exit
+                    || state.player().cause_of_death().is_some()
                 {
-                    // TODO: Is this branch ever taken?
-                    exam_ends(g, state, subject).await;
-                    return;
-                } else if state.player().cause_of_death().is_some() {
-                    return;
+                    return ExamResult::Exit;
                 }
             }
         }
 
         if g.rng.roll_dice(2) {
-            return;
+            break;
         }
     }
+    ExamResult::Continue
 }
 
 async fn suffer_exam(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     subject: Subject,
-) {
+) -> ExamResult {
     todo!()
 }
 
@@ -295,24 +297,22 @@ async fn exam_passed(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     subject: Subject,
-) {
+) -> ExamResult {
     todo!()
-    // Не забыть state.set_exam_in_progress(None);
 }
 
 async fn exam_ends(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     subject: Subject,
-) {
+) -> ExamResult {
     todo!()
-    // Не забыть state.set_exam_in_progress(None);
 }
 
 async fn classmate_wants_something(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     subject: Subject,
-) {
+) -> ExamResult {
     todo!()
 }

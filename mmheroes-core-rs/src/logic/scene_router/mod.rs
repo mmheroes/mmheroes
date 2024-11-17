@@ -12,7 +12,6 @@ use super::*;
 use crate::logic::actions::GameEndAction;
 
 pub(super) fn available_actions(state: &GameState) -> ActionVec {
-    assert!(state.exam_in_progress().is_none());
     let location = state.location();
 
     let add_classmates = |available_actions: &mut ActionVec| {

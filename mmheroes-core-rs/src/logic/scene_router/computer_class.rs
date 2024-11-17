@@ -34,7 +34,7 @@ pub(super) async fn handle_router_action(
                 state.classmates[classmate].current_location(),
                 ClassmateLocation::Location(Location::ComputerClass)
             );
-            interact_with_classmate(g, state, classmate).await
+            interact_with_classmate(g, state, classmate, None).await
         }
         Action::PlayMMHEROES => todo!("Поиграть в MMHEROES"),
         _ => illegal_action!(action),

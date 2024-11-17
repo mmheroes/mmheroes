@@ -25,7 +25,7 @@ pub(in crate::logic) async fn handle_router_action(
                 state.classmates[classmate].current_location(),
                 ClassmateLocation::Location(Location::Mausoleum)
             );
-            interact_with_classmate(g, state, classmate).await
+            interact_with_classmate(g, state, classmate, None).await
         }
         _ => illegal_action!(action),
     }
