@@ -176,7 +176,7 @@ impl Exam {
 
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
 pub struct Day {
-    index: usize,
+    index: u8,
     exams: [Option<Exam>; Subject::COUNT],
 }
 
@@ -194,7 +194,7 @@ impl Day {
     }
 
     pub fn index(&self) -> usize {
-        self.index
+        self.index as usize
     }
 
     pub fn exams(&self) -> impl Iterator<Item = &Exam> {
@@ -225,7 +225,7 @@ impl Timetable {
         }; NUM_DAYS];
 
         for (i, day) in days.iter_mut().enumerate() {
-            day.index = i;
+            day.index = i as u8;
         }
 
         for (subject, subject_info) in SUBJECTS.iter() {
