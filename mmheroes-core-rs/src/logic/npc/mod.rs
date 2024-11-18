@@ -189,6 +189,19 @@ impl ClassmateInfo {
             }
         }
     }
+
+    pub fn is_at_exam(&self, subject: Subject) -> bool {
+        match self.current_location {
+            ClassmateLocation::Exam(s) => s == subject,
+            ClassmateLocation::Location(Location::ComputerClass) => {
+                // Зачёт по информатике проходит прямо в компьютерном классе, так
+                // что все присутствующие в компьютерном классе также присутствуют
+                // на зачёте.
+                subject == Subject::ComputerScience
+            }
+            _ => false,
+        }
+    }
 }
 
 fn maybe_on_exam_inner<I: IntoIterator<Item = Subject>>(
@@ -304,9 +317,8 @@ impl Classmates {
         &self,
         subject: Subject,
     ) -> impl Iterator<Item = &ClassmateInfo> {
-        self.iter().filter(move |&classmate| {
-            matches!(classmate.current_location, ClassmateLocation::Exam(s) if s == subject)
-        })
+        self.iter()
+            .filter(move |&classmate| classmate.is_at_exam(subject))
     }
 }
 

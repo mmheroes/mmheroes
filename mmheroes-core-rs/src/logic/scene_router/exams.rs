@@ -234,8 +234,6 @@ async fn exam(g: &mut InternalGameState<'_>, state: &mut GameState, subject: Sub
         if !state.player.status_for_subject(subject).passed() {
             available_actions.push(Action::SufferMore);
         }
-        // TODO: На экзамене по информатике должны присутствовать все кто находится
-        //   в компьютерном классе
         available_actions.extend(state.classmates.filter_by_exam(subject).map(
             |classmate_info| Action::InteractWithClassmate(classmate_info.classmate()),
         ));
@@ -290,8 +288,7 @@ async fn npc_try_approach(
             if classmate.annoyance() - times_approached / 2 - garlic <= g.rng.random(10) {
                 continue;
             }
-            let location = state.classmates[classmate].current_location();
-            if !matches!(location, ClassmateLocation::Exam(s) if s == subject) {
+            if !state.classmates[classmate].is_at_exam(subject) {
                 continue;
             }
             if state.player.charisma.0 / 2 > times_approached {
