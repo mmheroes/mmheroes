@@ -46,12 +46,7 @@ pub(in crate::ui) fn display_terkom(
             writeln_colored!(White, r, "Ты сидишь за свободным компом");
             writeln!(r, "в тереховской \"конторе\".");
             writeln!(r, "Что делать будем?");
-            scene_router::display_short_today_timetable(
-                r,
-                7,
-                state.current_day(),
-                state.player(),
-            );
+            scene_router::display_short_today_timetable(r, 7, state);
             r.move_cursor_to(11, 0);
             dialog(r, available_actions)
         }

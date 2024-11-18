@@ -9,7 +9,7 @@ pub(in crate::ui) fn display_scene_router(
 ) -> WaitingState {
     r.clear_screen();
     display_header_stats(r, state);
-    display_short_today_timetable(r, 9, state.current_day(), state.player());
+    display_short_today_timetable(r, 9, state);
     r.set_color(Color::White, Color::Black);
     r.move_cursor_to(7, 0);
 
@@ -42,7 +42,7 @@ pub(in crate::ui) fn display_study_options(
 ) -> WaitingState {
     r.clear_screen();
     display_header_stats(r, state);
-    display_short_today_timetable(r, 9, state.current_day(), state.player());
+    display_short_today_timetable(r, 9, state);
     r.set_color(Color::White, Color::Black);
     r.move_cursor_to(7, 0);
     writeln!(r, "К чему готовиться?");
@@ -244,13 +244,12 @@ pub(in crate::ui::screens) fn display_short_today_timetable<
 >(
     r: &mut Renderer<C>,
     start_line: Line,
-    today: &Day,
-    player: &Player,
+    state: &GameState,
 ) {
     for (i, (subject, subject_info)) in SUBJECTS.iter().enumerate() {
         let line = (i as Line) + start_line;
         r.move_cursor_to(line, 49);
-        let passed = player.status_for_subject(*subject).passed();
+        let passed = state.player().status_for_subject(*subject).passed();
         let set_color_if_passed = |r: &mut Renderer<C>, if_passed, if_not_passed| {
             r.set_color(if passed { if_passed } else { if_not_passed }, Color::Black)
         };
@@ -258,7 +257,7 @@ pub(in crate::ui::screens) fn display_short_today_timetable<
         write!(r, "{}", subject_short_name(*subject));
         r.move_cursor_to(line, 57);
         set_color_if_passed(r, Color::Magenta, Color::RedBright);
-        if let Some(exam) = today.exam(*subject) {
+        if let Some(exam) = state.current_day().exam(*subject) {
             write!(r, "{}", exam.location());
             set_color_if_passed(r, Color::Gray, Color::WhiteBright);
             r.move_cursor_to(line, 63);
@@ -268,7 +267,7 @@ pub(in crate::ui::screens) fn display_short_today_timetable<
         }
 
         r.move_cursor_to(line, 71);
-        let problems_done = player.status_for_subject(*subject).problems_done();
+        let problems_done = state.player().status_for_subject(*subject).problems_done();
         let problems_required = subject_info.required_problems();
         let problems_color = if problems_done == 0 {
             Color::White

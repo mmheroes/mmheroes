@@ -67,12 +67,7 @@ pub(in crate::ui) fn display_kolya_interaction(
         SolvedAlgebraProblemsForFree => unreachable!(),
         PromptOatTincture => {
             writeln_colored!(White, r, "Заказать Коле настойку овса?");
-            scene_router::display_short_today_timetable(
-                r,
-                11,
-                state.current_day(),
-                state.player(),
-            );
+            scene_router::display_short_today_timetable(r, 11, state);
             r.move_cursor_to(14, 0);
             return dialog(r, available_actions);
         }
@@ -377,12 +372,7 @@ pub(crate) fn display_diamond_interaction(
         WannaTestNewMMHEROES => {
             start();
             writeln!(r, "\"Хочешь по-тестить новую версию Heroes of MAT-MEX?\"");
-            scene_router::display_short_today_timetable(
-                r,
-                11,
-                state.current_day(),
-                state.player(),
-            );
+            scene_router::display_short_today_timetable(r, 11, state);
             r.move_cursor_to(11, 0);
             dialog(r, available_actions)
         }

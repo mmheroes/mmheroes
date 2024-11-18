@@ -11,12 +11,7 @@ fn display_rest(
     scene_router::display_header_stats(r, state);
     r.move_cursor_to(7, 0);
     writeln_colored!(White, r, "{}", prompt);
-    scene_router::display_short_today_timetable(
-        r,
-        10,
-        state.current_day(),
-        state.player(),
-    );
+    scene_router::display_short_today_timetable(r, 10, state);
     r.move_cursor_to(10, 0);
     dialog(r, available_actions)
 }

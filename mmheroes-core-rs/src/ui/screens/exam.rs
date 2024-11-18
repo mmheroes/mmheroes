@@ -188,12 +188,7 @@ pub(in crate::ui) fn display_exam(
                 classmate_name(*classmate)
             );
             let line = r.get_cursor_position().0 + 2;
-            scene_router::display_short_today_timetable(
-                r,
-                line,
-                state.current_day(),
-                state.player(),
-            );
+            scene_router::display_short_today_timetable(r, line, state);
             r.move_cursor_to(line, 0);
             dialog(r, available_actions)
         }
@@ -213,12 +208,7 @@ pub(in crate::ui) fn display_exam(
             r.move_cursor_to(11, 0);
             writeln_colored!(RedBright, r, "{} уходит.", professor_name(*subject));
             writeln!(r, "Пойти за ним на электричку?");
-            scene_router::display_short_today_timetable(
-                r,
-                11,
-                state.current_day(),
-                state.player(),
-            );
+            scene_router::display_short_today_timetable(r, 11, state);
             r.move_cursor_to(14, 0);
             dialog(r, available_actions)
         }
@@ -309,12 +299,7 @@ pub(in crate::ui) fn display_exam_router(
     } else {
         writeln_colored!(Green, r, "У тебя уже все зачтено.")
     }
-    scene_router::display_short_today_timetable(
-        r,
-        11,
-        state.current_day(),
-        state.player(),
-    );
+    scene_router::display_short_today_timetable(r, 11, state);
     r.move_cursor_to(11, 0);
     dialog(r, available_actions)
 }
