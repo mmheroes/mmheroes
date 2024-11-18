@@ -162,11 +162,9 @@ impl ClassmateInfo {
                 }
             }
             DJuG => {
-                self.current_location = if Location::PDMI.is_exam_here_now(
-                    Subject::GeometryAndTopology,
-                    today,
-                    time,
-                ) {
+                self.current_location = if Location::PDMI
+                    .is_exam_here_on_day(Subject::GeometryAndTopology, today)
+                {
                     ClassmateLocation::Exam(Subject::GeometryAndTopology)
                 } else {
                     ClassmateLocation::Nowhere
