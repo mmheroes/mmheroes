@@ -12,7 +12,6 @@ pub enum PashaInteraction {
 use PashaInteraction::*;
 
 pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
-    assert_eq!(state.location(), Location::PUNK);
     let interaction = if state.player.got_stipend() {
         Inspiration
     } else {
