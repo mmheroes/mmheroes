@@ -1,6 +1,7 @@
 use super::*;
 use crate::logic::actions::NpcApproachAction;
 use crate::util::bitset::BitSet;
+use actions::ContinueSufferingWithExamInTrainAction;
 use core::cmp::{max, min};
 use strum::VariantArray;
 
@@ -207,13 +208,22 @@ pub enum ExamScene {
 
     /// Выбрали игнорировать NPC.
     IgnoredClassmate { feeling_bad: bool },
+
+    /// Преподаватель уходит.
+    ProfessorLeaves(GameState, Subject),
+
+    /// Предложение пойти за преподавателем сдавать зачёт в электричке.
+    PromptExamInTrain(GameState, Subject),
+
+    /// Преподаватель задерживается ещё на час
+    ProfessorLingers(GameState, Subject),
 }
 
 async fn exam(g: &mut InternalGameState<'_>, state: &mut GameState, subject: Subject) {
     loop {
         let day_index = state.current_day_index();
         let status = state.player.status_for_subject_mut(subject);
-        if status.problems_done() >= SUBJECTS[subject].required_problems {
+        if status.solved_all_problems() {
             status.set_passed_exam_day_index(day_index);
             if exam_passed(g, state, subject).await == ExamResult::Exit
                 || state.player().cause_of_death().is_some()
@@ -384,7 +394,64 @@ async fn exam_ends(
     state: &mut GameState,
     subject: Subject,
 ) -> ExamResult {
-    todo!("exam_ends")
+    match subject {
+        Subject::AlgebraAndNumberTheory => {
+            if state.location() == Location::PUNK
+                && !state
+                    .player
+                    .status_for_subject(subject)
+                    .solved_all_problems()
+            {
+                return match g
+                    .set_screen_and_wait_for_action(GameScreen::Exam(
+                        ExamScene::PromptExamInTrain(state.clone(), subject),
+                    ))
+                    .await
+                {
+                    ContinueSufferingWithExamInTrainAction::WantToSufferMore => {
+                        maybe_continue_exam_in_train(g, state, subject).await
+                    }
+                    ContinueSufferingWithExamInTrainAction::NoThanks => ExamResult::Exit,
+                };
+            }
+            // Всемирнов никогда не задерживается.
+        }
+        _ => {
+            if state.player.health <= 0 {
+                // Баг в оригинальной реализации, должно быть ExamResult::Exit.
+                // TODO: Написать на это тест
+                return ExamResult::Continue;
+            }
+            if SUBJECTS[subject].mental_load.0 * 2 + state.current_time().0 as i16 * 6
+                < state.player.charisma.0 * 3 + g.rng.random_in_range(20..40)
+            {
+                g.set_screen_and_wait_for_any_key(GameScreen::Exam(
+                    ExamScene::ProfessorLingers(state.clone(), subject),
+                ))
+                .await;
+                state
+                    .current_day_mut()
+                    .exam_mut(subject)
+                    .unwrap()
+                    .one_hour_more();
+                return ExamResult::Continue;
+            }
+        }
+    };
+    g.set_screen_and_wait_for_any_key(GameScreen::Exam(ExamScene::ProfessorLeaves(
+        state.clone(),
+        subject,
+    )))
+    .await;
+    ExamResult::Exit
+}
+
+async fn maybe_continue_exam_in_train(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+    subject: Subject,
+) -> ExamResult {
+    todo!()
 }
 
 async fn classmate_wants_something(

@@ -121,6 +121,12 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::GoToProfessor => "Идти к преподу",
         Action::SufferMore => "Мучаться дальше",
         Action::ExitExam => "Бросить это дело",
+        Action::ContinueSufferingWithExamInTrain(
+            actions::ContinueSufferingWithExamInTrainAction::WantToSufferMore,
+        ) => "Да, я хочу еще помучаться",
+        Action::ContinueSufferingWithExamInTrain(
+            actions::ContinueSufferingWithExamInTrainAction::NoThanks,
+        ) => "Ну уж нет, спасибо!",
         Action::GoToWork => "Пойти в ТЕРКОМ, поработать",
         Action::LookAtBaobab => "Посмотреть на баобаб",
         Action::LookAtBulletinBoard => "Посмотреть на доску объявлений",

@@ -43,15 +43,13 @@ pub(super) async fn handle_router_action(
 
 async fn surf_internet(g: &mut InternalGameState<'_>, state: &mut GameState) {
     let player = &state.player;
-    let cs_problems_done = player
+    let solved_all_problems = player
         .status_for_subject(Subject::ComputerScience)
-        .problems_done();
-    let cs_problems_required = SUBJECTS[Subject::ComputerScience].required_problems;
+        .solved_all_problems();
     // В GOD-режиме можно нафармить сколь угодно много решённых задач.
     // Наверное, баг в оригинальной реализации. А может и нет.
     let found_program = player.is_god_mode()
-        || (g.rng.random(player.brain) > BrainLevel(6)
-            && cs_problems_done < cs_problems_required);
+        || (g.rng.random(player.brain) > BrainLevel(6) && !solved_all_problems);
     g.set_screen_and_wait_for_any_key(GameScreen::SurfInternet(
         state.clone(),
         found_program,

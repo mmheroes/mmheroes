@@ -109,6 +109,17 @@ pub enum NpcApproachAction {
 
 action_conversion!(NpcApproachAction, NpcApproach);
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum ContinueSufferingWithExamInTrainAction {
+    WantToSufferMore,
+    NoThanks,
+}
+
+action_conversion!(
+    ContinueSufferingWithExamInTrainAction,
+    ContinueSufferingWithExamInTrain
+);
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     AnyKey,
@@ -152,6 +163,7 @@ pub enum Action {
     SufferMore,
     NpcApproach(NpcApproachAction),
     ExitExam,
+    ContinueSufferingWithExamInTrain(ContinueSufferingWithExamInTrainAction),
     GoToWork,
     LookAtBaobab,
     LookAtBulletinBoard,

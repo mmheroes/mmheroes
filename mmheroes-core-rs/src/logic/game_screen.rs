@@ -147,12 +147,22 @@ impl GameScreen {
             | GoToProfessor(state)
             | Exam(ExamScene::Router(state, _))
             | Exam(ExamScene::ClassmateWantsSomething(state, _, _))
+            | Exam(ExamScene::ProfessorLeaves(state, _))
+            | Exam(ExamScene::ProfessorLingers(state, _))
+            | Exam(ExamScene::PromptExamInTrain(state, _))
             | SurfInternet(state, _)
             | RestInMausoleum(state)
             | CafePUNK(state)
             | TrainToPDMI(state, _) => Some(state),
-            Intro | InitialParameters | Ding | ExamIntro(_) | Exam(_) | WannaTryAgain
-            | Disclaimer | Terminal => None,
+            Intro
+            | InitialParameters
+            | Ding
+            | ExamIntro(_)
+            | Exam(ExamScene::ExamSuffering { .. })
+            | Exam(ExamScene::IgnoredClassmate { .. })
+            | WannaTryAgain
+            | Disclaimer
+            | Terminal => None,
         }
     }
 }

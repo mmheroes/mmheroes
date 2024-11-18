@@ -163,6 +163,12 @@ pub(in crate::ui) fn display_exam(
         | ExamScene::ClassmateWantsSomething(state, subject, _) => {
             display_exam_header(r, state, *subject)
         }
+        ExamScene::PromptExamInTrain(state, _)
+        | ExamScene::ProfessorLeaves(state, _)
+        | ExamScene::ProfessorLingers(state, _) => {
+            r.clear_screen();
+            scene_router::display_header_stats(r, state);
+        }
         _ => (),
     }
     match scene {
@@ -198,6 +204,34 @@ pub(in crate::ui) fn display_exam(
             }
             wait_for_any_key(r)
         }
+        ExamScene::ProfessorLeaves(_, subject) => {
+            r.move_cursor_to(22, 0);
+            write_colored!(RedBright, r, "{} уходит", professor_name(*subject));
+            wait_for_any_key(r)
+        }
+        ExamScene::PromptExamInTrain(state, subject) => {
+            r.move_cursor_to(11, 0);
+            writeln_colored!(RedBright, r, "{} уходит.", professor_name(*subject));
+            writeln!(r, "Пойти за ним на электричку?");
+            scene_router::display_short_today_timetable(
+                r,
+                11,
+                state.current_day(),
+                state.player(),
+            );
+            r.move_cursor_to(14, 0);
+            dialog(r, available_actions)
+        }
+        ExamScene::ProfessorLingers(_, subject) => {
+            r.move_cursor_to(22, 0);
+            write_colored!(
+                RedBright,
+                r,
+                "{} задерживается еще на час.",
+                professor_name(*subject)
+            );
+            wait_for_any_key(r)
+        }
     }
 }
 
@@ -208,9 +242,11 @@ fn display_exam_header(
 ) {
     r.clear_screen();
     scene_router::display_header_stats(r, state);
-    let problems_done = state.player().status_for_subject(subject).problems_done();
-    let problems_required = SUBJECTS[subject].required_problems();
-    if problems_done >= problems_required {
+    if state
+        .player()
+        .status_for_subject(subject)
+        .solved_all_problems()
+    {
         r.move_cursor_to(6, 0);
         write_colored!(Green, r, "У вас все зачтено, можете быть свободны.");
     }

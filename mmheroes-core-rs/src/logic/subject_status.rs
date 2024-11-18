@@ -71,6 +71,10 @@ impl SubjectStatus {
         self.bits.problems_done()
     }
 
+    pub fn solved_all_problems(&self) -> bool {
+        self.problems_done() >= SUBJECTS[self.subject()].required_problems()
+    }
+
     pub(in crate::logic) fn more_problems_solved(&mut self, more: u8) {
         self.bits
             .set_problems_done(self.bits.problems_done() + more);
