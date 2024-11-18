@@ -50,11 +50,8 @@ async fn surf_internet(g: &mut InternalGameState<'_>, state: &mut GameState) {
     // Наверное, баг в оригинальной реализации. А может и нет.
     let found_program = player.is_god_mode()
         || (g.rng.random(player.brain) > BrainLevel(6) && !solved_all_problems);
-    g.set_screen_and_wait_for_any_key(GameScreen::SurfInternet(
-        state.clone(),
-        found_program,
-    ))
-    .await;
+    g.set_screen_and_wait_for_any_key(GameScreen::SurfInternet { found_program })
+        .await;
     if found_program {
         state
             .player

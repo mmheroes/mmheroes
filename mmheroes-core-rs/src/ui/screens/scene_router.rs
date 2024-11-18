@@ -295,10 +295,8 @@ pub(in crate::ui) fn display_sleeping(
 
 pub(in crate::ui) fn display_surfing_internet(
     r: &mut Renderer<impl RendererRequestConsumer>,
-    state: &GameState,
     found_program: bool,
 ) -> WaitingState {
-    assert!(state.location() == Location::ComputerClass);
     if found_program {
         r.move_cursor_to(19, 0);
         write_colored!(

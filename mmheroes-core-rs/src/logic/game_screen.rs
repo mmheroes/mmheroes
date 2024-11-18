@@ -76,9 +76,11 @@ pub enum GameScreen {
     /// Сон.
     Sleep(GameState),
 
-    /// Посидеть в интернете. Если второй аргумент `true`, это означает, что
+    /// Посидеть в интернете. Если `found_program` `true`, это означает, что
     /// герой нашёл в интернете решение задачи по информатике.
-    SurfInternet(GameState, bool),
+    SurfInternet {
+        found_program: bool,
+    },
 
     /// Экран "ты серьёзно хочешь закончить игру?"
     IAmDone(GameState),
@@ -150,13 +152,13 @@ impl GameScreen {
             | Exam(ExamScene::ProfessorLeaves(state, _))
             | Exam(ExamScene::ProfessorLingers(state, _))
             | Exam(ExamScene::PromptExamInTrain(state, _))
-            | SurfInternet(state, _)
             | RestInMausoleum(state)
             | CafePUNK(state)
             | TrainToPDMI(state, _) => Some(state),
             Intro
             | InitialParameters
             | Ding
+            | SurfInternet { .. }
             | ExamIntro(_)
             | Exam(ExamScene::ExamSuffering { .. })
             | Exam(ExamScene::IgnoredClassmate { .. })

@@ -315,10 +315,9 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
                 self.state_holder.observable_state().available_actions(),
                 scene,
             ),
-            SurfInternet(state, found_program) => {
+            SurfInternet { found_program } => {
                 screens::scene_router::display_surfing_internet(
                     &mut self.renderer,
-                    state,
                     *found_program,
                 )
             }
