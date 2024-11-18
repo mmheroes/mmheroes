@@ -169,7 +169,17 @@ impl ClassmateInfo {
                     ClassmateLocation::Nowhere
                 }
             }
-            DJuG => { /* TODO */ }
+            DJuG => {
+                self.current_location = if Location::PDMI.is_exam_here_now(
+                    Subject::GeometryAndTopology,
+                    today,
+                    time,
+                ) {
+                    ClassmateLocation::Exam(Subject::GeometryAndTopology)
+                } else {
+                    ClassmateLocation::Nowhere
+                }
+            }
             Andrew => { /* TODO */ }
             Grisha => {
                 self.current_location = if rng.roll_dice(3) {

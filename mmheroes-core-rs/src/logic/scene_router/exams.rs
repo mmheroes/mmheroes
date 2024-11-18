@@ -240,6 +240,16 @@ async fn exam(g: &mut InternalGameState<'_>, state: &mut GameState, subject: Sub
             |classmate_info| Action::InteractWithClassmate(classmate_info.classmate()),
         ));
         available_actions.push(Action::ExitExam);
+
+        // Убеждаемся, что DJuG всегда присутствует на зачёте по геометрии в ПОМИ
+        // и нигде больше.
+        assert!(
+            !(state.location() == Location::PDMI
+                && subject == Subject::GeometryAndTopology)
+                || available_actions
+                    .contains(&Action::InteractWithClassmate(Classmate::DJuG)),
+            "DJuG не на своём месте",
+        );
         g.set_screen_and_action_vec(
             GameScreen::Exam(ExamScene::Router(state.clone(), subject)),
             available_actions,
