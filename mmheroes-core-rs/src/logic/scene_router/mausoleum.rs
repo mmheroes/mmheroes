@@ -45,10 +45,7 @@ async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) {
     }
     available_actions.push(Action::RestByOurselvesInMausoleum);
     available_actions.push(Action::NoRestIsNoGood);
-    g.set_screen_and_action_vec(
-        GameScreen::RestInMausoleum(state.clone()),
-        available_actions,
-    );
+    g.set_screen_and_action_vec(GameScreen::RestInMausoleum, available_actions);
     let player = &mut state.player;
     match g.wait_for_action().await {
         Action::OrderCola => {

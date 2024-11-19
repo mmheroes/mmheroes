@@ -17,8 +17,13 @@ pub(super) async fn run(g: &mut InternalGameState<'_>) {
             Timetable::random(&mut g.rng),
             Location::Dorm,
         );
-        timetable::show(g, &state).await;
-        if let GameEnd::Exit = scene_router::run(g, state.clone()).await {
+        let mut state_ref = g.state_holder.game_state.borrow_mut();
+
+        // TODO: Set to none at the end of the iteration or upon returning
+        *state_ref = Some(state);
+
+        timetable::show(g).await;
+        if let GameEnd::Exit = scene_router::run(g, state_ref.as_mut().unwrap()).await {
             return;
         }
     }

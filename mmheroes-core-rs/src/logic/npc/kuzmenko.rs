@@ -94,17 +94,11 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
             // но в последующие разы экзамен тоже может добавиться в расписание,
             // просто Кузьменко об этом не скажет.
             state.add_additional_computer_science_exam();
-            GameScreen::KuzmenkoInteraction(
-                state.clone(),
-                AdditionalComputerScienceExam {
-                    day_index: additional_exam_day_idx,
-                },
-            )
+            GameScreen::KuzmenkoInteraction(AdditionalComputerScienceExam {
+                day_index: additional_exam_day_idx,
+            })
         }
-        _ => GameScreen::KuzmenkoInteraction(
-            state.clone(),
-            RandomReply(g.rng.random_variant()),
-        ),
+        _ => GameScreen::KuzmenkoInteraction(RandomReply(g.rng.random_variant())),
     };
     g.set_screen_and_wait_for_any_key(new_screen).await;
 }

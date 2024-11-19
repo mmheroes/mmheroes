@@ -156,39 +156,39 @@ pub(in crate::ui) fn display_exam_intro(
 pub(in crate::ui) fn display_exam(
     r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
-    scene: &ExamScene,
+    state: &GameState,
+    scene: ExamScene,
 ) -> WaitingState {
     match scene {
-        ExamScene::Router(state, subject)
-        | ExamScene::ClassmateWantsSomething(state, subject, _) => {
-            display_exam_header(r, state, *subject)
+        ExamScene::Router(subject) | ExamScene::ClassmateWantsSomething(subject, _) => {
+            display_exam_header(r, state, subject)
         }
-        ExamScene::PromptExamInTrain(state, _)
-        | ExamScene::ProfessorLeaves(state, _)
-        | ExamScene::ProfessorLingers(state, _) => {
+        ExamScene::PromptExamInTrain(_)
+        | ExamScene::ProfessorLeaves(_)
+        | ExamScene::ProfessorLingers(_) => {
             r.clear_screen();
             scene_router::display_header_stats(r, state);
         }
         _ => (),
     }
     match scene {
-        ExamScene::Router(state, subject) => {
-            display_exam_router(r, state, available_actions, *subject)
+        ExamScene::Router(subject) => {
+            display_exam_router(r, state, available_actions, subject)
         }
         ExamScene::ExamSuffering {
             solved_problems,
             too_smart,
         } => {
             r.move_cursor_to(19, 0);
-            display_suffering(r, *solved_problems, *too_smart)
+            display_suffering(r, solved_problems, too_smart)
         }
-        ExamScene::ClassmateWantsSomething(state, _, classmate) => {
+        ExamScene::ClassmateWantsSomething(_, classmate) => {
             writeln!(r);
             writeln_colored!(
                 White,
                 r,
                 "К тебе пристает {}. Что будешь делать?",
-                classmate_name(*classmate)
+                classmate_name(classmate)
             );
             let line = r.get_cursor_position().0 + 2;
             scene_router::display_short_today_timetable(r, line, state);
@@ -196,54 +196,49 @@ pub(in crate::ui) fn display_exam(
             dialog(r, available_actions)
         }
         ExamScene::IgnoredClassmate { feeling_bad } => {
-            if *feeling_bad {
+            if feeling_bad {
                 r.move_cursor_to(21, 0);
                 writeln_colored!(White, r, "Тебе как-то нехорошо ...");
             }
             wait_for_any_key(r)
         }
-        ExamScene::ProfessorLeaves(_, subject) => {
+        ExamScene::ProfessorLeaves(subject) => {
             r.move_cursor_to(22, 0);
-            write_colored!(RedBright, r, "{} уходит", professor_name(*subject));
+            write_colored!(RedBright, r, "{} уходит", professor_name(subject));
             wait_for_any_key(r)
         }
-        ExamScene::PromptExamInTrain(state, subject) => {
+        ExamScene::PromptExamInTrain(subject) => {
             r.move_cursor_to(11, 0);
-            writeln_colored!(RedBright, r, "{} уходит.", professor_name(*subject));
+            writeln_colored!(RedBright, r, "{} уходит.", professor_name(subject));
             writeln!(r, "Пойти за ним на электричку?");
             scene_router::display_short_today_timetable(r, 11, state);
             r.move_cursor_to(14, 0);
             dialog(r, available_actions)
         }
-        ExamScene::Train(state, train_scene) => {
-            screens::train::display_train_algebra_exam(
-                r,
-                available_actions,
-                state,
-                *train_scene,
-            )
-        }
-        ExamScene::SufferInTrain {
+        ExamScene::Train(train_scene) => screens::train::display_train_algebra_exam(
+            r,
+            available_actions,
             state,
-            solved_problems,
-        } => {
+            train_scene,
+        ),
+        ExamScene::SufferInTrain { solved_problems } => {
             r.clear_screen();
             scene_router::display_header_stats(r, state);
             r.move_cursor_to(13, 0);
             writeln_colored!(White, r, "Всемирнов принимает зачет даже в электричке!");
-            display_suffering(r, *solved_problems, false)
+            display_suffering(r, solved_problems, false)
         }
         ExamScene::CaughtByInspectorsEmptyScreenBug => {
             r.clear_screen();
             wait_for_any_key(r)
         }
-        ExamScene::ProfessorLingers(_, subject) => {
+        ExamScene::ProfessorLingers(subject) => {
             r.move_cursor_to(22, 0);
             write_colored!(
                 RedBright,
                 r,
                 "{} задерживается еще на час.",
-                professor_name(*subject)
+                professor_name(subject)
             );
             wait_for_any_key(r)
         }

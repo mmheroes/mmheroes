@@ -10,7 +10,7 @@ pub(super) async fn handle_router_action(
     match action {
         Action::Study => study(g, state).await,
         Action::ViewTimetable => {
-            timetable::show(g, state).await;
+            timetable::show(g).await;
         }
         Action::Rest => rest(g, state).await,
         Action::GoToBed => sleep(g, state).await,
@@ -32,7 +32,7 @@ pub(super) async fn handle_router_action(
             );
         }
         Action::WhatToDo => {
-            show_help(g, state).await;
+            show_help(g).await;
         }
         _ => illegal_action!(action),
     }
@@ -55,7 +55,7 @@ pub(in crate::logic) fn subjects_to_study(state: &GameState) -> ActionVec {
 
 async fn study(g: &mut InternalGameState<'_>, state: &mut GameState) {
     let available_subjects = subjects_to_study(state);
-    g.set_screen_and_action_vec(GameScreen::Study(state.clone()), available_subjects);
+    g.set_screen_and_action_vec(GameScreen::Study, available_subjects);
     let subject_to_study = match g.wait_for_action().await {
         Action::DoStudy { subject, .. } => subject,
         Action::DontStudy {} => return,
@@ -68,7 +68,7 @@ async fn study(g: &mut InternalGameState<'_>, state: &mut GameState) {
     let use_lecture_notes = if lecture_notes_available {
         match g
             .set_screen_and_wait_for_action::<UseLectureNotesAction>(
-                GameScreen::PromptUseLectureNotes(state.clone()),
+                GameScreen::PromptUseLectureNotes,
             )
             .await
         {
@@ -150,23 +150,22 @@ pub(in crate::logic) async fn sleep(
     state: &mut GameState,
 ) {
     if state.current_time() > Time(3) && state.current_time() < Time(20) {
-        g.set_screen_and_wait_for_any_key(GameScreen::Sleep(state.clone()))
-            .await;
+        g.set_screen_and_wait_for_any_key(GameScreen::Sleep).await;
     } else {
         todo!("Реализовать что-то помимо неудавшегося сна")
     }
 }
 
-async fn show_help(g: &mut InternalGameState<'_>, state: &GameState) {
+async fn show_help(g: &mut InternalGameState<'_>) {
     let mut help_action = HelpAction::WhatToDoAtAll;
     loop {
         let help_screen = match help_action {
-            HelpAction::WhatToDoAtAll => GameScreen::WhatToDo(state.clone()),
-            HelpAction::AboutScreen => GameScreen::AboutScreen(state.clone()),
-            HelpAction::WhereToGoAndWhy => GameScreen::WhereToGoAndWhy(state.clone()),
-            HelpAction::AboutProfessors => GameScreen::AboutProfessors(state.clone()),
-            HelpAction::AboutCharacters => GameScreen::AboutCharacters(state.clone()),
-            HelpAction::AboutThisProgram => GameScreen::AboutThisProgram(state.clone()),
+            HelpAction::WhatToDoAtAll => GameScreen::WhatToDo,
+            HelpAction::AboutScreen => GameScreen::AboutScreen,
+            HelpAction::WhereToGoAndWhy => GameScreen::WhereToGoAndWhy,
+            HelpAction::AboutProfessors => GameScreen::AboutProfessors,
+            HelpAction::AboutCharacters => GameScreen::AboutCharacters,
+            HelpAction::AboutThisProgram => GameScreen::AboutThisProgram,
             HelpAction::ThanksButNothing => return,
         };
         help_action = g

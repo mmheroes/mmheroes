@@ -9,7 +9,7 @@ pub(in crate::logic) async fn handle_router_action(
     match action {
         Action::GoToProfessor => exams::go_to_professor(g, state).await,
         Action::LookAtBulletinBoard => {
-            g.set_screen_and_wait_for_any_key(GameScreen::HighScores(state.clone()))
+            g.set_screen_and_wait_for_any_key(GameScreen::HighScores)
                 .await;
         }
         Action::RestInCafePDMI => todo!("Пойти в кафе"),

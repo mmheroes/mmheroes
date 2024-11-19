@@ -1,7 +1,7 @@
 use super::*;
 use crate::logic::scene_router::terkom;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub enum GameScreen {
     /// Самый первый экран, который видит пользователь.
     Intro,
@@ -14,56 +14,56 @@ pub enum GameScreen {
     Ding,
 
     /// Экран с расписанием.
-    Timetable(GameState),
+    Timetable,
 
     /// Главный экран.
-    SceneRouter(GameState),
+    SceneRouter,
 
     /// Выбор предмета для подготовки к зачёту.
-    Study(GameState),
+    Study,
 
     /// "Воспользуюсь конспектом" или "Буду учиться как умею"
-    PromptUseLectureNotes(GameState),
+    PromptUseLectureNotes,
 
     /// Экран с рекордами — баобаб в ПУНКе или доска объявлений в ПОМИ.
-    HighScores(GameState),
+    HighScores,
 
     /// Отдых в мавзолее.
-    RestInMausoleum(GameState),
+    RestInMausoleum,
 
     /// Кафе в ПУНКе
-    CafePUNK(GameState),
+    CafePUNK,
 
-    TrainToPDMI(GameState, scene_router::train::TrainScene),
+    TrainToPDMI(scene_router::train::TrainScene),
 
     /// Взаимодействие с Колей.
-    KolyaInteraction(GameState, npc::kolya::KolyaInteraction),
+    KolyaInteraction(npc::kolya::KolyaInteraction),
 
     /// Взаимодействие с Пашей.
-    PashaInteraction(GameState, npc::pasha::PashaInteraction),
+    PashaInteraction(npc::pasha::PashaInteraction),
 
     /// Взаимодействие с Гришей.
-    GrishaInteraction(GameState, npc::grisha::GrishaInteraction),
+    GrishaInteraction(npc::grisha::GrishaInteraction),
 
     /// Взаимодействие с Сашей.
-    SashaInteraction(GameState, npc::sasha::SashaInteraction),
+    SashaInteraction(npc::sasha::SashaInteraction),
 
     /// Взаимодействие с Кузьменко.
-    KuzmenkoInteraction(GameState, npc::kuzmenko::KuzmenkoInteraction),
+    KuzmenkoInteraction(npc::kuzmenko::KuzmenkoInteraction),
 
     /// Взаимодействие с Diamond.
     /// Третий аргумент означает, уходит ли Diamond после взаимодействия.
-    DiamondInteraction(GameState, npc::diamond::DiamondInteraction, bool),
+    DiamondInteraction(npc::diamond::DiamondInteraction, bool),
 
     /// Взаимодействие с Сержем.
     /// Третий аргумент означает, уходит ли Серж после взаимодействия.
-    SerjInteraction(GameState, npc::serj::SerjInteraction, bool),
+    SerjInteraction(npc::serj::SerjInteraction, bool),
 
     /// Работа в ТЕРКОМе
-    Terkom(GameState, terkom::Terkom),
+    Terkom(terkom::Terkom),
 
     /// Экран "Идти к преподу"
-    GoToProfessor(GameState),
+    GoToProfessor,
 
     /// Опциональный экран с прелюдией к сдаче зачёта
     ExamIntro(scene_router::exams::ExamIntro),
@@ -77,7 +77,7 @@ pub enum GameScreen {
 
     // TODO: Добавить больше параметров. Сейчас поддерживается только "не тянет поспать"
     /// Сон.
-    Sleep(GameState),
+    Sleep,
 
     /// Посидеть в интернете. Если `found_program` `true`, это означает, что
     /// герой нашёл в интернете решение задачи по информатике.
@@ -86,10 +86,10 @@ pub enum GameScreen {
     },
 
     /// Экран "ты серьёзно хочешь закончить игру?"
-    IAmDone(GameState),
+    IAmDone,
 
     /// Финальный экран с описанием причины смерти/отчисления, либо поздравлением.
-    GameEnd(GameState),
+    GameEnd,
 
     /// Пользователю предлагается либо повторить игру, либо выйти.
     WannaTryAgain,
@@ -98,85 +98,24 @@ pub enum GameScreen {
     Disclaimer,
 
     /// Экран помощи с описанием цели игры.
-    WhatToDo(GameState),
+    WhatToDo,
 
     /// Экран помощи с описанием главного экрана.
-    AboutScreen(GameState),
+    AboutScreen,
 
     /// Экран помощи с описанием локаций.
-    WhereToGoAndWhy(GameState),
+    WhereToGoAndWhy,
 
     /// Экран помощи с описанием преподавателей.
-    AboutProfessors(GameState),
+    AboutProfessors,
 
     /// Экран помощи с описанием NPC-шек.
-    AboutCharacters(GameState),
+    AboutCharacters,
 
     /// Экран помощи с информацией о программе.
-    AboutThisProgram(GameState),
+    AboutThisProgram,
 
     /// Терминальное состояние. Ему тоже соответствует никакой экран.
     /// Игра завершена безвозвратно.
     Terminal,
-}
-
-impl GameScreen {
-    /// Возвращает текущее состояние игры, если оно доступно.
-    /// Оно может быть недоступно, например, если игра ещё не началась
-    /// или уже закончилась.
-    pub fn state(&self) -> Option<&GameState> {
-        use crate::logic::scene_router::exams::ExamScene;
-        use crate::logic::scene_router::train::BaltiyskiyRailwayStationScene;
-        use GameScreen::*;
-        match self {
-            Timetable(state)
-            | SceneRouter(state)
-            | Study(state)
-            | PromptUseLectureNotes(state)
-            | Sleep(state)
-            | HighScores(state)
-            | IAmDone(state)
-            | GameEnd(state)
-            | WhatToDo(state)
-            | AboutScreen(state)
-            | WhereToGoAndWhy(state)
-            | AboutProfessors(state)
-            | AboutCharacters(state)
-            | AboutThisProgram(state)
-            | KolyaInteraction(state, _)
-            | PashaInteraction(state, _)
-            | GrishaInteraction(state, _)
-            | SashaInteraction(state, _)
-            | KuzmenkoInteraction(state, _)
-            | DiamondInteraction(state, _, _)
-            | SerjInteraction(state, _, _)
-            | Terkom(state, _)
-            | GoToProfessor(state)
-            | Exam(ExamScene::Router(state, _))
-            | Exam(ExamScene::ClassmateWantsSomething(state, _, _))
-            | Exam(ExamScene::ProfessorLeaves(state, _))
-            | Exam(ExamScene::ProfessorLingers(state, _))
-            | Exam(ExamScene::PromptExamInTrain(state, _))
-            | Exam(ExamScene::Train(state, _))
-            | Exam(ExamScene::SufferInTrain { state, .. })
-            | BaltiyskiyRailwayStation(BaltiyskiyRailwayStationScene::Prompt(state))
-            | RestInMausoleum(state)
-            | CafePUNK(state)
-            | TrainToPDMI(state, _) => Some(state),
-            Intro
-            | InitialParameters
-            | Ding
-            | SurfInternet { .. }
-            | ExamIntro(_)
-            | Exam(ExamScene::ExamSuffering { .. })
-            | Exam(ExamScene::IgnoredClassmate { .. })
-            | Exam(ExamScene::CaughtByInspectorsEmptyScreenBug)
-            | BaltiyskiyRailwayStation(
-                BaltiyskiyRailwayStationScene::CaughtByInspectors,
-            )
-            | WannaTryAgain
-            | Disclaimer
-            | Terminal => None,
-        }
-    }
 }

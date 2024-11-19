@@ -17,11 +17,8 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
     } else {
         Stipend
     };
-    g.set_screen_and_wait_for_any_key(GameScreen::PashaInteraction(
-        state.clone(),
-        interaction,
-    ))
-    .await;
+    g.set_screen_and_wait_for_any_key(GameScreen::PashaInteraction(interaction))
+        .await;
     let player = &mut state.player;
     match interaction {
         Stipend => {

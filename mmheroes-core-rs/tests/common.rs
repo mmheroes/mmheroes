@@ -131,10 +131,7 @@ pub fn replay_until_dorm<G: Game>(
     }
     // Дзинь!
     replay_game(game_ui, "2r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(_)
-    );
+    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter);
 }
 
 #[macro_export]

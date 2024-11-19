@@ -84,13 +84,12 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
     if !state.player.is_employed_at_terkom() && has_enough_charisma() {
         match g
             .set_screen_and_wait_for_action::<TerkomEmploymentAction>(
-                GameScreen::GrishaInteraction(state.clone(), PromptEmploymentAtTerkom),
+                GameScreen::GrishaInteraction(PromptEmploymentAtTerkom),
             )
             .await
         {
             TerkomEmploymentAction::Accept => {
                 g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(
-                    state.clone(),
                     CongratulationsYouAreNowEmployed,
                 ))
                 .await;
@@ -98,31 +97,24 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
             }
             TerkomEmploymentAction::Decline => {
                 g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(
-                    state.clone(),
                     AsYouWantButDontOverstudy,
                 ))
                 .await;
             }
         }
     } else if !state.player.has_internet() && has_enough_charisma() {
-        g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(
-            state.clone(),
-            ProxyAddress,
-        ))
-        .await;
+        g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(ProxyAddress))
+            .await;
         state.player.set_has_internet();
     } else {
         let drink_beer = g.rng.random(3) > 0;
         let hour_pass = g.rng.roll_dice(3);
         let reply = g.rng.random_variant();
-        g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(
-            state.clone(),
-            RandomReply {
-                reply,
-                drink_beer,
-                hour_pass,
-            },
-        ))
+        g.set_screen_and_wait_for_any_key(GameScreen::GrishaInteraction(RandomReply {
+            reply,
+            drink_beer,
+            hour_pass,
+        }))
         .await;
         if drink_beer {
             misc::decrease_brain(

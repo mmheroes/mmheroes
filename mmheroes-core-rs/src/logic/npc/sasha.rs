@@ -34,7 +34,7 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
         .collect::<ActionVec>();
     available_actions.push(Action::DontNeedAnythingFromSasha);
     g.set_screen_and_action_vec(
-        GameScreen::SashaInteraction(state.clone(), ChooseSubject),
+        GameScreen::SashaInteraction(ChooseSubject),
         available_actions,
     );
     let new_interaction = match g.wait_for_action().await {
@@ -55,9 +55,6 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
         Action::DontNeedAnythingFromSasha => SuitYourself,
         action => illegal_action!(action),
     };
-    g.set_screen_and_wait_for_any_key(GameScreen::SashaInteraction(
-        state.clone(),
-        new_interaction,
-    ))
-    .await;
+    g.set_screen_and_wait_for_any_key(GameScreen::SashaInteraction(new_interaction))
+        .await;
 }

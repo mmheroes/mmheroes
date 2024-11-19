@@ -95,7 +95,6 @@ pub(super) async fn interact(
         && state.player.charisma.0 * 2 + 20 > state.player.health.0
     {
         g.set_screen_and_wait_for_any_key(GameScreen::SerjInteraction(
-            state.clone(),
             HaveSomeKefir,
             serj_leaves,
         ))
@@ -116,7 +115,6 @@ pub(super) async fn interact(
     } else if g.rng.random(state.player.charisma.0) > g.rng.random_in_range(2..8) {
         if state.player.status_for_subject(PhysicalEducation).knowledge < BrainLevel(10) {
             g.set_screen_and_wait_for_any_key(GameScreen::SerjInteraction(
-                state.clone(),
                 IKnowWhereToCutInThePark,
                 serj_leaves,
             ))
@@ -129,7 +127,6 @@ pub(super) async fn interact(
     } else {
         let reply = g.rng.random_variant();
         g.set_screen_and_wait_for_any_key(GameScreen::SerjInteraction(
-            state.clone(),
             RandomReply(reply),
             serj_leaves,
         ))

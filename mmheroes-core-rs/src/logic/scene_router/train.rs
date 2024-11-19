@@ -22,10 +22,10 @@ pub enum TrainScene {
     BoughtRoundtripTicket,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum BaltiyskiyRailwayStationScene {
     /// "Ты в Питере, на Балтийском вокзале. Куда направляемся?"
-    Prompt(GameState),
+    Prompt,
 
     /// "Тебя заловили контролеры!"
     CaughtByInspectors,
@@ -34,11 +34,8 @@ pub enum BaltiyskiyRailwayStationScene {
 pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameState) {
     assert_ne!(state.location(), Location::PDMI);
     if state.current_time() > Time(20) {
-        g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
-            state.clone(),
-            NoPointToGoToPDMI,
-        ))
-        .await;
+        g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(NoPointToGoToPDMI))
+            .await;
         return;
     }
 
@@ -56,16 +53,13 @@ pub(super) async fn go_by_train(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     health_penalty: HealthLevel,
-    make_screen: &dyn Fn(GameState, TrainScene) -> GameScreen,
+    make_screen: &dyn Fn(TrainScene) -> GameScreen,
 ) -> bool {
     if state.player.money < Money::roundtrip_train_ticket_cost() {
         let caught_by_inspectors = inspectors(&mut g.rng, state);
-        g.set_screen_and_wait_for_any_key(make_screen(
-            state.clone(),
-            GatecrashBecauseNoMoney {
-                caught_by_inspectors,
-            },
-        ))
+        g.set_screen_and_wait_for_any_key(make_screen(GatecrashBecauseNoMoney {
+            caught_by_inspectors,
+        }))
         .await;
         misc::decrease_health(state, health_penalty, CauseOfDeath::CorpseFoundInTheTrain);
         if caught_by_inspectors {
@@ -79,7 +73,6 @@ pub(super) async fn go_by_train(
     } else {
         let caught_by_inspectors = match g
             .set_screen_and_wait_for_action::<TrainTicketAction>(make_screen(
-                state.clone(),
                 PromptToBuyTickets,
             ))
             .await
@@ -87,21 +80,15 @@ pub(super) async fn go_by_train(
             TrainTicketAction::GatecrashTrain => {
                 let caught_by_inspectors = inspectors(&mut g.rng, state);
                 // Здоровье не уменьшается если поймали контролёры!
-                g.set_screen_and_wait_for_any_key(make_screen(
-                    state.clone(),
-                    GatecrashByChoice {
-                        caught_by_inspectors,
-                    },
-                ))
+                g.set_screen_and_wait_for_any_key(make_screen(GatecrashByChoice {
+                    caught_by_inspectors,
+                }))
                 .await;
                 caught_by_inspectors
             }
             TrainTicketAction::BuyRoundtripTrainTicket => {
-                g.set_screen_and_wait_for_any_key(make_screen(
-                    state.clone(),
-                    BoughtRoundtripTicket,
-                ))
-                .await;
+                g.set_screen_and_wait_for_any_key(make_screen(BoughtRoundtripTicket))
+                    .await;
                 state.player.money -= Money::roundtrip_train_ticket_cost();
                 state.player.set_has_roundtrip_train_ticket();
                 false

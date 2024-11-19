@@ -50,11 +50,8 @@ async fn solve_algebra_problems(
     state: &mut GameState,
     interaction: KolyaInteraction,
 ) {
-    g.set_screen_and_wait_for_any_key(GameScreen::KolyaInteraction(
-        state.clone(),
-        interaction,
-    ))
-    .await;
+    g.set_screen_and_wait_for_any_key(GameScreen::KolyaInteraction(interaction))
+        .await;
     state
         .player
         .status_for_subject_mut(AlgebraAndNumberTheory)
@@ -71,7 +68,6 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
     if state.player.money < Money::oat_tincture_cost() {
         // "Коля достает тормозную жидкость, и вы распиваете еще по стакану."
         g.set_screen_and_wait_for_any_key(GameScreen::KolyaInteraction(
-            state.clone(),
             BrakeFluidNoMoney,
         ))
         .await;
@@ -81,7 +77,7 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
         // "Заказать Коле настойку овса?"
         match g
             .set_screen_and_wait_for_action::<YesOrNoAction>(
-                GameScreen::KolyaInteraction(state.clone(), PromptOatTincture),
+                GameScreen::KolyaInteraction(PromptOatTincture),
             )
             .await
         {
@@ -91,7 +87,6 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
                         .await;
                 } else {
                     g.set_screen_and_wait_for_any_key(GameScreen::KolyaInteraction(
-                        state.clone(),
                         Altruism,
                     ))
                     .await;
@@ -100,7 +95,6 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
             }
             YesOrNoAction::No => {
                 g.set_screen_and_wait_for_any_key(GameScreen::KolyaInteraction(
-                    state.clone(),
                     BrakeFluidBecauseRefused,
                 ))
                 .await;

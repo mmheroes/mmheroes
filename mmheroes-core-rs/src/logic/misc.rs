@@ -67,12 +67,8 @@ pub(in crate::logic) async fn midnight(
     }
 }
 
-pub(in crate::logic) async fn game_end(
-    g: &mut InternalGameState<'_>,
-    state: &GameState,
-) -> GameEnd {
-    g.set_screen_and_wait_for_any_key(GameScreen::GameEnd(state.clone()))
-        .await;
+pub(in crate::logic) async fn game_end(g: &mut InternalGameState<'_>) -> GameEnd {
+    g.set_screen_and_wait_for_any_key(GameScreen::GameEnd).await;
     // Хочешь попробовать снова? Да или нет.
     match g
         .set_screen_and_wait_for_action::<TryAgainAction>(GameScreen::WannaTryAgain)

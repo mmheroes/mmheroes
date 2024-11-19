@@ -95,8 +95,7 @@ pub unsafe extern "C" fn mmheroes_game_get_current_time(
     out_time: &mut Time,
 ) -> bool {
     let game = game_or_return!(const game, return false);
-    let borrowed_state = game.state_holder.observable_state();
-    if let Some(state) = borrowed_state.screen().state() {
+    if let Some(state) = game.state_holder.game_state() {
         *out_day = state.current_day().index() as u8;
         *out_time = state.current_time();
         true

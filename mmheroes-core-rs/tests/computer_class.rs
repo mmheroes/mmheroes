@@ -19,12 +19,13 @@ fn surf_internet_god_mode() {
 
     // Подходим к Грише, принимаем его предложение устроиться в ТЕРКОМ
     replay_game(game_ui, "2↑3r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert!(!state.player().has_internet());
-        }
-    );
+    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter);
+    assert!(!state
+        .observable_state()
+        .game_state()
+        .unwrap()
+        .player()
+        .has_internet());
 
     // Снова подходим к Грише, получаем у него адрес прокси-сервера
     replay_game(game_ui, "2↑2r");

@@ -114,23 +114,20 @@ pub(super) fn available_actions(state: &GameState) -> ActionVec {
 
 pub(super) async fn run(
     g: &mut InternalGameState<'_>,
-    mut state: GameState,
+    state: &mut GameState,
 ) -> entry_point::GameEnd {
     loop {
-        g.set_screen_and_action_vec(
-            GameScreen::SceneRouter(state.clone()),
-            available_actions(&state),
-        );
+        g.set_screen_and_action_vec(GameScreen::SceneRouter, available_actions(&state));
         let router_action = g.wait_for_action().await;
         if router_action == Action::IAmDone {
-            match i_am_done(g, &state).await {
+            match i_am_done(g).await {
                 None => continue,
                 Some(game_end) => return game_end,
             }
         }
-        handle_router_action(g, &mut state, router_action).await;
+        handle_router_action(g, state, router_action).await;
         if state.player.cause_of_death.is_some() {
-            return misc::game_end(g, &state).await;
+            return misc::game_end(g).await;
         }
     }
 }
@@ -150,17 +147,12 @@ async fn handle_router_action(
     }
 }
 
-async fn i_am_done(
-    g: &mut InternalGameState<'_>,
-    state: &GameState,
-) -> Option<entry_point::GameEnd> {
+async fn i_am_done(g: &mut InternalGameState<'_>) -> Option<entry_point::GameEnd> {
     match g
-        .set_screen_and_wait_for_action::<GameEndAction>(GameScreen::IAmDone(
-            state.clone(),
-        ))
+        .set_screen_and_wait_for_action::<GameEndAction>(GameScreen::IAmDone)
         .await
     {
         GameEndAction::NoIAmNotDone => None,
-        GameEndAction::IAmCertainlyDone => Some(misc::game_end(g, state).await),
+        GameEndAction::IAmCertainlyDone => Some(misc::game_end(g).await),
     }
 }

@@ -118,17 +118,12 @@ pub(super) async fn interact(
     {
         match g
             .set_screen_and_wait_for_action::<MmheroesFloppyAction>(
-                GameScreen::DiamondInteraction(
-                    state.clone(),
-                    WannaTestNewMMHEROES,
-                    false,
-                ),
+                GameScreen::DiamondInteraction(WannaTestNewMMHEROES, false),
             )
             .await
         {
             MmheroesFloppyAction::WantToTestNewMMHEROES => {
                 g.set_screen_and_wait_for_any_key(GameScreen::DiamondInteraction(
-                    state.clone(),
                     HereIsTheFloppy,
                     false,
                 ))
@@ -137,7 +132,6 @@ pub(super) async fn interact(
             }
             MmheroesFloppyAction::DontWantToTestNewMMHEROES => {
                 g.set_screen_and_wait_for_any_key(GameScreen::DiamondInteraction(
-                    state.clone(),
                     SorryForBothering,
                     false,
                 ))
@@ -151,7 +145,6 @@ pub(super) async fn interact(
 
     let diamond_leaves = exam_in_progress.is_none() && g.rng.roll_dice(2);
     g.set_screen_and_wait_for_any_key(GameScreen::DiamondInteraction(
-        state.clone(),
         Reply(reply),
         diamond_leaves,
     ))

@@ -18,10 +18,7 @@ pub(super) async fn go_to_professor(
         .map(|exam| Action::Exam(exam.subject()))
         .collect::<ActionVec>();
     available_actions.push(Action::DontGoToProfessor);
-    g.set_screen_and_action_vec(
-        GameScreen::GoToProfessor(state.clone()),
-        available_actions,
-    );
+    g.set_screen_and_action_vec(GameScreen::GoToProfessor, available_actions);
     let subject = match g.wait_for_action().await {
         Action::Exam(subject) => subject,
         Action::DontGoToProfessor => return,
@@ -195,10 +192,10 @@ enum ExamResult {
     Exit,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Copy, Clone)]
 pub enum ExamScene {
     /// Экран выбора действий во время зачёта
-    Router(GameState, Subject),
+    Router(Subject),
 
     /// Попытка сдать зачёт
     ExamSuffering {
@@ -207,31 +204,28 @@ pub enum ExamScene {
     },
 
     /// Во время сдачи зачёта пристаёт NPC
-    ClassmateWantsSomething(GameState, Subject, Classmate),
+    ClassmateWantsSomething(Subject, Classmate),
 
     /// Выбрали игнорировать NPC.
     IgnoredClassmate { feeling_bad: bool },
 
     /// Преподаватель уходит.
-    ProfessorLeaves(GameState, Subject),
+    ProfessorLeaves(Subject),
 
     /// Предложение пойти за преподавателем сдавать зачёт в электричке.
-    PromptExamInTrain(GameState, Subject),
+    PromptExamInTrain(Subject),
 
     /// Преподаватель согласился принимать зачёт в электричке
-    Train(GameState, train::TrainScene),
+    Train(train::TrainScene),
 
     /// Воспроизводим баг оригинальной реализации
     CaughtByInspectorsEmptyScreenBug,
 
     /// Мучаемся, сдавая зачёт в электричке
-    SufferInTrain {
-        state: GameState,
-        solved_problems: u8,
-    },
+    SufferInTrain { solved_problems: u8 },
 
     /// Преподаватель задерживается ещё на час
-    ProfessorLingers(GameState, Subject),
+    ProfessorLingers(Subject),
 }
 
 async fn exam(g: &mut InternalGameState<'_>, state: &mut GameState, subject: Subject) {
@@ -274,7 +268,7 @@ async fn exam(g: &mut InternalGameState<'_>, state: &mut GameState, subject: Sub
             "DJuG не на своём месте",
         );
         g.set_screen_and_action_vec(
-            GameScreen::Exam(ExamScene::Router(state.clone(), subject)),
+            GameScreen::Exam(ExamScene::Router(subject)),
             available_actions,
         );
         match g.wait_for_action().await {
@@ -380,10 +374,7 @@ async fn suffer_exam(
     }
 
     let scene = if in_train {
-        ExamScene::SufferInTrain {
-            state: state.clone(),
-            solved_problems,
-        }
+        ExamScene::SufferInTrain { solved_problems }
     } else {
         ExamScene::ExamSuffering {
             solved_problems,
@@ -444,7 +435,7 @@ async fn exam_ends(
             {
                 match g
                     .set_screen_and_wait_for_action(GameScreen::Exam(
-                        ExamScene::PromptExamInTrain(state.clone(), subject),
+                        ExamScene::PromptExamInTrain(subject),
                     ))
                     .await
                 {
@@ -467,7 +458,7 @@ async fn exam_ends(
                 < state.player.charisma.0 * 3 + g.rng.random_in_range(20..40)
             {
                 g.set_screen_and_wait_for_any_key(GameScreen::Exam(
-                    ExamScene::ProfessorLingers(state.clone(), subject),
+                    ExamScene::ProfessorLingers(subject),
                 ))
                 .await;
                 state
@@ -480,7 +471,6 @@ async fn exam_ends(
         }
     };
     g.set_screen_and_wait_for_any_key(GameScreen::Exam(ExamScene::ProfessorLeaves(
-        state.clone(),
         subject,
     )))
     .await;
@@ -498,11 +488,10 @@ async fn exam_in_train(
         // а по расписанию экзамен не может заканчиваться позже 18:00.
         unreachable!("Экзамен по алгебре после 20:00? Это как?")
     }
-    let caught_by_inspectors =
-        train::go_by_train(g, state, HealthLevel(0), &|state, train| {
-            GameScreen::Exam(ExamScene::Train(state, train))
-        })
-        .await;
+    let caught_by_inspectors = train::go_by_train(g, state, HealthLevel(0), &|train| {
+        GameScreen::Exam(ExamScene::Train(train))
+    })
+    .await;
     if caught_by_inspectors {
         // Баг в оригинальной реализации.
         // Если поймали контролёры, то появляется лишний пустой экран с единственным
@@ -523,9 +512,7 @@ async fn exam_in_train(
 
     match g
         .set_screen_and_wait_for_action::<BaltiyskiyRailwayStationAction>(
-            GameScreen::BaltiyskiyRailwayStation(BaltiyskiyRailwayStationScene::Prompt(
-                state.clone(),
-            )),
+            GameScreen::BaltiyskiyRailwayStation(BaltiyskiyRailwayStationScene::Prompt),
         )
         .await
     {
@@ -575,11 +562,7 @@ async fn classmate_wants_something(
 
     let selected_action = g
         .set_screen_and_wait_for_action_vec(
-            GameScreen::Exam(ExamScene::ClassmateWantsSomething(
-                state.clone(),
-                subject,
-                classmate,
-            )),
+            GameScreen::Exam(ExamScene::ClassmateWantsSomething(subject, classmate)),
             [
                 NpcApproachAction::Ignore,
                 NpcApproachAction::TalkToClassmate(classmate),

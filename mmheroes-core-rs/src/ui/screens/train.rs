@@ -134,10 +134,11 @@ fn display_train<R: RendererRequestConsumer>(
 pub(in crate::ui) fn display_baltiyskiy_railway_station(
     r: &mut Renderer<impl RendererRequestConsumer>,
     available_actions: &[Action],
-    scene: &BaltiyskiyRailwayStationScene,
+    state: &GameState,
+    scene: BaltiyskiyRailwayStationScene,
 ) -> WaitingState {
     match scene {
-        BaltiyskiyRailwayStationScene::Prompt(state) => {
+        BaltiyskiyRailwayStationScene::Prompt => {
             r.clear_screen();
             scene_router::display_header_stats(r, state);
             r.move_cursor_to(11, 0);

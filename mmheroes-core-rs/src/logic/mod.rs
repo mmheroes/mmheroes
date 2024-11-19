@@ -92,8 +92,8 @@ impl ObservableGameState {
         self.mode
     }
 
-    pub fn screen(&self) -> &GameScreen {
-        &self.screen
+    pub fn screen(&self) -> GameScreen {
+        self.screen
     }
 
     pub fn available_actions(&self) -> &[Action] {
@@ -246,6 +246,7 @@ impl<F: Future> Game for GameExecutor<'_, F> {
 
 pub struct StateHolder {
     observable_state: RefCell<ObservableGameState>,
+    game_state: RefCell<Option<GameState>>,
     shared_future_data: RefCell<Option<FutureData<Action, ()>>>,
 }
 
@@ -253,12 +254,17 @@ impl StateHolder {
     pub fn new(mode: GameMode) -> Self {
         Self {
             observable_state: RefCell::new(ObservableGameState::new(mode)),
+            game_state: RefCell::new(None),
             shared_future_data: RefCell::new(None),
         }
     }
 
     pub fn observable_state(&self) -> Ref<ObservableGameState> {
         self.observable_state.borrow()
+    }
+
+    pub fn game_state(&self) -> Option<Ref<GameState>> {
+        Ref::filter_map(self.game_state.borrow(), Option::as_ref).ok()
     }
 }
 
@@ -277,7 +283,7 @@ mod memory_tests {
     #[test]
     fn observable_game_state_memory() {
         let observable_game_state = ObservableGameState::new(GameMode::Normal);
-        assert_eq!(size_of_val(&observable_game_state), 288);
+        assert_eq!(size_of_val(&observable_game_state), 280);
     }
 
     #[test]
@@ -312,13 +318,13 @@ mod memory_tests {
 
     #[test]
     fn game_screen_memory() {
-        assert_eq!(size_of::<GameScreen>(), 240);
+        assert_eq!(size_of::<GameScreen>(), 4);
     }
 
     #[test]
     fn whole_game_memory() {
         let state_holder = StateHolder::new(GameMode::Normal);
         let game = create_game(0, &state_holder);
-        assert_eq!(size_of_val(&game), 1656);
+        assert_eq!(size_of_val(&game), 760);
     }
 }

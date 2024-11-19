@@ -1,6 +1,6 @@
 pub use crate::logic::{Location, Subject, SUBJECTS};
 
-use crate::logic::{GameScreen, GameState, InternalGameState};
+use crate::logic::{GameScreen, InternalGameState};
 use core::fmt::{Display, Formatter};
 use core::ops::{Add, AddAssign, Sub};
 use strum::EnumCount;
@@ -272,8 +272,8 @@ impl Timetable {
     }
 }
 
-pub(in crate::logic) async fn show(g: &mut InternalGameState<'_>, state: &GameState) {
-    g.set_screen_and_wait_for_any_key(GameScreen::Timetable(state.clone()))
+pub(in crate::logic) async fn show(g: &mut InternalGameState<'_>) {
+    g.set_screen_and_wait_for_any_key(GameScreen::Timetable)
         .await;
 }
 

@@ -248,8 +248,8 @@ fn main() {
 
     let steps = env_steps();
 
-    let observable_game_state = StateHolder::new(mode);
-    let game = create_game(seed, &observable_game_state);
+    let state_holder = StateHolder::new(mode);
+    let game = create_game(seed, &state_holder);
     let game = pin!(game);
 
     let renderer_request_evaluator = RendererRequestEvaluator {
@@ -258,7 +258,7 @@ fn main() {
     };
 
     let mut game_ui = GameUI::new(
-        &observable_game_state,
+        &state_holder,
         game,
         seed,
         high_scores::load(),

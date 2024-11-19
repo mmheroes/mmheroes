@@ -190,180 +190,158 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
             self.game.as_mut().perform_action(action);
         }
 
-        let new_waiting_state = match self.state_holder.observable_state().screen() {
-            Intro => screens::initial::display_intro(&mut self.renderer),
-            InitialParameters => screens::initial::display_initial_parameters(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-                self.state_holder.observable_state().mode(),
-            ),
-            Ding => screens::initial::display_ding(&mut self.renderer),
-            Timetable(state) => {
-                screens::timetable::display_timetable(&mut self.renderer, state)
+        let r = &mut self.renderer;
+        let observable_state = self.state_holder.observable_state();
+        let screen = observable_state.screen();
+        let mode = observable_state.mode();
+        let available_actions = observable_state.available_actions();
+        let new_waiting_state = match screen {
+            Intro => screens::initial::display_intro(r),
+            InitialParameters => {
+                screens::initial::display_initial_parameters(r, available_actions, mode)
             }
-            SceneRouter(state) => screens::scene_router::display_scene_router(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-                state,
+            Ding => screens::initial::display_ding(r),
+            Timetable => screens::timetable::display_timetable(
+                r,
+                &*self.state_holder.game_state().unwrap(),
             ),
-            Study(state) => screens::scene_router::display_study_options(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-                state,
+            SceneRouter => screens::scene_router::display_scene_router(
+                r,
+                available_actions,
+                &*self.state_holder.game_state().unwrap(),
             ),
-            PromptUseLectureNotes(_state) => {
+            Study => screens::scene_router::display_study_options(
+                r,
+                available_actions,
+                &*self.state_holder.game_state().unwrap(),
+            ),
+            PromptUseLectureNotes => {
                 screens::scene_router::display_prompt_use_lecture_notes(
-                    &mut self.renderer,
-                    self.state_holder.observable_state().available_actions(),
+                    r,
+                    available_actions,
                 )
             }
-            Sleep(state) => {
-                screens::scene_router::display_sleeping(&mut self.renderer, state)
-            }
-            HighScores(_) => screens::high_scores::display_high_scores(
-                &mut self.renderer,
-                &self.high_scores,
+            Sleep => screens::scene_router::display_sleeping(
+                r,
+                &*self.state_holder.game_state().unwrap(),
             ),
-            RestInMausoleum(state) => screens::rest::display_rest_in_mausoleum(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-                state,
+            HighScores => screens::high_scores::display_high_scores(r, &self.high_scores),
+            RestInMausoleum => screens::rest::display_rest_in_mausoleum(
+                r,
+                available_actions,
+                &*self.state_holder.game_state().unwrap(),
             ),
-            CafePUNK(state) => screens::rest::display_cafe(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-                state,
+            CafePUNK => screens::rest::display_cafe(
+                r,
+                available_actions,
+                &*self.state_holder.game_state().unwrap(),
             ),
-            TrainToPDMI(state, interaction) => screens::train::display_train_to_pdmi(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-                state,
-                *interaction,
+            TrainToPDMI(interaction) => screens::train::display_train_to_pdmi(
+                r,
+                available_actions,
+                &*self.state_holder.game_state().unwrap(),
+                interaction,
+            ),
+            KolyaInteraction(interaction) => screens::npc::display_kolya_interaction(
+                r,
+                &*self.state_holder.game_state().unwrap(),
+                available_actions,
+                interaction,
+            ),
+            PashaInteraction(interaction) => screens::npc::display_pasha_interaction(
+                r,
+                &*self.state_holder.game_state().unwrap(),
+                interaction,
+            ),
+            GrishaInteraction(interaction) => screens::npc::display_grisha_interaction(
+                r,
+                &*self.state_holder.game_state().unwrap(),
+                available_actions,
+                interaction,
+            ),
+            SashaInteraction(interaction) => screens::npc::display_sasha_interaction(
+                r,
+                &*self.state_holder.game_state().unwrap(),
+                available_actions,
+                interaction,
             ),
             BaltiyskiyRailwayStation(scene) => {
                 screens::train::display_baltiyskiy_railway_station(
                     &mut self.renderer,
                     self.state_holder.observable_state().available_actions(),
+                    &*self.state_holder.game_state().unwrap(),
                     scene,
                 )
             }
-            KolyaInteraction(state, interaction) => {
-                screens::npc::display_kolya_interaction(
-                    &mut self.renderer,
-                    state,
-                    self.state_holder.observable_state().available_actions(),
-                    *interaction,
-                )
-            }
-            PashaInteraction(state, interaction) => {
-                screens::npc::display_pasha_interaction(
-                    &mut self.renderer,
-                    state,
-                    *interaction,
-                )
-            }
-            GrishaInteraction(state, interaction) => {
-                screens::npc::display_grisha_interaction(
-                    &mut self.renderer,
-                    state,
-                    self.state_holder.observable_state().available_actions(),
-                    *interaction,
-                )
-            }
-            SashaInteraction(state, interaction) => {
-                screens::npc::display_sasha_interaction(
-                    &mut self.renderer,
-                    state,
-                    self.state_holder.observable_state().available_actions(),
-                    *interaction,
-                )
-            }
-            KuzmenkoInteraction(state, interaction) => {
+            KuzmenkoInteraction(interaction) => {
                 screens::npc::display_kuzmenko_interaction(
-                    &mut self.renderer,
-                    state,
-                    *interaction,
+                    r,
+                    &*self.state_holder.game_state().unwrap(),
+                    interaction,
                 )
             }
-            DiamondInteraction(state, interaction, diamond_leaves) => {
+            DiamondInteraction(interaction, diamond_leaves) => {
                 screens::npc::display_diamond_interaction(
-                    &mut self.renderer,
-                    state,
-                    *interaction,
-                    self.state_holder.observable_state().available_actions(),
-                    *diamond_leaves,
+                    r,
+                    &*self.state_holder.game_state().unwrap(),
+                    interaction,
+                    available_actions,
+                    diamond_leaves,
                 )
             }
-            SerjInteraction(state, interaction, serj_leaves) => {
+            SerjInteraction(interaction, serj_leaves) => {
                 screens::npc::display_serj_interaction(
-                    &mut self.renderer,
-                    state,
-                    *interaction,
-                    *serj_leaves,
+                    r,
+                    &*self.state_holder.game_state().unwrap(),
+                    interaction,
+                    serj_leaves,
                 )
             }
-            Terkom(state, terkom_screen) => screens::terkom::display_terkom(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
+            Terkom(terkom_screen) => screens::terkom::display_terkom(
+                r,
+                available_actions,
                 &mut self.rng,
-                state,
-                *terkom_screen,
+                &*self.state_holder.game_state().unwrap(),
+                terkom_screen,
             ),
-            GoToProfessor(state) => screens::scene_router::display_available_professors(
-                &mut self.renderer,
-                state,
-                self.state_holder.observable_state().available_actions(),
+            GoToProfessor => screens::scene_router::display_available_professors(
+                r,
+                &*self.state_holder.game_state().unwrap(),
+                available_actions,
             ),
-            ExamIntro(intro) => {
-                screens::exam::display_exam_intro(&mut self.renderer, *intro)
-            }
+            ExamIntro(intro) => screens::exam::display_exam_intro(r, intro),
             Exam(scene) => screens::exam::display_exam(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
+                r,
+                available_actions,
+                &*self.state_holder.game_state().unwrap(),
                 scene,
             ),
             SurfInternet { found_program } => {
-                screens::scene_router::display_surfing_internet(
-                    &mut self.renderer,
-                    *found_program,
-                )
+                screens::scene_router::display_surfing_internet(r, found_program)
             }
-            IAmDone(_) => screens::game_end::display_i_am_done(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
+            IAmDone => screens::game_end::display_i_am_done(r, available_actions),
+            GameEnd => screens::game_end::display_game_end(
+                r,
+                &*self.state_holder.game_state().unwrap(),
             ),
-            GameEnd(state) => {
-                screens::game_end::display_game_end(&mut self.renderer, state)
+            WannaTryAgain => {
+                screens::game_end::display_wanna_try_again(r, available_actions)
             }
-            WannaTryAgain => screens::game_end::display_wanna_try_again(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-            ),
-            Disclaimer => screens::game_end::display_disclaimer(&mut self.renderer),
-            WhatToDo(_) => screens::help::display_what_to_do(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-            ),
-            AboutScreen(_) => screens::help::display_about_screen(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-            ),
-            WhereToGoAndWhy(_) => screens::help::display_where_to_go_and_why(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-            ),
-            AboutProfessors(_) => screens::help::display_about_professors(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-            ),
-            AboutCharacters(_) => screens::help::display_about_characters(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-            ),
-            AboutThisProgram(_) => screens::help::display_about_this_program(
-                &mut self.renderer,
-                self.state_holder.observable_state().available_actions(),
-            ),
+            Disclaimer => screens::game_end::display_disclaimer(r),
+            WhatToDo => screens::help::display_what_to_do(r, available_actions),
+            AboutScreen => screens::help::display_about_screen(r, available_actions),
+            WhereToGoAndWhy => {
+                screens::help::display_where_to_go_and_why(r, available_actions)
+            }
+            AboutProfessors => {
+                screens::help::display_about_professors(r, available_actions)
+            }
+            AboutCharacters => {
+                screens::help::display_about_characters(r, available_actions)
+            }
+            AboutThisProgram => {
+                screens::help::display_about_this_program(r, available_actions)
+            }
             Terminal => {
                 self.renderer.waiting_state = None;
                 return false;
