@@ -55,7 +55,8 @@ jobs:
         run: |
           rustup target add \
             aarch64-apple-ios \
-            x86_64-apple-ios
+            x86_64-apple-ios \
+            aarch64-apple-ios-sim
       #      - name: Build iOS project (debug, device)
       #        uses: sersoft-gmbh/xcodebuild-action@v1
       #        with:
@@ -64,13 +65,22 @@ jobs:
       #          sdk: iphoneos
       #          configuration: Debug
       #          action: build
-      - name: Build iOS project (debug, simulator)
+      - name: Build iOS project (debug, simulator, x86_64)
         uses: sersoft-gmbh/xcodebuild-action@v1
         with:
           project: mmheroes-ios/mmheroes-ios.xcodeproj
           scheme: mmheroes-ios
           sdk: iphonesimulator
           arch: x86_64
+          configuration: Debug
+          action: build
+      - name: Build iOS project (debug, simulator, arm64)
+        uses: sersoft-gmbh/xcodebuild-action@v1
+        with:
+          project: mmheroes-ios/mmheroes-ios.xcodeproj
+          scheme: mmheroes-ios
+          sdk: iphonesimulator
+          arch: arm64
           configuration: Debug
           action: build
       #      - name: Build iOS project (release, device)
@@ -81,12 +91,21 @@ jobs:
       #          sdk: iphoneos
       #          configuration: Release
       #          action: build
-      - name: Build iOS project (release, simulator)
+      - name: Build iOS project (release, simulator, x86_64)
         uses: sersoft-gmbh/xcodebuild-action@v1
         with:
           project: mmheroes-ios/mmheroes-ios.xcodeproj
           scheme: mmheroes-ios
           sdk: iphonesimulator
           arch: x86_64
+          configuration: Release
+          action: build
+      - name: Build iOS project (release, simulator, arm64)
+        uses: sersoft-gmbh/xcodebuild-action@v1
+        with:
+          project: mmheroes-ios/mmheroes-ios.xcodeproj
+          scheme: mmheroes-ios
+          sdk: iphonesimulator
+          arch: arm64
           configuration: Release
           action: build
