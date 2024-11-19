@@ -34,57 +34,61 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
     }
 
     let health_penalty = HealthLevel(g.rng.random(10));
-    misc::decrease_health(state, health_penalty, CauseOfDeath::CorpseFoundInTheTrain);
     state.set_location(Location::PDMI);
-    let caught_by_inspectors =
-        if state.player.money < Money::roundtrip_train_ticket_cost() {
-            let caught_by_inspectors = inspectors(&mut g.rng, state);
-            if caught_by_inspectors {
-                misc::decrease_health(
-                    state,
-                    HealthLevel(10),
-                    CauseOfDeath::KilledByInspectors,
-                );
-            }
-            g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+    let caught_by_inspectors = if state.player.money
+        < Money::roundtrip_train_ticket_cost()
+    {
+        let caught_by_inspectors = inspectors(&mut g.rng, state);
+        g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+            state.clone(),
+            GatecrashBecauseNoMoney {
+                caught_by_inspectors,
+            },
+        ))
+        .await;
+        misc::decrease_health(state, health_penalty, CauseOfDeath::CorpseFoundInTheTrain);
+        if caught_by_inspectors {
+            misc::decrease_health(
+                state,
+                HealthLevel(10),
+                CauseOfDeath::KilledByInspectors,
+            );
+        }
+        caught_by_inspectors
+    } else {
+        let caught_by_inspectors = match g
+            .set_screen_and_wait_for_action::<TrainTicketAction>(GameScreen::TrainToPDMI(
                 state.clone(),
-                GatecrashBecauseNoMoney {
-                    caught_by_inspectors,
-                },
+                PromptToBuyTickets,
             ))
-            .await;
-            caught_by_inspectors
-        } else {
-            match g
-                .set_screen_and_wait_for_action::<TrainTicketAction>(
-                    GameScreen::TrainToPDMI(state.clone(), PromptToBuyTickets),
-                )
-                .await
-            {
-                TrainTicketAction::GatecrashTrain => {
-                    let caught_by_inspectors = inspectors(&mut g.rng, state);
-                    // Здоровье не уменьшается если поймали контролёры!
-                    g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
-                        state.clone(),
-                        GatecrashByChoice {
-                            caught_by_inspectors,
-                        },
-                    ))
-                    .await;
-                    caught_by_inspectors
-                }
-                TrainTicketAction::BuyRoundtripTrainTicket => {
-                    g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
-                        state.clone(),
-                        BoughtRoundtripTicket,
-                    ))
-                    .await;
-                    state.player.money -= Money::roundtrip_train_ticket_cost();
-                    state.player.set_has_roundtrip_train_ticket();
-                    false
-                }
+            .await
+        {
+            TrainTicketAction::GatecrashTrain => {
+                let caught_by_inspectors = inspectors(&mut g.rng, state);
+                // Здоровье не уменьшается если поймали контролёры!
+                g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+                    state.clone(),
+                    GatecrashByChoice {
+                        caught_by_inspectors,
+                    },
+                ))
+                .await;
+                caught_by_inspectors
+            }
+            TrainTicketAction::BuyRoundtripTrainTicket => {
+                g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+                    state.clone(),
+                    BoughtRoundtripTicket,
+                ))
+                .await;
+                state.player.money -= Money::roundtrip_train_ticket_cost();
+                state.player.set_has_roundtrip_train_ticket();
+                false
             }
         };
+        misc::decrease_health(state, health_penalty, CauseOfDeath::CorpseFoundInTheTrain);
+        caught_by_inspectors
+    };
     misc::hour_pass(g, state).await;
     if caught_by_inspectors {
         misc::hour_pass(g, state).await;
