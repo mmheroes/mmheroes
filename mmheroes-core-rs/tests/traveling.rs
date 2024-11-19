@@ -1,21 +1,35 @@
 mod common;
 
-use assert_matches::assert_matches;
 use common::*;
 use mmheroes_core::logic::actions::PlayStyle;
-use mmheroes_core::logic::scene_router::train::TrainToPDMI;
-use mmheroes_core::logic::{
-    Action, CauseOfDeath, GameMode, GameScreen, HealthLevel, Location, Money, Time,
-};
+use mmheroes_core::logic::{GameMode, Location};
 
 #[test]
 fn go_from_dorm_to_punk() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
     replay_game(game_ui, "4↓r");
-    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
-        assert_eq!(state.location(), Location::PUNK);
-    });
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (41)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты на факультете. Что делать?
+
+Идти к преподу▁                                  АиТЧ    ПУНК  13-15    0/12
+Посмотреть на баобаб                             МатАн   ----           0/10
+Пойти в общагу                                   ГиТ     ----           0/3
+Поехать в ПОМИ                                   Инф     ----           0/2
+Пойти в мавзолей                                 ИнЯз    ПУНК  14-16    0/3
+Пойти в компьютерный класс                       Физ-ра  ----           0/1
+С меня хватит!
+"
+    );
 }
 
 #[test]
@@ -26,16 +40,62 @@ fn death_on_the_way_from_dorm_to_punk() {
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
     replay_game(game_ui, "10r");
 
-    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
-        assert_eq!(state.player().health(), HealthLevel(2));
-    });
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 13:00   Версия gamma3.14   Алгебра и Т.Ч.        26  Хорошо
+Самочувствие: пора помирать ... (2)         Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ПУНК  13-15    0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     ----           0/2
+Пойти на факультет                               ИнЯз    ПУНК  14-16    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
+    );
 
     // Идём на факультет
     replay_game(game_ui, "4↓r");
 
-    assert_matches!(state.observable_state().screen(), GameScreen::GameEnd(state) => {
-        assert_matches!(state.player().cause_of_death(), Some(CauseOfDeath::OnTheWayToPUNK));
-    });
+    assert_ui!(
+        game_ui,
+        "
+Легче лбом колоть орехи,
+чем учиться на МАТ-МЕХе.
+Умер по пути на факультет.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "
+    );
 }
 
 #[test]
@@ -43,9 +103,26 @@ fn go_from_dorm_to_mausoleum() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
     replay_game(game_ui, "6↓r");
-    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
-        assert_eq!(state.location(), Location::Mausoleum);
-    });
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (41)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+С меня хватит!                                   ИнЯз    ПУНК  14-16    0/3
+                                                 Физ-ра  ----           0/1
+"
+    );
 }
 
 #[test]
@@ -56,16 +133,62 @@ fn death_on_the_way_from_dorm_to_mausoleum() {
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
     replay_game(game_ui, "10r");
 
-    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
-        assert_eq!(state.player().health(), HealthLevel(2));
-    });
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 13:00   Версия gamma3.14   Алгебра и Т.Ч.        26  Хорошо
+Самочувствие: пора помирать ... (2)         Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ПУНК  13-15    0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     ----           0/2
+Пойти на факультет                               ИнЯз    ПУНК  14-16    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
+    );
 
     // Идём в мавзолей
     replay_game(game_ui, "6↓r");
 
-    assert_matches!(state.observable_state().screen(), GameScreen::GameEnd(state) => {
-        assert_matches!(state.player().cause_of_death(), Some(CauseOfDeath::OnTheWayToMausoleum));
-    });
+    assert_ui!(
+        game_ui,
+        "
+Легче лбом колоть орехи,
+чем учиться на МАТ-МЕХе.
+Умер по пути в мавзолей.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
+    );
 }
 
 #[test]
@@ -80,15 +203,59 @@ fn no_point_to_go_to_pdmi() {
 
     // Едем в ПОМИ
     replay_game(game_ui, "5↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::TrainToPDMI(_, TrainToPDMI::NoPointToGoToPDMI)
+    assert_ui!(
+        game_ui,
+        "
+Здравый смысл подсказывает тебе, что в такое время
+ты там никого уже не найдешь.
+Не будем зря тратить здоровье на поездку в ПОМИ.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
     );
 
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(_)
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 21:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (200)                Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ПУНК  13-15    0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     ----           0/2
+Пойти на факультет                               ИнЯз    ПУНК  14-16    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
     );
 }
 
@@ -96,32 +263,80 @@ fn no_point_to_go_to_pdmi() {
 fn go_to_pdmi_from_dorm_without_money_not_caught_by_inspectors() {
     initialize_game!((0, GameMode::Normal) => state, game_ui);
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
-    assert_matches!(state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.player().health(), HealthLevel(44))
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (44)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ПУНК  13-15    0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     ----           0/2
+Пойти на факультет                               ИнЯз    ПУНК  14-16    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
     );
     replay_game(game_ui, "5↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::TrainToPDMI(
-            state,
-            TrainToPDMI::GatecrashBecauseNoMoney {
-                caught_by_inspectors: false
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(8));
-            assert_eq!(state.player().health(), HealthLevel(43))
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (43)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Денег у тебя нет, пришлось ехать зайцем...
+Уф, доехал!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
     );
 
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(9));
-            assert_eq!(state.location(), Location::PDMI)
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 9:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (43)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в ПОМИ. Что делать?
+
+Идти к преподу▁                                  АиТЧ    ПУНК  13-15    0/12
+Посмотреть на доску объявлений                   МатАн   ----           0/10
+Пойти в кафе                                     ГиТ     ----           0/3
+Поехать в ПУНК                                   Инф     ----           0/2
+С меня хватит!                                   ИнЯз    ПУНК  14-16    0/3
+                                                 Физ-ра  ----           0/1
+"
     );
 }
 
@@ -129,34 +344,80 @@ fn go_to_pdmi_from_dorm_without_money_not_caught_by_inspectors() {
 fn go_to_pdmi_from_dorm_without_money_caught_by_inspectors() {
     initialize_game!((1, GameMode::Normal) => state, game_ui);
     replay_until_dorm(state, game_ui, PlayStyle::RandomStudent);
-    assert_matches!(state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.player().health(), HealthLevel(45));
-            assert_eq!(state.current_time(), Time(8));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        3   Плохо
+Самочувствие: отличное (45)                 Мат. Анализ           2   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Легкость в мыслях необыкновенная (6)        Информатика           3   Плохо
+Готов к труду и обороне (5)                 English               0   Плохо
+Ты нормально относишься к окружающим (4)    Физ-ра                4   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ----           0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     Компы 16-17    0/2
+Пойти на факультет                               ИнЯз    ПУНК  13-15    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
     );
     replay_game(game_ui, "5↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::TrainToPDMI(
-            state,
-            TrainToPDMI::GatecrashBecauseNoMoney {
-                caught_by_inspectors: true
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(8));
-            assert_eq!(state.location(), Location::PDMI);
-            assert_eq!(state.player().health(), HealthLevel(26))
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        3   Плохо
+Самочувствие: среднее (26)                  Мат. Анализ           2   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Легкость в мыслях необыкновенная (6)        Информатика           3   Плохо
+Готов к труду и обороне (5)                 English               0   Плохо
+Ты нормально относишься к окружающим (4)    Физ-ра                4   Плохо
+
+Денег у тебя нет, пришлось ехать зайцем...
+Тебя заловили контролеры!
+Высадили в Красных зорях, гады!
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
     );
 
     replay_game(game_ui, "r");
-    assert_matches!(state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(10));
-            assert_eq!(state.location(), Location::PDMI);
-            assert_eq!(state.player().health(), HealthLevel(26));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 10:00   Версия gamma3.14   Алгебра и Т.Ч.        3   Плохо
+Самочувствие: среднее (26)                  Мат. Анализ           2   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Легкость в мыслях необыкновенная (6)        Информатика           3   Плохо
+Готов к труду и обороне (5)                 English               0   Плохо
+Ты нормально относишься к окружающим (4)    Физ-ра                4   Плохо
+
+Ты в ПОМИ. Что делать?
+
+Идти к преподу▁                                  АиТЧ    ----           0/12
+Посмотреть на доску объявлений                   МатАн   ----           0/10
+Пойти в кафе                                     ГиТ     ----           0/3
+Поехать в ПУНК                                   Инф     Компы 16-17    0/2
+С меня хватит!                                   ИнЯз    ПУНК  13-15    0/3
+                                                 Физ-ра  ----           0/1
+"
     );
 }
 
@@ -167,43 +428,91 @@ fn death_on_the_way_to_pdmi() {
 
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
     replay_game(game_ui, "10r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(13));
-            assert_eq!(state.player().health(), HealthLevel(2));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 13:00   Версия gamma3.14   Алгебра и Т.Ч.        26  Хорошо
+Самочувствие: пора помирать ... (2)         Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ПУНК  13-15    0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     ----           0/2
+Пойти на факультет                               ИнЯз    ПУНК  14-16    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
     );
 
     // Едем в ПОМИ
     replay_game(game_ui, "5↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::TrainToPDMI(
-            state,
-            TrainToPDMI::GatecrashBecauseNoMoney { caught_by_inspectors: false },
-        ) => {
-            assert_matches!(
-                state.player().cause_of_death(),
-                Some(CauseOfDeath::CorpseFoundInTheTrain)
-            );
-            assert_eq!(state.current_time(), Time(13));
-            assert_eq!(state.player().health(), HealthLevel(2));
-            assert_eq!(state.location(), Location::PDMI)
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 13:00   Версия gamma3.14   Алгебра и Т.Ч.        26  Хорошо
+Самочувствие: пора помирать ... (2)         Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Денег у тебя нет, пришлось ехать зайцем...
+Уф, доехал!
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
     );
 
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GameEnd(state) => {
-            assert_eq!(state.current_time(), Time(14));
-            assert_matches!(
-                state.player().cause_of_death(),
-                Some(CauseOfDeath::CorpseFoundInTheTrain)
-            );
-            assert_eq!(state.location(), Location::PDMI)
-        }
+    assert_ui!(
+        game_ui,
+        "
+Легче лбом колоть орехи,
+чем учиться на МАТ-МЕХе.
+В электричке нашли бездыханное тело.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
     );
 }
 
@@ -214,44 +523,100 @@ fn killed_by_inspectors_no_money_from_dorm_to_pdmi() {
 
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
     replay_game(game_ui, "8r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.player().health(), HealthLevel(13));
-            assert_eq!(state.current_time(), Time(12))
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 12:00   Версия gamma3.14   Алгебра и Т.Ч.        24  Хорошо
+Самочувствие: плохое (13)                   Мат. Анализ           2   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Легкость в мыслях необыкновенная (6)        Информатика           3   Плохо
+Готов к труду и обороне (5)                 English               0   Плохо
+Ты нормально относишься к окружающим (4)    Физ-ра                4   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ----           0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     Компы 16-17    0/2
+Пойти на факультет                               ИнЯз    ПУНК  13-15    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
     );
 
     // Едем в ПОМИ
     replay_game(game_ui, "5↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::TrainToPDMI(
-            state,
-            TrainToPDMI::GatecrashBecauseNoMoney { caught_by_inspectors: true },
-        ) => {
-            assert_matches!(
-                state.player().cause_of_death(),
-                Some(CauseOfDeath::KilledByInspectors)
-            );
-            assert_eq!(state.current_time(), Time(12));
-            assert_eq!(state.location(), Location::PDMI);
-            assert_eq!(state.player().health(), HealthLevel(8));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 12:00   Версия gamma3.14   Алгебра и Т.Ч.        24  Хорошо
+Самочувствие: пора помирать ... (8)         Мат. Анализ           2   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Легкость в мыслях необыкновенная (6)        Информатика           3   Плохо
+Готов к труду и обороне (5)                 English               0   Плохо
+Ты нормально относишься к окружающим (4)    Физ-ра                4   Плохо
+
+Денег у тебя нет, пришлось ехать зайцем...
+Тебя заловили контролеры!
+Высадили в Красных зорях, гады!
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
     );
 
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GameEnd(state) => {
-            assert_eq!(state.current_time(), Time(14));
-            assert_matches!(
-                state.player().cause_of_death(),
-                Some(CauseOfDeath::KilledByInspectors)
-            );
-            assert_eq!(state.player().health(), HealthLevel(8));
-            assert_eq!(state.location(), Location::PDMI)
-        }
+    assert_ui!(
+        game_ui,
+        "
+Легче лбом колоть орехи,
+чем учиться на МАТ-МЕХе.
+Контролеры жизни лишили.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
+    );
+    assert_eq!(
+        state
+            .observable_state()
+            .screen()
+            .state()
+            .unwrap()
+            .location(),
+        Location::PDMI
     );
 }
 
@@ -268,35 +633,85 @@ fn go_to_pdmi_with_money_but_without_ticket_not_caught_by_inspectors() {
 
     // Едем в ПОМИ
     replay_game(game_ui, "3↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::TrainToPDMI(_, TrainToPDMI::PromptToBuyTickets)
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 10:00   Версия gamma3.14   Алгебра и Т.Ч.        4   Плохо
+Самочувствие: отличное (52)                 Мат. Анализ           4   Плохо
+Финансы: 50 руб.                            Геометрия и Топология 2   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Нас ждут великие дела (6)                   English               4   Плохо
+Ты нормально относишься к окружающим (4)    Физ-ра                2   Плохо
+
+
+
+
+
+Ехать зайцем▁
+Честно заплатить 10 руб. за билет в оба конца
+"
     );
 
     // Едем зайцем
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::TrainToPDMI(
-            state,
-            TrainToPDMI::GatecrashByChoice {
-                caught_by_inspectors: false
-            }
-        ) => {
-            assert_eq!(state.player().health(), HealthLevel(52))
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 10:00   Версия gamma3.14   Алгебра и Т.Ч.        4   Плохо
+Самочувствие: отличное (52)                 Мат. Анализ           4   Плохо
+Финансы: 50 руб.                            Геометрия и Топология 2   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Нас ждут великие дела (6)                   English               4   Плохо
+Ты нормально относишься к окружающим (4)    Физ-ра                2   Плохо
+
+
+
+
+
+Ехать зайцем
+Честно заплатить 10 руб. за билет в оба конца
+
+Уф, доехал!
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
     );
 
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::PDMI);
-            assert_eq!(state.player().health(), HealthLevel(52));
-            assert_eq!(state.player().money(), Money(50));
-            assert!(!state.player().has_roundtrip_train_ticket());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 11:00   Версия gamma3.14   Алгебра и Т.Ч.        4   Плохо
+Самочувствие: отличное (52)                 Мат. Анализ           4   Плохо
+Финансы: 50 руб.                            Геометрия и Топология 2   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Нас ждут великие дела (6)                   English               4   Плохо
+Ты нормально относишься к окружающим (4)    Физ-ра                2   Плохо
+
+Ты в ПОМИ. Что делать?
+
+Идти к преподу▁                                  АиТЧ    ----           0/12
+Посмотреть на доску объявлений                   МатАн   ----           0/10
+Пойти в кафе                                     ГиТ     ПОМИ  15-18    0/3
+Поехать в ПУНК                                   Инф     ----           0/2
+С меня хватит!                                   ИнЯз    ----           0/3
+                                                 Физ-ра  ПУНК  16-17    0/1
+"
     );
+    assert!(!state
+        .observable_state()
+        .screen()
+        .state()
+        .unwrap()
+        .player()
+        .has_roundtrip_train_ticket());
 }
 
 #[test]
@@ -309,50 +724,115 @@ fn go_to_pdmi_with_money_but_without_ticket_caught_by_inspectors() {
 
     // Получаем у Паши стипендию
     replay_game(game_ui, "4↓r7↓2r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.current_time(), Time(10));
-            assert_eq!(state.player().health(), HealthLevel(64))
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 10:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (64)                 Мат. Анализ           0   Плохо
+Финансы: 50 руб.                            Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты на факультете. Что делать?
+
+Идти к преподу▁                                  АиТЧ    ПУНК  13-15    0/12
+Посмотреть на баобаб                             МатАн   ----           0/10
+Пойти в общагу                                   ГиТ     ----           0/3
+Поехать в ПОМИ                                   Инф     ----           0/2
+Пойти в мавзолей                                 ИнЯз    ПУНК  14-16    0/3
+Пойти в компьютерный класс                       Физ-ра  ----           0/1
+Сходить в кафе
+Паша
+Миша
+Серж
+Саша
+С меня хватит!
+"
     );
 
     // Едем в ПОМИ
     replay_game(game_ui, "3↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::TrainToPDMI(state, TrainToPDMI::PromptToBuyTickets) => {
-            assert_eq!(state.location(), Location::PDMI);
-            assert_eq!(state.current_time(), Time(10));
-            assert_eq!(state.player().health(), HealthLevel(59))
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 10:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (59)                 Мат. Анализ           0   Плохо
+Финансы: 50 руб.                            Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+
+
+
+
+Ехать зайцем▁
+Честно заплатить 10 руб. за билет в оба конца
+"
+    );
+    assert_eq!(
+        state
+            .observable_state()
+            .screen()
+            .state()
+            .unwrap()
+            .location(),
+        Location::PDMI
     );
 
     // Едем зайцем
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::TrainToPDMI(
-            state,
-            TrainToPDMI::GatecrashByChoice {
-                caught_by_inspectors: true
-            }
-        ) => {
-            assert_eq!(state.location(), Location::PDMI);
-            assert_eq!(state.current_time(), Time(10));
-            assert_eq!(state.player().health(), HealthLevel(59))
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 10:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (59)                 Мат. Анализ           0   Плохо
+Финансы: 50 руб.                            Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+
+
+
+
+Ехать зайцем
+Честно заплатить 10 руб. за билет в оба конца
+
+Тебя заловили контролеры!
+Высадили в Красных зорях, гады!
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
     );
 
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::PDMI);
-            assert_eq!(state.current_time(), Time(12));
-            assert_eq!(state.player().health(), HealthLevel(59))
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 12:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (59)                 Мат. Анализ           0   Плохо
+Финансы: 50 руб.                            Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в ПОМИ. Что делать?
+
+Идти к преподу▁                                  АиТЧ    ПУНК  13-15    0/12
+Посмотреть на доску объявлений                   МатАн   ----           0/10
+Пойти в кафе                                     ГиТ     ----           0/3
+Поехать в ПУНК                                   Инф     ----           0/2
+С меня хватит!                                   ИнЯз    ПУНК  14-16    0/3
+                                                 Физ-ра  ----           0/1
+"
     );
 }
 
@@ -369,35 +849,77 @@ fn go_to_pdmi_with_ticket() {
 
     // Едем в ПОМИ
     replay_game(game_ui, "3↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::TrainToPDMI(_, TrainToPDMI::PromptToBuyTickets)
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 10:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (59)                 Мат. Анализ           0   Плохо
+Финансы: 50 руб.                            Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+
+
+
+
+Ехать зайцем▁
+Честно заплатить 10 руб. за билет в оба конца
+"
     );
 
     // Покупаем билет
     replay_game(game_ui, "↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::TrainToPDMI(
-            state,
-            TrainToPDMI::BoughtRoundtripTicket
-        ) => {
-            assert_eq!(state.location(), Location::PDMI);
-            assert_eq!(state.player().health(), HealthLevel(59));
-            assert_eq!(state.player().money(), Money(50));
-            assert!(!state.player().has_roundtrip_train_ticket());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 10:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (59)                 Мат. Анализ           0   Плохо
+Финансы: 50 руб.                            Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+
+
+
+
+Ехать зайцем
+Честно заплатить 10 руб. за билет в оба конца
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
     );
 
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::PDMI);
-            assert_eq!(state.player().health(), HealthLevel(59));
-            assert_eq!(state.player().money(), Money(40));
-            assert!(state.player().has_roundtrip_train_ticket());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 11:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (59)                 Мат. Анализ           0   Плохо
+Финансы: 40 руб.                            Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в ПОМИ. Что делать?
+
+Идти к преподу▁                                  АиТЧ    ПУНК  13-15    0/12
+Посмотреть на доску объявлений                   МатАн   ----           0/10
+Пойти в кафе                                     ГиТ     ----           0/3
+Поехать в ПУНК                                   Инф     ----           0/2
+С меня хватит!                                   ИнЯз    ПУНК  14-16    0/3
+                                                 Физ-ра  ----           0/1
+"
     );
 }
 
@@ -408,22 +930,52 @@ fn go_from_punk_to_dorm() {
 
     // Идём на факультет
     replay_game(game_ui, "4↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.player().health(), HealthLevel(41));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (41)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты на факультете. Что делать?
+
+Идти к преподу▁                                  АиТЧ    ПУНК  13-15    0/12
+Посмотреть на баобаб                             МатАн   ----           0/10
+Пойти в общагу                                   ГиТ     ----           0/3
+Поехать в ПОМИ                                   Инф     ----           0/2
+Пойти в мавзолей                                 ИнЯз    ПУНК  14-16    0/3
+Пойти в компьютерный класс                       Физ-ра  ----           0/1
+С меня хватит!
+"
     );
 
     // Идём обратно в общагу факультет и проверяем что здоровье не изменилось
     replay_game(game_ui, "2↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::Dorm);
-            assert_eq!(state.player().health(), HealthLevel(41));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (41)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ПУНК  13-15    0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     ----           0/2
+Пойти на факультет                               ИнЯз    ПУНК  14-16    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
     );
 }
 
@@ -434,51 +986,125 @@ fn go_from_punk_to_computer_class() {
 
     // Идём на факультет
     replay_game(game_ui, "4↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.player().health(), HealthLevel(41));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (41)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты на факультете. Что делать?
+
+Идти к преподу▁                                  АиТЧ    ПУНК  13-15    0/12
+Посмотреть на баобаб                             МатАн   ----           0/10
+Пойти в общагу                                   ГиТ     ----           0/3
+Поехать в ПОМИ                                   Инф     ----           0/2
+Пойти в мавзолей                                 ИнЯз    ПУНК  14-16    0/3
+Пойти в компьютерный класс                       Физ-ра  ----           0/1
+С меня хватит!
+"
     );
 
     // Идём в компьютерный класс
     replay_game(game_ui, "5↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::ComputerClass);
-            assert_eq!(state.player().health(), HealthLevel(39));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: хорошее (39)                  Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в компьютерном классе. Что делать?
+
+Пойти в общагу▁                                  АиТЧ    ПУНК  13-15    0/12
+Покинуть класс                                   МатАн   ----           0/10
+Поехать в ПОМИ                                   ГиТ     ----           0/3
+Пойти в мавзолей                                 Инф     ----           0/2
+С меня хватит!                                   ИнЯз    ПУНК  14-16    0/3
+                                                 Физ-ра  ----           0/1
+"
     );
 
     // Возвращаемся в общагу
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::Dorm);
-            assert_eq!(state.player().health(), HealthLevel(39));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: хорошее (39)                  Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ПУНК  13-15    0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     ----           0/2
+Пойти на факультет                               ИнЯз    ПУНК  14-16    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
     );
 
     // Отдыхаем до 19:00
     replay_game(game_ui, "2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r2↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.player().health(), HealthLevel(170));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 19:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (170)                Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ПУНК  13-15    0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     ----           0/2
+Пойти на факультет                               ИнЯз    ПУНК  14-16    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
     );
 
     // Снова идём в компьютерный класс
     replay_game(game_ui, "4↓r5↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::ComputerClass);
-            assert_eq!(state.player().health(), HealthLevel(165));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 19:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (165)                Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в компьютерном классе. Что делать?
+
+Пойти в общагу▁                                  АиТЧ    ПУНК  13-15    0/12
+Покинуть класс                                   МатАн   ----           0/10
+Поехать в ПОМИ                                   ГиТ     ----           0/3
+Пойти в мавзолей                                 Инф     ----           0/2
+Diamond                                          ИнЯз    ПУНК  14-16    0/3
+RAI                                              Физ-ра  ----           0/1
+С меня хватит!
+"
     );
 
     // Возвращаемся в общагу и отдыхаем до 20:00
@@ -486,10 +1112,29 @@ fn go_from_punk_to_computer_class() {
 
     // Идём на факультет, убеждаемся что компьютерный класс уже закрыт
     replay_game(game_ui, "4↓r");
-    assert!(!state
-        .observable_state()
-        .available_actions()
-        .contains(&Action::GoToComputerClass));
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 20:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (176)                Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты на факультете. Что делать?
+
+Идти к преподу▁                                  АиТЧ    ПУНК  13-15    0/12
+Посмотреть на баобаб                             МатАн   ----           0/10
+Пойти в общагу                                   ГиТ     ----           0/3
+Поехать в ПОМИ                                   Инф     ----           0/2
+Пойти в мавзолей                                 ИнЯз    ПУНК  14-16    0/3
+Паша                                             Физ-ра  ----           0/1
+Миша
+Серж
+С меня хватит!
+"
+    );
 }
 
 #[test]
@@ -500,16 +1145,61 @@ fn death_on_the_way_to_computer_class() {
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
     replay_game(game_ui, "10r");
 
-    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
-        assert_eq!(state.player().health(), HealthLevel(4));
-    });
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 13:00   Версия gamma3.14   Алгебра и Т.Ч.        28  Хорошо
+Самочувствие: пора помирать ... (4)         Мат. Анализ           2   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Легкость в мыслях необыкновенная (6)        Информатика           3   Плохо
+Готов к труду и обороне (5)                 English               0   Плохо
+Ты нормально относишься к окружающим (4)    Физ-ра                4   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ----           0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     Компы 16-17    0/2
+Пойти на факультет                               ИнЯз    ПУНК  13-15    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
+    );
 
     // Идём в компьютерный класс
     replay_game(game_ui, "4↓r5↓r");
+    assert_ui!(
+        game_ui,
+        "
+Легче лбом колоть орехи,
+чем учиться на МАТ-МЕХе.
+Упал с лестницы у главного входа.
 
-    assert_matches!(state.observable_state().screen(), GameScreen::GameEnd(state) => {
-        assert_eq!(state.player().cause_of_death(), Some(CauseOfDeath::FellFromStairs));
-    });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
+    );
 }
 
 #[test]
@@ -519,22 +1209,49 @@ fn go_from_punk_to_mausoleum() {
 
     // Идём на факультет
     replay_game(game_ui, "4↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.player().health(), HealthLevel(41));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (41)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты на факультете. Что делать?
+
+Идти к преподу▁                                  АиТЧ    ПУНК  13-15    0/12
+Посмотреть на баобаб                             МатАн   ----           0/10
+Пойти в общагу                                   ГиТ     ----           0/3
+Поехать в ПОМИ                                   Инф     ----           0/2
+Пойти в мавзолей                                 ИнЯз    ПУНК  14-16    0/3
+Пойти в компьютерный класс                       Физ-ра  ----           0/1
+С меня хватит!
+"
     );
 
     // Идём в мавзолей
     replay_game(game_ui, "3↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::Mausoleum);
-            assert_eq!(state.player().health(), HealthLevel(38));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: хорошее (38)                  Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+С меня хватит!                                   ИнЯз    ПУНК  14-16    0/3
+                                                 Физ-ра  ----           0/1
+"
     );
 }
 
@@ -545,22 +1262,49 @@ fn go_from_mausoleum_to_punk() {
 
     // Идём в мавзолей
     replay_game(game_ui, "6↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::Mausoleum);
-            assert_eq!(state.player().health(), HealthLevel(41));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (41)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+С меня хватит!                                   ИнЯз    ПУНК  14-16    0/3
+                                                 Физ-ра  ----           0/1
+"
     );
 
     // Идём в ПУНК
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.player().health(), HealthLevel(38));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: хорошее (38)                  Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты на факультете. Что делать?
+
+Идти к преподу▁                                  АиТЧ    ПУНК  13-15    0/12
+Посмотреть на баобаб                             МатАн   ----           0/10
+Пойти в общагу                                   ГиТ     ----           0/3
+Поехать в ПОМИ                                   Инф     ----           0/2
+Пойти в мавзолей                                 ИнЯз    ПУНК  14-16    0/3
+Пойти в компьютерный класс                       Физ-ра  ----           0/1
+С меня хватит!
+"
     );
 }
 
@@ -572,28 +1316,84 @@ fn death_on_the_way_from_mausoleum_to_punk() {
     // Учим алгебру пока уровень здоровья не упадёт до почти нуля
     replay_game(game_ui, "10r");
 
-    assert_matches!(state.observable_state().screen(), GameScreen::SceneRouter(state) => {
-        assert_eq!(state.player().health(), HealthLevel(4));
-    });
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 13:00   Версия gamma3.14   Алгебра и Т.Ч.        28  Хорошо
+Самочувствие: пора помирать ... (4)         Мат. Анализ           2   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Легкость в мыслях необыкновенная (6)        Информатика           3   Плохо
+Готов к труду и обороне (5)                 English               0   Плохо
+Ты нормально относишься к окружающим (4)    Физ-ра                4   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ----           0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     Компы 16-17    0/2
+Пойти на факультет                               ИнЯз    ПУНК  13-15    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
+    );
 
     // Идём в мавзолей
     replay_game(game_ui, "6↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::Mausoleum);
-            assert_eq!(state.player().health(), HealthLevel(1));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 13:00   Версия gamma3.14   Алгебра и Т.Ч.        28  Хорошо
+Самочувствие: пора помирать ... (1)         Мат. Анализ           2   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Легкость в мыслях необыкновенная (6)        Информатика           3   Плохо
+Готов к труду и обороне (5)                 English               0   Плохо
+Ты нормально относишься к окружающим (4)    Физ-ра                4   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ----           0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     Компы 16-17    0/2
+Коля                                             ИнЯз    ПУНК  13-15    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+"
     );
 
     // Идём в ПУНК
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GameEnd(state) => {
-            assert_eq!(state.location(), Location::PUNK);
-            assert_eq!(state.player().cause_of_death(), Some(CauseOfDeath::OnTheWayToPUNK));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Легче лбом колоть орехи,
+чем учиться на МАТ-МЕХе.
+Умер по пути на факультет.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
     );
 }
 
@@ -604,21 +1404,50 @@ fn go_from_mausoleum_to_dorm() {
 
     // Идём в мавзолей
     replay_game(game_ui, "6↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::Mausoleum);
-            assert_eq!(state.player().health(), HealthLevel(41));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (41)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+С меня хватит!                                   ИнЯз    ПУНК  14-16    0/3
+                                                 Физ-ра  ----           0/1
+"
     );
 
     // Идём в общагу
     replay_game(game_ui, "2↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.location(), Location::Dorm);
-            assert_eq!(state.player().health(), HealthLevel(41));
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 8:00    Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (41)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в общаге. Что делать?
+
+Готовиться▁                                      АиТЧ    ПУНК  13-15    0/12
+Посмотреть расписание                            МатАн   ----           0/10
+Отдыхать                                         ГиТ     ----           0/3
+Лечь спать                                       Инф     ----           0/2
+Пойти на факультет                               ИнЯз    ПУНК  14-16    0/3
+Поехать в ПОМИ                                   Физ-ра  ----           0/1
+Пойти в мавзолей
+С меня хватит!
+ЧТО ДЕЛАТЬ ???
+"
     );
 }
