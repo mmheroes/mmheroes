@@ -239,9 +239,10 @@ impl Timetable {
                     }
                 };
 
-                let exam_ends_max = WORKDAY_ENDS - subject_info.exam_max_duration;
+                let exam_begins_max = WORKDAY_ENDS - subject_info.exam_max_duration;
 
-                let exam_start_time = rng.random_in_range(WORKDAY_BEGINS..=exam_ends_max);
+                let exam_start_time =
+                    rng.random_in_range(WORKDAY_BEGINS..=exam_begins_max);
                 let exam_duration = rng.random_in_range(
                     subject_info.exam_min_duration..=subject_info.exam_max_duration,
                 );

@@ -1,10 +1,10 @@
 use super::*;
 use crate::logic::actions::TrainTicketAction;
 use crate::random::Rng;
-use TrainToPDMI::*;
+use TrainScene::*;
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
-pub enum TrainToPDMI {
+pub enum TrainScene {
     /// "Здравый смысл подсказывает тебе, что в такое время ты там никого уже не найдешь.
     /// Не будем зря тратить здоровье на поездку в ПОМИ."
     NoPointToGoToPDMI,
@@ -35,11 +35,23 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
 
     let health_penalty = HealthLevel(g.rng.random(10));
     state.set_location(Location::PDMI);
-    let caught_by_inspectors = if state.player.money
-        < Money::roundtrip_train_ticket_cost()
-    {
+    let caught_by_inspectors =
+        go_by_train(g, state, health_penalty, &GameScreen::TrainToPDMI).await;
+    misc::hour_pass(g, state).await;
+    if caught_by_inspectors {
+        misc::hour_pass(g, state).await;
+    }
+}
+
+pub(super) async fn go_by_train(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+    health_penalty: HealthLevel,
+    make_screen: &dyn Fn(GameState, TrainScene) -> GameScreen,
+) -> bool {
+    if state.player.money < Money::roundtrip_train_ticket_cost() {
         let caught_by_inspectors = inspectors(&mut g.rng, state);
-        g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+        g.set_screen_and_wait_for_any_key(make_screen(
             state.clone(),
             GatecrashBecauseNoMoney {
                 caught_by_inspectors,
@@ -57,7 +69,7 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
         caught_by_inspectors
     } else {
         let caught_by_inspectors = match g
-            .set_screen_and_wait_for_action::<TrainTicketAction>(GameScreen::TrainToPDMI(
+            .set_screen_and_wait_for_action::<TrainTicketAction>(make_screen(
                 state.clone(),
                 PromptToBuyTickets,
             ))
@@ -66,7 +78,7 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
             TrainTicketAction::GatecrashTrain => {
                 let caught_by_inspectors = inspectors(&mut g.rng, state);
                 // Здоровье не уменьшается если поймали контролёры!
-                g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+                g.set_screen_and_wait_for_any_key(make_screen(
                     state.clone(),
                     GatecrashByChoice {
                         caught_by_inspectors,
@@ -76,7 +88,7 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
                 caught_by_inspectors
             }
             TrainTicketAction::BuyRoundtripTrainTicket => {
-                g.set_screen_and_wait_for_any_key(GameScreen::TrainToPDMI(
+                g.set_screen_and_wait_for_any_key(make_screen(
                     state.clone(),
                     BoughtRoundtripTicket,
                 ))
@@ -88,10 +100,6 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
         };
         misc::decrease_health(state, health_penalty, CauseOfDeath::CorpseFoundInTheTrain);
         caught_by_inspectors
-    };
-    misc::hour_pass(g, state).await;
-    if caught_by_inspectors {
-        misc::hour_pass(g, state).await;
     }
 }
 

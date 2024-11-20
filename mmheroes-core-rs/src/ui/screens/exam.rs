@@ -4,7 +4,7 @@ use crate::ui::dialog::dialog;
 use crate::ui::renderer::{Renderer, RendererRequestConsumer};
 use crate::ui::screens::scene_router;
 use crate::ui::{
-    classmate_name, problems_inflected, professor_name, wait_for_any_key, Color,
+    classmate_name, problems_inflected, professor_name, screens, wait_for_any_key, Color,
     WaitingState,
 };
 
@@ -211,6 +211,14 @@ pub(in crate::ui) fn display_exam(
             scene_router::display_short_today_timetable(r, 11, state);
             r.move_cursor_to(14, 0);
             dialog(r, available_actions)
+        }
+        ExamScene::Train(state, train_scene) => {
+            screens::train::display_train_algebra_exam(
+                r,
+                available_actions,
+                state,
+                *train_scene,
+            )
         }
         ExamScene::ProfessorLingers(_, subject) => {
             r.move_cursor_to(22, 0);

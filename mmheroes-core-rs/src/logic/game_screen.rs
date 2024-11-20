@@ -35,7 +35,7 @@ pub enum GameScreen {
     /// Кафе в ПУНКе
     CafePUNK(GameState),
 
-    TrainToPDMI(GameState, scene_router::train::TrainToPDMI),
+    TrainToPDMI(GameState, scene_router::train::TrainScene),
 
     /// Взаимодействие с Колей.
     KolyaInteraction(GameState, npc::kolya::KolyaInteraction),
@@ -152,6 +152,7 @@ impl GameScreen {
             | Exam(ExamScene::ProfessorLeaves(state, _))
             | Exam(ExamScene::ProfessorLingers(state, _))
             | Exam(ExamScene::PromptExamInTrain(state, _))
+            | Exam(ExamScene::Train(state, _))
             | RestInMausoleum(state)
             | CafePUNK(state)
             | TrainToPDMI(state, _) => Some(state),

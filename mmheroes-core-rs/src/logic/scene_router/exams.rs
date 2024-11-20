@@ -215,6 +215,9 @@ pub enum ExamScene {
     /// Предложение пойти за преподавателем сдавать зачёт в электричке.
     PromptExamInTrain(GameState, Subject),
 
+    /// Преподаватель согласился принимать зачёт в электричке
+    Train(GameState, train::TrainScene),
+
     /// Преподаватель задерживается ещё на час
     ProfessorLingers(GameState, Subject),
 }
@@ -451,6 +454,16 @@ async fn maybe_continue_exam_in_train(
     state: &mut GameState,
     subject: Subject,
 ) -> ExamResult {
+    if state.current_time() > Time(20) {
+        // В этом случае Всемирнов должен отказаться принимать зачёт в электричке,
+        // но, кажется, эта ветка недостижима, так как Всемирнов никогда не задерживается,
+        // а по расписанию экзамен не может заканчиваться позже 18:00.
+        unreachable!("Экзамен по алгебре после 20:00? Это как?")
+    }
+    train::go_by_train(g, state, HealthLevel(0), &|state, train| {
+        GameScreen::Exam(ExamScene::Train(state, train))
+    })
+    .await;
     todo!()
 }
 
