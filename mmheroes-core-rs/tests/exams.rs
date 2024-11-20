@@ -720,6 +720,37 @@ fn algebra_exam_continue_in_train_gatecrash_because_no_money_caught() {
 "
     );
 
+    replay_game(game_ui, "r");
+    assert_ui!(
+        game_ui,
+        "
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+"
+    );
+
     // TODO: Uncomment when implemented
     // replay_game(game_ui, "r");
 }
@@ -957,6 +988,37 @@ fn algebra_exam_continue_in_train_gatecrash_by_choice_caught() {
 
 Тебя заловили контролеры!
 И со Всемирновым ты ничего не успел...
+
+Нажми любую клавишу ...▁
+"
+    );
+
+    replay_game(game_ui, "r");
+    assert_ui!(
+        game_ui,
+        "
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 Нажми любую клавишу ...▁
 "

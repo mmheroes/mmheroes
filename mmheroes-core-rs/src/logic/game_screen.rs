@@ -163,6 +163,7 @@ impl GameScreen {
             | ExamIntro(_)
             | Exam(ExamScene::ExamSuffering { .. })
             | Exam(ExamScene::IgnoredClassmate { .. })
+            | Exam(ExamScene::CaughtByInspectorsEmptyScreenBug)
             | WannaTryAgain
             | Disclaimer
             | Terminal => None,

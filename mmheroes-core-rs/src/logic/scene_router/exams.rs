@@ -207,7 +207,9 @@ pub enum ExamScene {
     ClassmateWantsSomething(GameState, Subject, Classmate),
 
     /// Выбрали игнорировать NPC.
-    IgnoredClassmate { feeling_bad: bool },
+    IgnoredClassmate {
+        feeling_bad: bool,
+    },
 
     /// Преподаватель уходит.
     ProfessorLeaves(GameState, Subject),
@@ -217,6 +219,8 @@ pub enum ExamScene {
 
     /// Преподаватель согласился принимать зачёт в электричке
     Train(GameState, train::TrainScene),
+
+    CaughtByInspectorsEmptyScreenBug,
 
     /// Преподаватель задерживается ещё на час
     ProfessorLingers(GameState, Subject),
@@ -460,10 +464,20 @@ async fn maybe_continue_exam_in_train(
         // а по расписанию экзамен не может заканчиваться позже 18:00.
         unreachable!("Экзамен по алгебре после 20:00? Это как?")
     }
-    train::go_by_train(g, state, HealthLevel(0), &|state, train| {
-        GameScreen::Exam(ExamScene::Train(state, train))
-    })
-    .await;
+    let caught_by_inspectors =
+        train::go_by_train(g, state, HealthLevel(0), &|state, train| {
+            GameScreen::Exam(ExamScene::Train(state, train))
+        })
+        .await;
+    if caught_by_inspectors {
+        // Баг в оригинальной реализации.
+        // Если поймали контролёры, то появляется лишний пустой экран с единственным
+        // предложением нажать любую клавишу.
+        g.set_screen_and_wait_for_any_key(GameScreen::Exam(
+            ExamScene::CaughtByInspectorsEmptyScreenBug,
+        ))
+        .await;
+    }
     todo!()
 }
 

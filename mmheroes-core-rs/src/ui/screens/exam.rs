@@ -220,6 +220,10 @@ pub(in crate::ui) fn display_exam(
                 *train_scene,
             )
         }
+        ExamScene::CaughtByInspectorsEmptyScreenBug => {
+            r.clear_screen();
+            wait_for_any_key(r)
+        }
         ExamScene::ProfessorLingers(_, subject) => {
             r.move_cursor_to(22, 0);
             write_colored!(
