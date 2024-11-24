@@ -4,6 +4,7 @@ use crate::logic::npc::{
     grisha::GrishaInteraction, kolya::KolyaInteraction, kuzmenko::KuzmenkoInteraction,
     pasha::PashaInteraction, sasha::SashaInteraction, serj::SerjInteraction,
 };
+use crate::logic::rai::RaiInteraction;
 use crate::logic::*;
 use crate::ui::{renderer::Renderer, screens::scene_router, *};
 
@@ -531,6 +532,45 @@ pub(crate) fn display_serj_interaction(
     writeln_colored!(WhiteBright, r, "\"{}\"", reply);
     if serj_leaves {
         writeln_colored!(White, r, "Серж уходит куда-то по своим делам ...");
+    }
+    wait_for_any_key(r)
+}
+
+pub(crate) fn display_rai_interaction(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    available_actions: &[Action],
+    interaction: &RaiInteraction,
+) -> WaitingState {
+    match interaction {
+        RaiInteraction::Ignores(state) => {
+            r.clear_screen();
+            scene_router::display_header_stats(r, state);
+            r.move_cursor_to(7, 0);
+            writeln_colored!(White, r, "RAI не реагирует на твои позывы.");
+        }
+        RaiInteraction::PromptWillYouHelpMe(state) => {
+            r.clear_screen();
+            scene_router::display_header_stats(r, state);
+            r.move_cursor_to(9, 0);
+            write_colored!(White, r, "RAI:");
+            writeln_colored!(WhiteBright, r, "\"Ты мне поможешь?\"");
+            scene_router::display_short_today_timetable(r, 11, state);
+            r.move_cursor_to(11, 0);
+            return dialog(r, available_actions);
+        }
+        RaiInteraction::TakeIt => {
+            r.move_cursor_to(14, 0);
+            writeln_colored!(MagentaBright, r, "\"Ах, так! Получай! Получай!\"");
+            writeln_colored!(White, r, "RAI делает тебе больно ...");
+        }
+        RaiInteraction::YouHelped => {
+            r.move_cursor_to(14, 0);
+            writeln_colored!(Green, r, "Ты помог RAI.");
+        }
+        RaiInteraction::Fail => {
+            r.move_cursor_to(14, 0);
+            writeln_colored!(White, r, "Ничего не вышло.");
+        }
     }
     wait_for_any_key(r)
 }

@@ -59,6 +59,9 @@ pub enum GameScreen {
     /// Третий аргумент означает, уходит ли Серж после взаимодействия.
     SerjInteraction(GameState, npc::serj::SerjInteraction, bool),
 
+    /// Взаимодействие с RAI
+    RaiInteraction(npc::rai::RaiInteraction),
+
     /// Работа в ТЕРКОМе
     Terkom(GameState, terkom::Terkom),
 
@@ -150,6 +153,8 @@ impl GameScreen {
             | KuzmenkoInteraction(state, _)
             | DiamondInteraction(state, _, _)
             | SerjInteraction(state, _, _)
+            | RaiInteraction(rai::RaiInteraction::Ignores(state))
+            | RaiInteraction(rai::RaiInteraction::PromptWillYouHelpMe(state))
             | Terkom(state, _)
             | GoToProfessor(state)
             | Exam(ExamScene::Router(state, _))
@@ -174,6 +179,9 @@ impl GameScreen {
             | BaltiyskiyRailwayStation(
                 BaltiyskiyRailwayStationScene::CaughtByInspectors,
             )
+            | RaiInteraction(rai::RaiInteraction::TakeIt)
+            | RaiInteraction(rai::RaiInteraction::YouHelped)
+            | RaiInteraction(rai::RaiInteraction::Fail)
             | WannaTryAgain
             | Disclaimer
             | Terminal => None,

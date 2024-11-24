@@ -133,6 +133,8 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::BaltiyskiyRailwayStation(
             actions::BaltiyskiyRailwayStationAction::GoToPDMI,
         ) => "Хочу в ПОМИ!",
+        Action::Rai(actions::RaiAction::YesOfCourse) => "\"Да, конечно\"",
+        Action::Rai(actions::RaiAction::NoSorry) => "\"Нет, извини...\"",
         Action::GoToWork => "Пойти в ТЕРКОМ, поработать",
         Action::LookAtBaobab => "Посмотреть на баобаб",
         Action::LookAtBulletinBoard => "Посмотреть на доску объявлений",

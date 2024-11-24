@@ -302,6 +302,11 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
                     *serj_leaves,
                 )
             }
+            RaiInteraction(interaction) => screens::npc::display_rai_interaction(
+                &mut self.renderer,
+                self.state_holder.observable_state().available_actions(),
+                interaction,
+            ),
             Terkom(state, terkom_screen) => screens::terkom::display_terkom(
                 &mut self.renderer,
                 self.state_holder.observable_state().available_actions(),

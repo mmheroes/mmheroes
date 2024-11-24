@@ -60,6 +60,9 @@ pub enum CauseOfDeath {
     /// <NPC> лучше игнорировать не надо.
     BetterNotIgnoreClassmate(Classmate),
 
+    /// RAI замочил.
+    KilledByRai,
+
     /// Бурно прогрессирующая паранойя
     Paranoia,
 

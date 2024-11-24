@@ -53,6 +53,7 @@ fn display_game_end_dead(
                 classmate_name(classmate)
             );
         }
+        KilledByRai => writeln!(r, "RAI замочил."),
         Paranoia => writeln!(r, "Бурно прогрессирующая паранойя."),
         TimeOut => writeln!(r, "Время вышло."),
         Suicide => writeln!(r, "Вышел сам."),

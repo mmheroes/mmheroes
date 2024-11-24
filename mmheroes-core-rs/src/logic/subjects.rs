@@ -54,18 +54,24 @@ impl Subject {
         self as u8
     }
 
+    pub(super) fn is_math(&self) -> bool {
+        match self {
+            Self::AlgebraAndNumberTheory | Self::Calculus | Self::GeometryAndTopology => {
+                true
+            }
+            Self::ComputerScience | Self::English | Self::PhysicalEducation => false,
+        }
+    }
+
     pub(super) fn all_subjects() -> impl DoubleEndedIterator<Item = Subject> {
         SUBJECTS.iter().map(|(subject, _)| *subject)
     }
 
     pub(super) fn math_subjects() -> impl DoubleEndedIterator<Item = Subject> {
-        [
-            Self::AlgebraAndNumberTheory,
-            Self::Calculus,
-            Self::GeometryAndTopology,
-        ]
-        .iter()
-        .cloned()
+        SUBJECTS
+            .iter()
+            .map(|(subject, _)| *subject)
+            .filter(Subject::is_math)
     }
 }
 
