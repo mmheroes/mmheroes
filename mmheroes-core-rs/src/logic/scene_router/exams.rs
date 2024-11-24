@@ -1,7 +1,10 @@
 use super::*;
-use crate::logic::actions::NpcApproachAction;
+use crate::logic::scene_router::train::BaltiyskiyRailwayStationScene;
 use crate::util::bitset::BitSet;
-use actions::ContinueSufferingWithExamInTrainAction;
+use actions::{
+    BaltiyskiyRailwayStationAction, ContinueSufferingWithExamInTrainAction,
+    NpcApproachAction,
+};
 use core::cmp::{max, min};
 use strum::VariantArray;
 
@@ -207,9 +210,7 @@ pub enum ExamScene {
     ClassmateWantsSomething(GameState, Subject, Classmate),
 
     /// Выбрали игнорировать NPC.
-    IgnoredClassmate {
-        feeling_bad: bool,
-    },
+    IgnoredClassmate { feeling_bad: bool },
 
     /// Преподаватель уходит.
     ProfessorLeaves(GameState, Subject),
@@ -220,7 +221,14 @@ pub enum ExamScene {
     /// Преподаватель согласился принимать зачёт в электричке
     Train(GameState, train::TrainScene),
 
+    /// Воспроизводим баг оригинальной реализации
     CaughtByInspectorsEmptyScreenBug,
+
+    /// Мучаемся, сдавая зачёт в электричке
+    SufferInTrain {
+        state: GameState,
+        solved_problems: u8,
+    },
 
     /// Преподаватель задерживается ещё на час
     ProfessorLingers(GameState, Subject),
@@ -271,7 +279,7 @@ async fn exam(g: &mut InternalGameState<'_>, state: &mut GameState, subject: Sub
         );
         match g.wait_for_action().await {
             Action::SufferMore => {
-                suffer_exam(g, state, subject).await;
+                suffer_exam(g, state, false, subject).await;
             }
             Action::InteractWithClassmate(classmate) => {
                 interact_with_classmate(g, state, classmate, Some(subject)).await;
@@ -331,14 +339,20 @@ async fn npc_try_approach(
 async fn suffer_exam(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
+    in_train: bool,
     subject: Subject,
 ) {
     let charisma = state.player.charisma;
     let subject_info = &SUBJECTS[subject];
-    let mental_capacity = state.player.status_for_subject(subject).knowledge
+    let mut mental_capacity = state.player.status_for_subject(subject).knowledge
         + g.rng.random(state.player.brain)
-        - subject_info.mental_load
-        - g.rng.random(BrainLevel(max(5 - state.player.health.0, 0)));
+        - subject_info.mental_load;
+
+    if in_train {
+        mental_capacity = BrainLevel(mental_capacity.0 * 3 / 4);
+    }
+
+    mental_capacity -= g.rng.random(BrainLevel(max(5 - state.player.health.0, 0)));
 
     let mut solved_problems = if mental_capacity > BrainLevel(0) {
         ((mental_capacity.0 as f32).sqrt()
@@ -365,19 +379,34 @@ async fn suffer_exam(
         solved_problems = 0;
     }
 
-    g.set_screen_and_wait_for_any_key(GameScreen::Exam(ExamScene::ExamSuffering {
-        solved_problems,
-        too_smart,
-    }))
-    .await;
+    let scene = if in_train {
+        ExamScene::SufferInTrain {
+            state: state.clone(),
+            solved_problems,
+        }
+    } else {
+        ExamScene::ExamSuffering {
+            solved_problems,
+            too_smart,
+        }
+    };
+
+    g.set_screen_and_wait_for_any_key(GameScreen::Exam(scene))
+        .await;
 
     state
         .player
         .status_for_subject_mut(subject)
         .more_problems_solved(solved_problems);
 
+    let stamina = if in_train {
+        state.player.stamina.0 * 2 / 3
+    } else {
+        state.player.stamina.0
+    };
+
     let health_penalty = max(
-        subject_info.health_penalty - g.rng.random(HealthLevel(state.player.stamina.0)),
+        subject_info.health_penalty - g.rng.random(HealthLevel(stamina)),
         HealthLevel(0),
     );
     misc::decrease_health(
@@ -385,7 +414,11 @@ async fn suffer_exam(
         health_penalty,
         CauseOfDeath::TorturedByProfessor(subject),
     );
-    misc::hour_pass(g, state).await;
+    if !in_train || state.player.health > 0 {
+        // Баг в оригинальной реализации: если умер в поезде, то экран смерти
+        // не показывается и час не проходит.
+        misc::hour_pass(g, state).await;
+    }
 }
 
 async fn exam_passed(
@@ -409,17 +442,18 @@ async fn exam_ends(
                     .status_for_subject(subject)
                     .solved_all_problems()
             {
-                return match g
+                match g
                     .set_screen_and_wait_for_action(GameScreen::Exam(
                         ExamScene::PromptExamInTrain(state.clone(), subject),
                     ))
                     .await
                 {
                     ContinueSufferingWithExamInTrainAction::WantToSufferMore => {
-                        maybe_continue_exam_in_train(g, state, subject).await
+                        exam_in_train(g, state, subject).await;
                     }
-                    ContinueSufferingWithExamInTrainAction::NoThanks => ExamResult::Exit,
+                    ContinueSufferingWithExamInTrainAction::NoThanks => (),
                 };
+                return ExamResult::Exit;
             }
             // Всемирнов никогда не задерживается.
         }
@@ -453,11 +487,11 @@ async fn exam_ends(
     ExamResult::Exit
 }
 
-async fn maybe_continue_exam_in_train(
+async fn exam_in_train(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     subject: Subject,
-) -> ExamResult {
+) {
     if state.current_time() > Time(20) {
         // В этом случае Всемирнов должен отказаться принимать зачёт в электричке,
         // но, кажется, эта ветка недостижима, так как Всемирнов никогда не задерживается,
@@ -478,7 +512,54 @@ async fn maybe_continue_exam_in_train(
         ))
         .await;
     }
-    todo!()
+    suffer_exam(g, state, true, subject).await;
+
+    if state.current_time() > Time(20) {
+        // "Увы, ПОМИ уже закрыто, поэтому придется ехать домой.."
+        // Тут мы должны мгновенно оказаться в общаге, без контролёров и всего такого.
+        // TODO: Выяснить, достижима ли эта ветка. Кажется, будто бы нет.
+        unreachable!()
+    }
+
+    match g
+        .set_screen_and_wait_for_action::<BaltiyskiyRailwayStationAction>(
+            GameScreen::BaltiyskiyRailwayStation(BaltiyskiyRailwayStationScene::Prompt(
+                state.clone(),
+            )),
+        )
+        .await
+    {
+        BaltiyskiyRailwayStationAction::GoToPDMI => {
+            state.set_location(Location::PDMI);
+        }
+        BaltiyskiyRailwayStationAction::GoToPUNK => {
+            // Баг в оригинальной реализации: даже если есть деньги, билет купить
+            // не предлагается.
+            // Кроме того, не отнимается здоровье.
+            if state.player.has_roundtrip_train_ticket() {
+                // Баг в оригинальной реализации: на экран должно быть выведено
+                // "Хорошо, билет есть...", но поскольку нет вызова wait_for_key,
+                // эта надпись не успевает появиться на экране.
+            } else if train::inspectors(&mut g.rng, state) {
+                g.set_screen_and_wait_for_any_key(GameScreen::BaltiyskiyRailwayStation(
+                    BaltiyskiyRailwayStationScene::CaughtByInspectors,
+                ))
+                .await;
+                misc::decrease_health(
+                    state,
+                    HealthLevel(10),
+                    CauseOfDeath::CorpseFoundInTheTrain,
+                );
+                misc::hour_pass(g, state).await;
+            } else {
+                // Баг в оригинальной реализации: на экран должно быть выведено
+                // "Уф, доехал...", но поскольку нет вызова wait_for_key,
+                // эта надпись не успевает появиться на экране.
+            }
+            state.set_location(Location::PUNK);
+            misc::hour_pass(g, state).await;
+        }
+    };
 }
 
 async fn classmate_wants_something(

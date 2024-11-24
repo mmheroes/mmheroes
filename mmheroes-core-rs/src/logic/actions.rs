@@ -120,6 +120,14 @@ action_conversion!(
     ContinueSufferingWithExamInTrain
 );
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum BaltiyskiyRailwayStationAction {
+    GoToPUNK,
+    GoToPDMI,
+}
+
+action_conversion!(BaltiyskiyRailwayStationAction, BaltiyskiyRailwayStation);
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     AnyKey,
@@ -164,6 +172,7 @@ pub enum Action {
     NpcApproach(NpcApproachAction),
     ExitExam,
     ContinueSufferingWithExamInTrain(ContinueSufferingWithExamInTrainAction),
+    BaltiyskiyRailwayStation(BaltiyskiyRailwayStationAction),
     GoToWork,
     LookAtBaobab,
     LookAtBulletinBoard,

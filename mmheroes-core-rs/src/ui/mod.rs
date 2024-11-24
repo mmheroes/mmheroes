@@ -240,6 +240,13 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
                 state,
                 *interaction,
             ),
+            BaltiyskiyRailwayStation(scene) => {
+                screens::train::display_baltiyskiy_railway_station(
+                    &mut self.renderer,
+                    self.state_holder.observable_state().available_actions(),
+                    scene,
+                )
+            }
             KolyaInteraction(state, interaction) => {
                 screens::npc::display_kolya_interaction(
                     &mut self.renderer,

@@ -178,7 +178,10 @@ pub(in crate::ui) fn display_exam(
         ExamScene::ExamSuffering {
             solved_problems,
             too_smart,
-        } => display_suffering(r, *solved_problems, *too_smart),
+        } => {
+            r.move_cursor_to(19, 0);
+            display_suffering(r, *solved_problems, *too_smart)
+        }
         ExamScene::ClassmateWantsSomething(state, _, classmate) => {
             writeln!(r);
             writeln_colored!(
@@ -219,6 +222,16 @@ pub(in crate::ui) fn display_exam(
                 state,
                 *train_scene,
             )
+        }
+        ExamScene::SufferInTrain {
+            state,
+            solved_problems,
+        } => {
+            r.clear_screen();
+            scene_router::display_header_stats(r, state);
+            r.move_cursor_to(13, 0);
+            writeln_colored!(White, r, "Всемирнов принимает зачет даже в электричке!");
+            display_suffering(r, *solved_problems, false)
         }
         ExamScene::CaughtByInspectorsEmptyScreenBug => {
             r.clear_screen();
@@ -321,7 +334,6 @@ pub(in crate::ui) fn display_suffering(
     solved_problems: u8,
     too_smart: bool,
 ) -> WaitingState {
-    r.move_cursor_to(19, 0);
     if too_smart {
         write_colored!(White, r, "Подкорытов:");
         write_colored!(

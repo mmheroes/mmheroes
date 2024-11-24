@@ -1,5 +1,4 @@
 use super::*;
-use crate::logic::scene_router::exams::ExamScene;
 use crate::logic::scene_router::terkom;
 
 #[derive(Debug)]
@@ -72,6 +71,10 @@ pub enum GameScreen {
     /// Экран сдачи зачёта.
     Exam(scene_router::exams::ExamScene),
 
+    /// После сдачи зачёта в электричке оказался на Балтийском вокзале,
+    /// дальше можно либо поехать в ПОМИ, либо обратно в ПУНК.
+    BaltiyskiyRailwayStation(scene_router::train::BaltiyskiyRailwayStationScene),
+
     // TODO: Добавить больше параметров. Сейчас поддерживается только "не тянет поспать"
     /// Сон.
     Sleep(GameState),
@@ -122,6 +125,8 @@ impl GameScreen {
     /// Оно может быть недоступно, например, если игра ещё не началась
     /// или уже закончилась.
     pub fn state(&self) -> Option<&GameState> {
+        use crate::logic::scene_router::exams::ExamScene;
+        use crate::logic::scene_router::train::BaltiyskiyRailwayStationScene;
         use GameScreen::*;
         match self {
             Timetable(state)
@@ -153,6 +158,8 @@ impl GameScreen {
             | Exam(ExamScene::ProfessorLingers(state, _))
             | Exam(ExamScene::PromptExamInTrain(state, _))
             | Exam(ExamScene::Train(state, _))
+            | Exam(ExamScene::SufferInTrain { state, .. })
+            | BaltiyskiyRailwayStation(BaltiyskiyRailwayStationScene::Prompt(state))
             | RestInMausoleum(state)
             | CafePUNK(state)
             | TrainToPDMI(state, _) => Some(state),
@@ -164,6 +171,9 @@ impl GameScreen {
             | Exam(ExamScene::ExamSuffering { .. })
             | Exam(ExamScene::IgnoredClassmate { .. })
             | Exam(ExamScene::CaughtByInspectorsEmptyScreenBug)
+            | BaltiyskiyRailwayStation(
+                BaltiyskiyRailwayStationScene::CaughtByInspectors,
+            )
             | WannaTryAgain
             | Disclaimer
             | Terminal => None,

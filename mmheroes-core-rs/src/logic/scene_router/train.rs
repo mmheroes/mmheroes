@@ -22,6 +22,15 @@ pub enum TrainScene {
     BoughtRoundtripTicket,
 }
 
+#[derive(Debug, Clone)]
+pub enum BaltiyskiyRailwayStationScene {
+    /// "Ты в Питере, на Балтийском вокзале. Куда направляемся?"
+    Prompt(GameState),
+
+    /// "Тебя заловили контролеры!"
+    CaughtByInspectors,
+}
+
 pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameState) {
     assert_ne!(state.location(), Location::PDMI);
     if state.current_time() > Time(20) {

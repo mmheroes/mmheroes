@@ -1,4 +1,4 @@
-use crate::logic::scene_router::train::TrainScene;
+use crate::logic::scene_router::train::{BaltiyskiyRailwayStationScene, TrainScene};
 use crate::logic::*;
 use crate::ui::{renderer::Renderer, screens::scene_router, *};
 
@@ -128,5 +128,29 @@ fn display_train<R: RendererRequestConsumer>(
             wait_for_any_key(r)
         }
         TrainScene::BoughtRoundtripTicket => wait_for_any_key(r),
+    }
+}
+
+pub(in crate::ui) fn display_baltiyskiy_railway_station(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    available_actions: &[Action],
+    scene: &BaltiyskiyRailwayStationScene,
+) -> WaitingState {
+    match scene {
+        BaltiyskiyRailwayStationScene::Prompt(state) => {
+            r.clear_screen();
+            scene_router::display_header_stats(r, state);
+            r.move_cursor_to(11, 0);
+            writeln_colored!(CyanBright, r, "Ты в Питере, на Балтийском вокзале.");
+            writeln!(r, "Куда направляемся?");
+            r.move_cursor_to(14, 0);
+            dialog(r, available_actions)
+        }
+        BaltiyskiyRailwayStationScene::CaughtByInspectors => {
+            r.move_cursor_to(19, 0);
+            writeln_colored!(White, r, "Тебя заловили контролеры!");
+            writeln!(r, "Высадили в Красных зорях, гады!");
+            wait_for_any_key(r)
+        }
     }
 }
