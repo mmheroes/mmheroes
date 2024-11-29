@@ -8,7 +8,7 @@ pub struct TinyString<const CAPACITY: usize> {
 }
 
 impl<const CAPACITY: usize> TinyString<CAPACITY> {
-    pub(crate) fn new() -> Self {
+    pub(crate) const fn new() -> Self {
         Self { v: TinyVec::new() }
     }
 

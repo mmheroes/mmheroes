@@ -14,20 +14,20 @@ pub(crate) struct TinyVec<T, const CAPACITY: usize> {
 
 impl<T, const CAPACITY: usize> TinyVec<T, CAPACITY> {
     #[allow(dead_code)]
-    pub(crate) fn len(&self) -> usize {
+    pub(crate) const fn len(&self) -> usize {
         self.count
     }
 }
 
 impl<T, const CAPACITY: usize> TinyVec<T, CAPACITY> {
-    pub(crate) fn new() -> Self {
+    pub(crate) const fn new() -> Self {
         Self {
             storage: [const { MaybeUninit::uninit() }; CAPACITY],
             count: 0,
         }
     }
 
-    pub(crate) fn push(&mut self, value: T) {
+    pub(crate) const fn push(&mut self, value: T) {
         assert!(self.count < self.storage.len(), "Capacity is exceeded");
         unsafe { self.storage[self.count].as_mut_ptr().write(value) }
         self.count += 1;
@@ -225,7 +225,7 @@ mod tests {
 
         assert_eq!(*drop_counter.borrow(), 0);
 
-        core::mem::drop(vec);
+        drop(vec);
 
         assert_eq!(*drop_counter.borrow(), 5);
     }
