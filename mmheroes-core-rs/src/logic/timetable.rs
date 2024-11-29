@@ -1,4 +1,4 @@
-pub use crate::logic::{Location, Subject, SUBJECTS};
+pub use crate::logic::{Location, Subject};
 
 use crate::logic::{GameScreen, GameState, InternalGameState};
 use core::fmt::{Display, Formatter};
@@ -228,9 +228,9 @@ impl Timetable {
             day.index = i as u8;
         }
 
-        for (subject, subject_info) in SUBJECTS.iter() {
+        for subject in Subject::all_subjects() {
             let mut day_used = [false; NUM_DAYS];
-            for _ in 0..subject_info.exam_days {
+            for _ in 0..subject.exam_days() {
                 let day_idx = loop {
                     let day = rng.random_in_range(0..NUM_DAYS);
                     if !day_used[day] {
@@ -239,19 +239,19 @@ impl Timetable {
                     }
                 };
 
-                let exam_begins_max = WORKDAY_ENDS - subject_info.exam_max_duration;
+                let exam_begins_max = WORKDAY_ENDS - subject.exam_max_duration();
 
                 let exam_start_time =
                     rng.random_in_range(WORKDAY_BEGINS..=exam_begins_max);
                 let exam_duration = rng.random_in_range(
-                    subject_info.exam_min_duration..=subject_info.exam_max_duration,
+                    subject.exam_min_duration()..=subject.exam_max_duration(),
                 );
 
                 let exam = Exam::new(
-                    *subject,
+                    subject,
                     exam_start_time,
                     exam_start_time + exam_duration,
-                    *rng.random_element(&subject_info.exam_places),
+                    *rng.random_element(subject.exam_places()),
                 );
                 days[day_idx].add_exam(exam);
             }

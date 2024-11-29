@@ -39,13 +39,12 @@ pub(super) async fn handle_router_action(
 }
 
 pub(in crate::logic) fn subjects_to_study(state: &GameState) -> ActionVec {
-    let mut available_actions = SUBJECTS
-        .iter()
-        .map(|(subject, _)| Action::DoStudy {
-            subject: *subject,
+    let mut available_actions = Subject::all_subjects()
+        .map(|subject| Action::DoStudy {
+            subject,
             lecture_notes_available: state
                 .player
-                .status_for_subject(*subject)
+                .status_for_subject(subject)
                 .has_lecture_notes(),
         })
         .collect::<ActionVec>();

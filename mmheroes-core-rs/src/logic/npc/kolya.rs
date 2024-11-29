@@ -2,7 +2,7 @@ use crate::logic::actions::YesOrNoAction;
 use crate::logic::Subject::AlgebraAndNumberTheory;
 use crate::logic::{
     misc, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
-    InternalGameState, Location, Money, Player, SUBJECTS,
+    InternalGameState, Location, Money, Player,
 };
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -41,8 +41,7 @@ fn can_solve_algebra_problems(rng: &mut crate::random::Rng, player: &mut Player)
     let problems_done = player
         .status_for_subject(AlgebraAndNumberTheory)
         .problems_done();
-    let required_problems = SUBJECTS[AlgebraAndNumberTheory].required_problems;
-    problems_done + 2 <= required_problems
+    problems_done + 2 <= AlgebraAndNumberTheory.required_problems()
 }
 
 async fn solve_algebra_problems(

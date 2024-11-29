@@ -1,38 +1,7 @@
 use super::*;
-use strum::{EnumCount, FromRepr};
+use strum::{EnumCount, EnumIter, FromRepr};
 
-#[derive(Debug)]
-#[allow(non_snake_case)] // TODO: Remove this
-pub struct SubjectInfo {
-    pub(in crate::logic) required_problems: u8,
-    pub(in crate::logic) exam_days: u16,
-    pub(in crate::logic) exam_min_duration: Duration,
-    pub(in crate::logic) exam_max_duration: Duration,
-    pub(in crate::logic) exam_places: [Location; 3],
-
-    /// Чем больше это число, тем больше знаний, интеллекта и здоровья нужно для того,
-    /// чтобы преподаватель зачёл задачу.
-    pub(in crate::logic) mental_load: BrainLevel,
-
-    /// Чем больше это число, тем больше выносливости нужно чтобы не терять здоровье
-    /// при попытке сдать зачёт.
-    pub(in crate::logic) health_penalty: HealthLevel,
-
-    /// Чем больше это число, тем больше mental capacity нужно для того,
-    /// чтобы зачли _одну_ задачу.
-    pub(in crate::logic) single_problem_mental_factor: i16,
-
-    /// Какой уровень знаний соответствует какой оценке по шкале этого препода.
-    pub(in crate::logic) assessment_bounds: [(BrainLevel, KnowledgeAssessment); 3],
-}
-
-impl SubjectInfo {
-    pub fn required_problems(&self) -> u8 {
-        self.required_problems
-    }
-}
-
-#[derive(Copy, Clone, Debug, Eq, PartialEq, FromRepr, EnumCount)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, FromRepr, EnumIter, EnumCount)]
 pub enum Subject {
     AlgebraAndNumberTheory = 0,
     Calculus,
@@ -42,7 +11,17 @@ pub enum Subject {
     PhysicalEducation,
 }
 
+use Subject::*;
+
 impl Subject {
+    pub fn all_subjects() -> impl DoubleEndedIterator<Item = Subject> {
+        Self::iter()
+    }
+
+    pub(super) fn math_subjects() -> impl DoubleEndedIterator<Item = Subject> {
+        Self::all_subjects().filter(|subject| subject.is_math())
+    }
+
     pub(super) const fn from_bits(bits: u8) -> Subject {
         match subject_from_bits(bits) {
             Some(subject) => subject,
@@ -54,24 +33,142 @@ impl Subject {
         self as u8
     }
 
-    pub(super) fn is_math(&self) -> bool {
+    /// Является ли предмет математической дисциплиной.
+    /// Некоторые действия в игре применимы только для таких предметов.
+    pub(super) const fn is_math(self) -> bool {
         match self {
-            Self::AlgebraAndNumberTheory | Self::Calculus | Self::GeometryAndTopology => {
-                true
-            }
-            Self::ComputerScience | Self::English | Self::PhysicalEducation => false,
+            AlgebraAndNumberTheory | Calculus | GeometryAndTopology => true,
+            ComputerScience | English | PhysicalEducation => false,
         }
     }
 
-    pub(super) fn all_subjects() -> impl DoubleEndedIterator<Item = Subject> {
-        SUBJECTS.iter().map(|(subject, _)| *subject)
+    /// Количество задач, которые необходимо решить для получения зачёта по предмету.
+    pub const fn required_problems(self) -> u8 {
+        match self {
+            AlgebraAndNumberTheory => 12,
+            Calculus => 10,
+            GeometryAndTopology | English => 3,
+            ComputerScience => 2,
+            PhysicalEducation => 1,
+        }
     }
 
-    pub(super) fn math_subjects() -> impl DoubleEndedIterator<Item = Subject> {
-        SUBJECTS
-            .iter()
-            .map(|(subject, _)| *subject)
-            .filter(Subject::is_math)
+    /// Количество дней в изначальном расписании, в которые может проходить зачёт по
+    /// предмету.
+    /// В течение игры, впрочем, расписание может меняться — могут добавляться новые дни.
+    pub(super) const fn exam_days(self) -> u16 {
+        match self {
+            AlgebraAndNumberTheory | Calculus => 4,
+            GeometryAndTopology | ComputerScience | English | PhysicalEducation => 2,
+        }
+    }
+
+    /// Минимальная продолжительность зачёта по предмету в часах.
+    pub(super) const fn exam_min_duration(self) -> Duration {
+        match self {
+            AlgebraAndNumberTheory | Calculus | English => Duration(2),
+            GeometryAndTopology | ComputerScience | PhysicalEducation => Duration(1),
+        }
+    }
+
+    /// Максимальная продолжительность зачёта по предмету в часах.
+    /// Используется только при составлении изначального расписания.
+    ///
+    /// Важно: расписание может меняться, зачёт может затягиваться сверх этого числа.
+    pub(super) const fn exam_max_duration(self) -> Duration {
+        match self {
+            AlgebraAndNumberTheory => Duration(4),
+            Calculus | GeometryAndTopology => Duration(3),
+            ComputerScience | English => Duration(2),
+            PhysicalEducation => Duration(1),
+        }
+    }
+
+    /// Чем больше это число, тем больше знаний, интеллекта и здоровья нужно для того,
+    /// чтобы преподаватель зачёл задачу.
+    pub(super) const fn mental_load(self) -> BrainLevel {
+        match self {
+            AlgebraAndNumberTheory => BrainLevel(10),
+            Calculus => BrainLevel(8),
+            GeometryAndTopology => BrainLevel(4),
+            ComputerScience => BrainLevel(5),
+            English | PhysicalEducation => BrainLevel(7),
+        }
+    }
+
+    /// Чем больше это число, тем больше выносливости нужно чтобы не терять здоровье
+    /// при попытке сдать зачёт.
+    pub(super) const fn health_penalty(self) -> HealthLevel {
+        match self {
+            AlgebraAndNumberTheory => HealthLevel(17),
+            Calculus => HealthLevel(14),
+            GeometryAndTopology => HealthLevel(8),
+            ComputerScience => HealthLevel(6),
+            English => HealthLevel(10),
+            PhysicalEducation => HealthLevel(20),
+        }
+    }
+
+    /// Чем больше это число, тем больше mental capacity нужно для того,
+    /// чтобы зачли _одну_ задачу.
+    pub(super) const fn single_problem_mental_factor(self) -> f32 {
+        match self {
+            AlgebraAndNumberTheory | GeometryAndTopology | ComputerScience => 3.0,
+            Calculus => 2.0,
+            English | PhysicalEducation => 1.0,
+        }
+    }
+
+    /// В каких местах может проходить зачёт по предмету.
+    ///
+    /// При составлении расписания из этого массива выбирается случайный элемент.
+    pub(super) const fn exam_places(self) -> &'static [Location] {
+        use Location::*;
+        match self {
+            AlgebraAndNumberTheory => &[PUNK, PUNK, PDMI],
+            GeometryAndTopology => &[PUNK, PDMI, PDMI],
+            ComputerScience => &[ComputerClass, ComputerClass, ComputerClass],
+            Calculus | English | PhysicalEducation => &[PUNK, PUNK, PUNK],
+        }
+    }
+
+    /// Какой уровень знаний соответствует какой оценке по шкале этого препода.
+    pub(super) const fn assessment_bounds(
+        self,
+    ) -> &'static [(BrainLevel, KnowledgeAssessment)] {
+        use KnowledgeAssessment::*;
+        match self {
+            AlgebraAndNumberTheory => &[
+                (BrainLevel(11), Bad),
+                (BrainLevel(21), Satisfactory),
+                (BrainLevel(51), Good),
+            ],
+            Calculus => &[
+                (BrainLevel(9), Bad),
+                (BrainLevel(19), Satisfactory),
+                (BrainLevel(41), Good),
+            ],
+            GeometryAndTopology => &[
+                (BrainLevel(6), Bad),
+                (BrainLevel(11), Satisfactory),
+                (BrainLevel(31), Good),
+            ],
+            ComputerScience => &[
+                (BrainLevel(10), Bad),
+                (BrainLevel(16), Satisfactory),
+                (BrainLevel(31), Good),
+            ],
+            English => &[
+                (BrainLevel(5), Bad),
+                (BrainLevel(9), Satisfactory),
+                (BrainLevel(16), Good),
+            ],
+            PhysicalEducation => &[
+                (BrainLevel(5), Bad),
+                (BrainLevel(9), Satisfactory),
+                (BrainLevel(16), Good),
+            ],
+        }
     }
 }
 
@@ -85,143 +182,3 @@ pub(super) const fn subject_into_bits(subject: Option<Subject>) -> u8 {
         Some(s) => s as u8,
     }
 }
-
-pub struct Subjects([(Subject, SubjectInfo); Subject::COUNT]);
-
-pub const SUBJECTS_WITH_LECTURE_NOTES: [Subject; 3] = [
-    Subject::AlgebraAndNumberTheory,
-    Subject::Calculus,
-    Subject::GeometryAndTopology,
-];
-
-impl Subjects {
-    const fn new() -> Subjects {
-        use KnowledgeAssessment::*;
-        use Location::*;
-        use Subject::*;
-        Subjects([
-            (
-                AlgebraAndNumberTheory,
-                SubjectInfo {
-                    required_problems: 12,
-                    exam_days: 4,
-                    exam_min_duration: Duration(2),
-                    exam_max_duration: Duration(4),
-                    exam_places: [PUNK, PUNK, PDMI],
-                    mental_load: BrainLevel(10),
-                    health_penalty: HealthLevel(17),
-                    single_problem_mental_factor: 3,
-                    assessment_bounds: [
-                        (BrainLevel(11), Bad),
-                        (BrainLevel(21), Satisfactory),
-                        (BrainLevel(51), Good),
-                    ],
-                },
-            ),
-            (
-                Calculus,
-                SubjectInfo {
-                    required_problems: 10,
-                    exam_days: 4,
-                    exam_min_duration: Duration(2),
-                    exam_max_duration: Duration(3),
-                    exam_places: [PUNK, PUNK, PUNK],
-                    mental_load: BrainLevel(8),
-                    health_penalty: HealthLevel(14),
-                    single_problem_mental_factor: 2,
-                    assessment_bounds: [
-                        (BrainLevel(9), Bad),
-                        (BrainLevel(19), Satisfactory),
-                        (BrainLevel(41), Good),
-                    ],
-                },
-            ),
-            (
-                GeometryAndTopology,
-                SubjectInfo {
-                    required_problems: 3,
-                    exam_days: 2,
-                    exam_min_duration: Duration(1),
-                    exam_max_duration: Duration(3),
-                    exam_places: [PUNK, PDMI, PDMI],
-                    mental_load: BrainLevel(4),
-                    health_penalty: HealthLevel(8),
-                    single_problem_mental_factor: 3,
-                    assessment_bounds: [
-                        (BrainLevel(6), Bad),
-                        (BrainLevel(11), Satisfactory),
-                        (BrainLevel(31), Good),
-                    ],
-                },
-            ),
-            (
-                ComputerScience,
-                SubjectInfo {
-                    required_problems: 2,
-                    exam_days: 2, // FIXME: May be 3.
-                    exam_min_duration: Duration(1),
-                    exam_max_duration: Duration(2),
-                    exam_places: [ComputerClass, ComputerClass, ComputerClass],
-                    mental_load: BrainLevel(5),
-                    health_penalty: HealthLevel(6),
-                    single_problem_mental_factor: 3,
-                    assessment_bounds: [
-                        (BrainLevel(10), Bad),
-                        (BrainLevel(16), Satisfactory),
-                        (BrainLevel(31), Good),
-                    ],
-                },
-            ),
-            (
-                English,
-                SubjectInfo {
-                    required_problems: 3,
-                    exam_days: 2,
-                    exam_min_duration: Duration(2),
-                    exam_max_duration: Duration(2),
-                    exam_places: [PUNK, PUNK, PUNK],
-                    mental_load: BrainLevel(7),
-                    health_penalty: HealthLevel(10),
-                    single_problem_mental_factor: 1,
-                    assessment_bounds: [
-                        (BrainLevel(5), Bad),
-                        (BrainLevel(9), Satisfactory),
-                        (BrainLevel(16), Good),
-                    ],
-                },
-            ),
-            (
-                PhysicalEducation,
-                SubjectInfo {
-                    required_problems: 1,
-                    exam_days: 2,
-                    exam_min_duration: Duration(1),
-                    exam_max_duration: Duration(1),
-                    exam_places: [PUNK, PUNK, PUNK],
-                    mental_load: BrainLevel(7),
-                    health_penalty: HealthLevel(20),
-                    single_problem_mental_factor: 1,
-                    assessment_bounds: [
-                        (BrainLevel(5), Bad),
-                        (BrainLevel(9), Satisfactory),
-                        (BrainLevel(16), Good),
-                    ],
-                },
-            ),
-        ])
-    }
-
-    pub fn iter(&self) -> core::slice::Iter<'_, (Subject, SubjectInfo)> {
-        self.0.iter()
-    }
-}
-
-impl core::ops::Index<Subject> for Subjects {
-    type Output = SubjectInfo;
-
-    fn index(&self, index: Subject) -> &Self::Output {
-        &self.0[index as usize].1
-    }
-}
-
-pub const SUBJECTS: Subjects = Subjects::new();

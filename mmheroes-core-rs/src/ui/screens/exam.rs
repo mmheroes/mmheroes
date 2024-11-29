@@ -1,5 +1,5 @@
 use crate::logic::scene_router::exams::{BenefitsOfRunning, ExamIntro, ExamScene};
-use crate::logic::{Action, GameState, Subject, SUBJECTS};
+use crate::logic::{Action, GameState, Subject};
 use crate::ui::dialog::dialog;
 use crate::ui::renderer::{Renderer, RendererRequestConsumer};
 use crate::ui::screens::scene_router;
@@ -312,7 +312,7 @@ pub(in crate::ui) fn display_exam_router(
 ) -> WaitingState {
     display_exam_header(r, state, subject);
     let problems_done = state.player().status_for_subject(subject).problems_done();
-    let problems_required = SUBJECTS[subject].required_problems();
+    let problems_required = subject.required_problems();
     r.move_cursor_to(6, 0);
     if problems_done == 0 {
         writeln_colored!(White, r, "У тебя еще ничего не зачтено.")

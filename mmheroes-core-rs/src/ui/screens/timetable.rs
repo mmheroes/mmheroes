@@ -9,7 +9,8 @@ fn output_remaining_problems(
     subject_status: &SubjectStatus,
 ) {
     let (line, column) = r.get_cursor_position();
-    let problems_remaining = SUBJECTS[subject_status.subject()]
+    let problems_remaining = subject_status
+        .subject()
         .required_problems()
         .saturating_sub(subject_status.problems_done());
     if let Some(passed_day) = subject_status.passed_exam_day(timetable) {
@@ -99,14 +100,14 @@ pub(in crate::ui) fn display_timetable(
 ) -> WaitingState {
     r.clear_screen();
     let today = state.current_day();
-    for (i, (subject, _)) in SUBJECTS.iter().enumerate() {
+    for (i, subject) in Subject::all_subjects().enumerate() {
         let line = (i as Line) * TIMETABLE_ROW_HEIGHT + TIMETABLE_START_Y;
         r.move_cursor_to(line, TIMETABLE_START_X);
         r.set_color(Color::Green, Color::Black);
-        writeln!(r, "{}", professor_name(*subject));
+        writeln!(r, "{}", professor_name(subject));
         r.move_cursor_to(line + 1, TIMETABLE_START_X);
         r.set_color(Color::CyanBright, Color::Black);
-        write!(r, "{}", subject_name(*subject));
+        write!(r, "{}", subject_name(subject));
 
         for (j, day) in state.timetable().days().iter().enumerate() {
             r.move_cursor_to(
@@ -117,8 +118,8 @@ pub(in crate::ui) fn display_timetable(
                 r,
                 day,
                 day.index() == today.index(),
-                state.player().status_for_subject(*subject).passed(),
-                *subject,
+                state.player().status_for_subject(subject).passed(),
+                subject,
             );
         }
 
@@ -126,7 +127,7 @@ pub(in crate::ui) fn display_timetable(
         output_remaining_problems(
             r,
             state.timetable(),
-            state.player().status_for_subject(*subject),
+            state.player().status_for_subject(subject),
         );
     }
 

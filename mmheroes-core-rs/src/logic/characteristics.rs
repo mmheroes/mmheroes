@@ -260,7 +260,7 @@ impl BrainLevel {
 
     pub fn relative_knowledge_assessment(&self, subject: Subject) -> KnowledgeAssessment {
         *crate::util::assess(
-            &SUBJECTS[subject].assessment_bounds,
+            subject.assessment_bounds(),
             self,
             &KnowledgeAssessment::Excellent,
         )

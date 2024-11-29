@@ -160,7 +160,7 @@ impl Debug for GameState {
         impl Debug for LectureNotesInfoAdapter<'_> {
             fn fmt(&self, f: &mut Formatter<'_>) -> FmtResult {
                 f.debug_map()
-                    .entries(SUBJECTS_WITH_LECTURE_NOTES.map(|subject| {
+                    .entries(Subject::math_subjects().map(|subject| {
                         (subject, self.0.sasha_has_lecture_notes(subject))
                     }))
                     .finish()

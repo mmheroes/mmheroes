@@ -43,7 +43,7 @@ pub(super) async fn interact(
                 RaiAction::YesOfCourse => {
                     if g.rng
                         .random(state.player.status_for_subject(subject).knowledge)
-                        > g.rng.random(SUBJECTS[subject].mental_load)
+                        > g.rng.random(subject.mental_load())
                     {
                         g.set_screen_and_wait_for_any_key(GameScreen::RaiInteraction(
                             YouHelped,

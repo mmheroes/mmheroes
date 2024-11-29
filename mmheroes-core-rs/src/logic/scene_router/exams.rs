@@ -343,10 +343,9 @@ async fn suffer_exam(
     subject: Subject,
 ) {
     let charisma = state.player.charisma;
-    let subject_info = &SUBJECTS[subject];
     let mut mental_capacity = state.player.status_for_subject(subject).knowledge
         + g.rng.random(state.player.brain)
-        - subject_info.mental_load;
+        - subject.mental_load();
 
     if in_train {
         mental_capacity = BrainLevel(mental_capacity.0 * 3 / 4);
@@ -355,20 +354,19 @@ async fn suffer_exam(
     mental_capacity -= g.rng.random(BrainLevel(max(5 - state.player.health.0, 0)));
 
     let mut solved_problems = if mental_capacity > BrainLevel(0) {
-        ((mental_capacity.0 as f32).sqrt()
-            / subject_info.single_problem_mental_factor as f32)
+        ((mental_capacity.0 as f32).sqrt() / subject.single_problem_mental_factor())
             .round() as u8
     } else {
         0
     };
 
     solved_problems = min(
-        subject_info.required_problems
+        subject.required_problems()
             - state.player.status_for_subject(subject).problems_done(),
         solved_problems,
     );
 
-    let knowledge_penalty = g.rng.random(subject_info.mental_load)
+    let knowledge_penalty = g.rng.random(subject.mental_load())
         - g.rng.random(BrainLevel(state.player.stamina.0));
     let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
     *knowledge -= knowledge_penalty.clamp(BrainLevel(0), *knowledge);
@@ -406,7 +404,7 @@ async fn suffer_exam(
     };
 
     let health_penalty = max(
-        subject_info.health_penalty - g.rng.random(HealthLevel(stamina)),
+        subject.health_penalty() - g.rng.random(HealthLevel(stamina)),
         HealthLevel(0),
     );
     misc::decrease_health(
@@ -463,7 +461,7 @@ async fn exam_ends(
                 // TODO: Написать на это тест
                 return ExamResult::Continue;
             }
-            if SUBJECTS[subject].mental_load.0 * 2 + state.current_time().0 as i16 * 6
+            if subject.mental_load().0 * 2 + state.current_time().0 as i16 * 6
                 < state.player.charisma.0 * 3 + g.rng.random_in_range(20..40)
             {
                 g.set_screen_and_wait_for_any_key(GameScreen::Exam(

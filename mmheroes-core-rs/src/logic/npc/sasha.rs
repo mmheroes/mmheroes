@@ -15,21 +15,14 @@ pub enum SashaInteraction {
 
 use crate::logic::actions::{illegal_action, ActionVec};
 use crate::logic::{
-    Action, CharismaLevel, GameScreen, GameState, InternalGameState, Location,
-    SUBJECTS_WITH_LECTURE_NOTES,
+    Action, CharismaLevel, GameScreen, GameState, InternalGameState, Location, Subject,
 };
 use SashaInteraction::*;
 
 pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
     assert_eq!(state.location(), Location::PUNK);
-    let mut available_actions = SUBJECTS_WITH_LECTURE_NOTES
-        .into_iter()
-        .filter(|subject| {
-            !state
-                .player
-                .status_for_subject(*subject)
-                .has_lecture_notes()
-        })
+    let mut available_actions = Subject::math_subjects()
+        .filter(|&subject| !state.player.status_for_subject(subject).has_lecture_notes())
         .map(Action::RequestLectureNotesFromSasha)
         .collect::<ActionVec>();
     available_actions.push(Action::DontNeedAnythingFromSasha);
