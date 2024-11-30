@@ -137,6 +137,12 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::Rai(actions::RaiAction::NoSorry) => "\"Нет, извини...\"",
         Action::Nil(actions::NilAction::YesOfCourse) => "\"Да, конечно\"",
         Action::Nil(actions::NilAction::MaybeNextTime) => "\"Извини, в другой раз\"",
+        Action::BugSquasher(actions::BugSquasherAction::LetsGo) => "\"Давай!\"",
+        Action::BugSquasher(actions::BugSquasherAction::NoIWontPlay) => {
+            "\"Нет, не буду я в клоподавку ...\""
+        }
+        Action::Tennis(actions::TennisAction::Sure) => "\"Обязательно!\"",
+        Action::Tennis(actions::TennisAction::SorryMaybeLater) => "\"Извини, потом.\"",
         Action::GoToWork => "Пойти в ТЕРКОМ, поработать",
         Action::LookAtBaobab => "Посмотреть на баобаб",
         Action::LookAtBulletinBoard => "Посмотреть на доску объявлений",

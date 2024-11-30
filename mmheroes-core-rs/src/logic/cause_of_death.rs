@@ -63,6 +63,9 @@ pub enum CauseOfDeath {
     /// RAI замочил.
     KilledByRai,
 
+    /// Загонял тебя Миша.
+    ExhaustedByMisha,
+
     /// Бурно прогрессирующая паранойя
     Paranoia,
 

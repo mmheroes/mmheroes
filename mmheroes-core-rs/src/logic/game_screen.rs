@@ -59,6 +59,9 @@ pub enum GameScreen {
     /// Третий аргумент означает, уходит ли Серж после взаимодействия.
     SerjInteraction(GameState, npc::serj::SerjInteraction, bool),
 
+    /// Взаимодействие с Мишей
+    MishaInteraction(npc::misha::MishaInteraction),
+
     /// Взаимодействие с RAI
     RaiInteraction(npc::rai::RaiInteraction),
 
@@ -159,6 +162,9 @@ impl GameScreen {
             | RaiInteraction(rai::RaiInteraction::Ignores(state))
             | RaiInteraction(rai::RaiInteraction::PromptWillYouHelpMe(state))
             | NilInteraction(nil::NilInteraction::WillYouHelpMe(state))
+            | MishaInteraction(misha::MishaInteraction::PromptBugSquasher(state))
+            | MishaInteraction(misha::MishaInteraction::PromptTennis(state))
+            | MishaInteraction(misha::MishaInteraction::RandomReply(state, _))
             | Terkom(state, _)
             | GoToProfessor(state)
             | Exam(ExamScene::Router(state, _))
@@ -189,6 +195,10 @@ impl GameScreen {
             | NilInteraction(nil::NilInteraction::RefusedToHelp)
             | NilInteraction(nil::NilInteraction::ThanksHereIsYourMoney(_))
             | NilInteraction(nil::NilInteraction::DidntWorkOut)
+            | MishaInteraction(misha::MishaInteraction::NoWorries)
+            | MishaInteraction(misha::MishaInteraction::TooBad)
+            | MishaInteraction(misha::MishaInteraction::PlayedBugSquasherWithMisha)
+            | MishaInteraction(misha::MishaInteraction::PlayedTennisWithMisha)
             | WannaTryAgain
             | Disclaimer
             | Terminal => None,

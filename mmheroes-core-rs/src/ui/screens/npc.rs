@@ -1,5 +1,6 @@
 use crate::logic::diamond::DiamondInteraction;
 use crate::logic::grisha::GrishaReply;
+use crate::logic::misha::{MishaInteraction, MishaReply};
 use crate::logic::npc::{
     grisha::GrishaInteraction, kolya::KolyaInteraction, kuzmenko::KuzmenkoInteraction,
     nil::NilInteraction, pasha::PashaInteraction, sasha::SashaInteraction,
@@ -610,4 +611,114 @@ pub(crate) fn display_nil_interaction(
         }
     }
     wait_for_any_key(r)
+}
+
+pub(crate) fn display_misha_interaction(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    available_actions: &[Action],
+    interaction: &MishaInteraction,
+) -> WaitingState {
+    use MishaInteraction::*;
+    use MishaReply::*;
+    match interaction {
+        PromptBugSquasher(state) | PromptTennis(state) | RandomReply(state, _) => {
+            r.clear_screen();
+            scene_router::display_header_stats(r, state);
+            r.move_cursor_to(7, 0);
+        }
+        _ => (),
+    }
+    match interaction {
+        PromptBugSquasher(_) => {
+            write_colored!(White, r, "Миша : ");
+            writeln_colored!(WhiteBright, r, "\"Слушай, хватит мучаться! Прервись!");
+            writeln!(r, "Давай в клоподавку сыграем!\"");
+            r.move_cursor_to(11, 0);
+            dialog(r, available_actions)
+        }
+        PlayedBugSquasherWithMisha => {
+            r.move_cursor_to(14, 0);
+            writeln_colored!(Green, r, "Ты сыграл с Мишей партию в клоподавку.");
+            wait_for_any_key(r)
+        }
+        TooBad => {
+            r.move_cursor_to(14, 0);
+            writeln_colored!(WhiteBright, r, "\"Зря, очень зря!\"");
+            wait_for_any_key(r)
+        }
+        PromptTennis(_) => {
+            write_colored!(White, r, "Миша : ");
+            writeln_colored!(
+                WhiteBright,
+                r,
+                "\"Слушай, а ведь в ТЕРКОМе есть столик для тенниса. Сыграем?\""
+            );
+            r.move_cursor_to(11, 0);
+            dialog(r, available_actions)
+        }
+        PlayedTennisWithMisha => {
+            r.move_cursor_to(14, 0);
+            writeln_colored!(Green, r, "Ты сыграл с Мишей в теннис.");
+            wait_for_any_key(r)
+        }
+        NoWorries => {
+            r.move_cursor_to(14, 0);
+            writeln_colored!(WhiteBright, r, "\"Ничего, я на тебя не в обиде.\"");
+            wait_for_any_key(r)
+        }
+        RandomReply(_, reply) => {
+            write_colored!(White, r, "Миша:");
+            let reply_text = match reply {
+                TooBadNowhereToPlayBugSquasher => "Эх, жаль, негде сыграть в клоподавку!",
+                AlwaysPayAttentionToHealth => "Всегда следи за здоровьем!",
+                BrainLevelAffectsExamSuccess => {
+                    "Мозги влияют на подготовку и сдачу зачетов."
+                }
+                TheMoreStaminaTheLessHealthYouSpend => {
+                    "Чем больше выносливость, тем меньше здоровья ты тратишь."
+                }
+                TheMoreCharismaTheBetterRelationshipsWithPeople => {
+                    "Чем больше твоя харизма, тем лучше у тебя отношения с людьми."
+                }
+                ImportanceOfCharacteristicAffectsGameStyle => {
+                    "Важность конкретного качества сильно зависит от стиля игры."
+                }
+                CharismaHelpsGetAnything => {
+                    "Харизма помогает получить что угодно от кого угодно."
+                }
+                TheMoreCharismaTheMoreYouAreApproached => {
+                    "Чем больше харизма, тем чаще к тебе пристают."
+                }
+                TheLessStaminaTheMorePainfulStudyingIs => {
+                    "Чем меньше выносливость, тем больнее учиться."
+                }
+                TheMoreBrainTheMoreEasyToPrepare => {
+                    "Чем больше мозги, тем легче готовиться."
+                }
+                InternetSometimesImprovesBrain => {
+                    "Сидение в Inet'e иногда развивает мозги."
+                }
+                IfTiredOfDyingTryAnotherStrategy => {
+                    "Если тебе надоело умирать - попробуй другую стратегию."
+                }
+                WantFreebieGetCharisma => "Хочешь халявы - набирай харизму.",
+                WantAchieveEverythingYourselfImproveBrain => {
+                    "Хочешь добиться всего сам - развивай мозги."
+                }
+                InMausoleumKnowingWhenToStopIsImportant => {
+                    "В \"Мавзолее\" важно знать меру..."
+                }
+                CharismaAndStaminaSaveFromPersonalityDisorder => {
+                    "От раздвоения личности спасают харизма и выносливость."
+                }
+                YouGetStupidFromInteractingWithNil => {
+                    "От любого общения с NiL ты тупеешь!"
+                }
+                GrishaCanHelpWithEmployment => "Гриша может помочь с трудоустройством.",
+                NpcMovementsArePredictable => "Перемещения студентов предсказуемы.",
+            };
+            writeln_colored!(WhiteBright, r, "\"{reply_text}\"");
+            wait_for_any_key(r)
+        }
+    }
 }

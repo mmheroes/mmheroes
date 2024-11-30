@@ -144,6 +144,22 @@ pub enum NilAction {
 
 action_conversion!(NilAction, Nil);
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum BugSquasherAction {
+    LetsGo,
+    NoIWontPlay,
+}
+
+action_conversion!(BugSquasherAction, BugSquasher);
+
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum TennisAction {
+    Sure,
+    SorryMaybeLater,
+}
+
+action_conversion!(TennisAction, Tennis);
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     AnyKey,
@@ -191,6 +207,8 @@ pub enum Action {
     BaltiyskiyRailwayStation(BaltiyskiyRailwayStationAction),
     Rai(RaiAction),
     Nil(NilAction),
+    BugSquasher(BugSquasherAction),
+    Tennis(TennisAction),
     GoToWork,
     LookAtBaobab,
     LookAtBulletinBoard,
