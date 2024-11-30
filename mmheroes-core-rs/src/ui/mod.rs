@@ -307,6 +307,9 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
                 self.state_holder.observable_state().available_actions(),
                 interaction,
             ),
+            DjugInteraction(state) => {
+                screens::npc::display_djug_interaction(&mut self.renderer, state)
+            }
             RaiInteraction(interaction) => screens::npc::display_rai_interaction(
                 &mut self.renderer,
                 self.state_holder.observable_state().available_actions(),

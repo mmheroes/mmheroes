@@ -55,6 +55,7 @@ fn display_game_end_dead(
         }
         KilledByRai => writeln!(r, "RAI замочил."),
         ExhaustedByMisha => writeln!(r, "Загонял тебя Миша."),
+        DontTalkToDjug => writeln!(r, "Не общайся с тормозами!"),
         Paranoia => writeln!(r, "Бурно прогрессирующая паранойя."),
         TimeOut => writeln!(r, "Время вышло."),
         Suicide => writeln!(r, "Вышел сам."),

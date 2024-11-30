@@ -66,6 +66,9 @@ pub enum CauseOfDeath {
     /// Загонял тебя Миша.
     ExhaustedByMisha,
 
+    /// Не общайся с тормозами!
+    DontTalkToDjug,
+
     /// Бурно прогрессирующая паранойя
     Paranoia,
 

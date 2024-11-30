@@ -62,6 +62,9 @@ pub enum GameScreen {
     /// Взаимодействие с Мишей
     MishaInteraction(npc::misha::MishaInteraction),
 
+    /// Взаимодействие с DJuG
+    DjugInteraction(GameState),
+
     /// Взаимодействие с RAI
     RaiInteraction(npc::rai::RaiInteraction),
 
@@ -165,6 +168,7 @@ impl GameScreen {
             | MishaInteraction(misha::MishaInteraction::PromptBugSquasher(state))
             | MishaInteraction(misha::MishaInteraction::PromptTennis(state))
             | MishaInteraction(misha::MishaInteraction::RandomReply(state, _))
+            | DjugInteraction(state)
             | Terkom(state, _)
             | GoToProfessor(state)
             | Exam(ExamScene::Router(state, _))

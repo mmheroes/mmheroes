@@ -722,3 +722,19 @@ pub(crate) fn display_misha_interaction(
         }
     }
 }
+
+pub(crate) fn display_djug_interaction<C: RendererRequestConsumer>(
+    r: &mut Renderer<C>,
+    state: &GameState,
+) -> WaitingState {
+    r.clear_screen();
+    scene_router::display_header_stats(r, state);
+    r.move_cursor_to(7, 0);
+    write_colored!(White, r, "DJuG:");
+    writeln_colored!(
+        WhiteBright,
+        r,
+        "\"У Вас какой-то школьный метод решения задач...\""
+    );
+    wait_for_any_key(r)
+}
