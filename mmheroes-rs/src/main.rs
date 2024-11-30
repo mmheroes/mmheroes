@@ -123,25 +123,19 @@ fn getch(window: &ScreenRAII, logger: &Logger) -> ui::Input {
     }
 }
 
-#[cfg(target_os = "windows")]
 fn pause() {
-    let _ = std::process::Command::new("cmd.exe")
-        .arg("/c")
-        .arg("pause")
-        .status();
+    if cfg!(windows) {
+        let _ = std::process::Command::new("cmd.exe")
+            .arg("/c")
+            .arg("pause")
+            .status();
+    }
 }
 
-#[cfg(not(target_os = "windows"))]
-fn pause() {}
-
-#[cfg(not(target_os = "windows"))]
 fn resize_terminal(height: i32, width: i32) {
-    println!("\x1B[8;{};{}t", height, width);
-    resize_term(height, width);
-}
-
-#[cfg(target_os = "windows")]
-fn resize_terminal(height: i32, width: i32) {
+    if !cfg!(windows) {
+        println!("\x1B[8;{};{}t", height, width);
+    }
     resize_term(height, width);
 }
 
