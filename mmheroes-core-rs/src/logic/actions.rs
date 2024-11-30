@@ -136,6 +136,14 @@ pub enum RaiAction {
 
 action_conversion!(RaiAction, Rai);
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum NilAction {
+    YesOfCourse,
+    MaybeNextTime,
+}
+
+action_conversion!(NilAction, Nil);
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     AnyKey,
@@ -182,6 +190,7 @@ pub enum Action {
     ContinueSufferingWithExamInTrain(ContinueSufferingWithExamInTrainAction),
     BaltiyskiyRailwayStation(BaltiyskiyRailwayStationAction),
     Rai(RaiAction),
+    Nil(NilAction),
     GoToWork,
     LookAtBaobab,
     LookAtBulletinBoard,

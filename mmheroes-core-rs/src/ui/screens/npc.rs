@@ -2,7 +2,8 @@ use crate::logic::diamond::DiamondInteraction;
 use crate::logic::grisha::GrishaReply;
 use crate::logic::npc::{
     grisha::GrishaInteraction, kolya::KolyaInteraction, kuzmenko::KuzmenkoInteraction,
-    pasha::PashaInteraction, sasha::SashaInteraction, serj::SerjInteraction,
+    nil::NilInteraction, pasha::PashaInteraction, sasha::SashaInteraction,
+    serj::SerjInteraction,
 };
 use crate::logic::rai::RaiInteraction;
 use crate::logic::*;
@@ -570,6 +571,42 @@ pub(crate) fn display_rai_interaction(
         RaiInteraction::Fail => {
             r.move_cursor_to(14, 0);
             writeln_colored!(White, r, "Ничего не вышло.");
+        }
+    }
+    wait_for_any_key(r)
+}
+
+pub(crate) fn display_nil_interaction(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    available_actions: &[Action],
+    interaction: &NilInteraction,
+) -> WaitingState {
+    match interaction {
+        NilInteraction::WillYouHelpMe(state) => {
+            r.clear_screen();
+            scene_router::display_header_stats(r, state);
+            r.move_cursor_to(7, 0);
+            writeln_colored!(
+                CyanBright,
+                r,
+                "\"Маладой чилавек, вы мне не паможите решить задачу?"
+            );
+            writeln!(r, "А то я сигодня ни в зуб нагой ...\"");
+            r.move_cursor_to(10, 0);
+            return dialog(r, available_actions);
+        }
+        NilInteraction::RefusedToHelp => (),
+        NilInteraction::ThanksHereIsYourMoney(reward) => {
+            r.move_cursor_to(13, 0);
+            writeln_colored!(
+                YellowBright,
+                r,
+                "\"Ой, спасибо! Вот вам {reward} руб. за это...\"",
+            );
+        }
+        NilInteraction::DidntWorkOut => {
+            r.move_cursor_to(13, 0);
+            writeln_colored!(MagentaBright, r, "У тебя ничего не вышло.")
         }
     }
     wait_for_any_key(r)

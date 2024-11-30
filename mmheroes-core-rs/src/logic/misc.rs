@@ -10,10 +10,9 @@ pub(in crate::logic) fn decrease_health(
     delta: HealthLevel,
     cause_of_death: CauseOfDeath,
 ) {
-    if state.player.health <= delta {
+    state.player.health -= delta;
+    if state.player.health <= 0 {
         state.player.cause_of_death = Some(cause_of_death);
-    } else {
-        state.player.health -= delta;
     }
 }
 

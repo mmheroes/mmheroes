@@ -144,12 +144,12 @@ macro_rules! initialize_game {
         let $state = &state_holder;
         let mut game = mmheroes_core::logic::create_game($seed, $state);
         let game = core::pin::pin!(game);
-        let mut game_ui = $crate::TestGameUI::new(
+        let mut game_ui = $crate::common::TestGameUI::new(
             $state,
             game,
             $seed,
             $high_scores,
-            $crate::TestRendererRequestConsumer::new(),
+            $crate::common::TestRendererRequestConsumer::new(),
         );
         let $game_ui = &mut game_ui;
         $game_ui.continue_game(mmheroes_core::ui::Input::Enter)

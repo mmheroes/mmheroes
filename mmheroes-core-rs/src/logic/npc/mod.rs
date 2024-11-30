@@ -2,6 +2,7 @@ pub mod diamond;
 pub mod grisha;
 pub mod kolya;
 pub mod kuzmenko;
+pub mod nil;
 pub mod pasha;
 pub mod rai;
 pub mod sasha;
@@ -365,7 +366,7 @@ pub(super) async fn interact_with_classmate(
         Misha => todo!("Misha"),
         Serj => serj::interact(g, state, exam_in_progress).await,
         Sasha => sasha::interact(g, state).await,
-        NiL => todo!("NiL"),
+        NiL => nil::interact(g, state, exam_in_progress).await,
         Kuzmenko => kuzmenko::interact(g, state).await,
         DJuG => todo!("DJuG"),
         Andrew => todo!("Andrew"),

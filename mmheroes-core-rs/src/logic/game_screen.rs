@@ -62,6 +62,9 @@ pub enum GameScreen {
     /// Взаимодействие с RAI
     RaiInteraction(npc::rai::RaiInteraction),
 
+    /// Взаимодействие с NiL
+    NilInteraction(npc::nil::NilInteraction),
+
     /// Работа в ТЕРКОМе
     Terkom(GameState, terkom::Terkom),
 
@@ -155,6 +158,7 @@ impl GameScreen {
             | SerjInteraction(state, _, _)
             | RaiInteraction(rai::RaiInteraction::Ignores(state))
             | RaiInteraction(rai::RaiInteraction::PromptWillYouHelpMe(state))
+            | NilInteraction(nil::NilInteraction::WillYouHelpMe(state))
             | Terkom(state, _)
             | GoToProfessor(state)
             | Exam(ExamScene::Router(state, _))
@@ -182,6 +186,9 @@ impl GameScreen {
             | RaiInteraction(rai::RaiInteraction::TakeIt)
             | RaiInteraction(rai::RaiInteraction::YouHelped)
             | RaiInteraction(rai::RaiInteraction::Fail)
+            | NilInteraction(nil::NilInteraction::RefusedToHelp)
+            | NilInteraction(nil::NilInteraction::ThanksHereIsYourMoney(_))
+            | NilInteraction(nil::NilInteraction::DidntWorkOut)
             | WannaTryAgain
             | Disclaimer
             | Terminal => None,
