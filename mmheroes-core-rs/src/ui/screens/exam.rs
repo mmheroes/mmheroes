@@ -1,11 +1,13 @@
-use crate::logic::scene_router::exams::{BenefitsOfRunning, ExamIntro, ExamScene};
+use crate::logic::scene_router::exams::{
+    BenefitsOfRunning, EnglishExamFeeling, ExamIntro, ExamScene,
+};
 use crate::logic::{Action, GameState, Subject};
 use crate::ui::dialog::dialog;
 use crate::ui::renderer::{Renderer, RendererRequestConsumer};
 use crate::ui::screens::scene_router;
 use crate::ui::{
-    classmate_name, problems_inflected, professor_name, screens, wait_for_any_key, Color,
-    WaitingState,
+    classmate_name, problems_inflected, professor_name, screens, sleep, wait_for_any_key,
+    Color, Milliseconds, WaitingState,
 };
 
 pub(in crate::ui) fn display_exam_intro(
@@ -155,13 +157,14 @@ pub(in crate::ui) fn display_exam_intro(
 
 pub(in crate::ui) fn display_exam(
     r: &mut Renderer<impl RendererRequestConsumer>,
+    rng: &mut crate::random::Rng,
     available_actions: &[Action],
     scene: &ExamScene,
 ) -> WaitingState {
     match scene {
         ExamScene::Router(state, subject)
         | ExamScene::ClassmateWantsSomething(state, subject, _) => {
-            display_exam_header(r, state, *subject)
+            display_exam_info(r, state, *subject)
         }
         ExamScene::PromptExamInTrain(state, _)
         | ExamScene::ProfessorLeaves(state, _)
@@ -247,7 +250,160 @@ pub(in crate::ui) fn display_exam(
             );
             wait_for_any_key(r)
         }
+        ExamScene::AlgebraExamPassed(state) => {
+            r.clear_screen();
+            scene_router::display_header_stats(r, state);
+            r.move_cursor_to(7, 0);
+            writeln_colored!(White, r, "Всемирнов медленно рисует минус ...");
+            sleep(r, Milliseconds(1000));
+            writeln!(
+                r,
+                "И так же медленно пририсовывает к нему вертикальную палочку!"
+            );
+            writeln!(r, "Уф! Ну и шуточки у него!");
+            writeln!(r, "Хорошо хоть, зачет поставил...");
+            wait_for_any_key(r)
+        }
+        ExamScene::EnglishExamPassed(state, feeling) => {
+            display_exam_header(r, state, Subject::English);
+            r.move_cursor_to(8, 0);
+            write_colored!(White, r, "Влащенко Н.П.:");
+            writeln_colored!(WhiteBright, r, "\"Закройте глаза ...\"");
+            writeln_colored!(White, r, "Ты послушно закрываешь глаза.");
+            sleep(r, Milliseconds(1000));
+            writeln_colored!(WhiteBright, r, "\"Октройте глаза ...\"");
+            writeln_random_color(
+                r,
+                rng,
+                "Ты видишь Влащенко Н.П. в костюме сказочной феи.",
+            );
+            writeln_random_color(
+                r,
+                rng,
+                "Влащенко Н.П. касается тебя указкой (она же - волшебная палочка ...)",
+            );
+            writeln_random_color(
+                r,
+                rng,
+                "Ты чувствуешь, что с тобой происходит что-то сверхъестественное.",
+            );
+            match feeling {
+                EnglishExamFeeling::ReallyBad => {
+                    writeln_random_color(r, rng, "Тебе сильно поплохело.");
+                }
+                EnglishExamFeeling::SomeplaceElse => {
+                    writeln_random_color(
+                        r,
+                        rng,
+                        "Ты почувствовал себя где-то в другом месте.",
+                    );
+                }
+                EnglishExamFeeling::ForgotAlgebra => {
+                    writeln_random_color(
+                        r,
+                        rng,
+                        "Ты чувствуешь, что подзабыл алгебру...",
+                    );
+                }
+                EnglishExamFeeling::ForgotCalculus => {
+                    writeln_random_color(
+                        r,
+                        rng,
+                        "Ты чувствуешь, что анализ придется учить заново.",
+                    );
+                }
+                EnglishExamFeeling::ThoughtsAboutFairies => {
+                    writeln_random_color(
+                        r,
+                        rng,
+                        "В голову постоянно лезут мысли о всяких феях...",
+                    );
+                }
+                EnglishExamFeeling::EveryoneWantsYouDead => {
+                    writeln_random_color(
+                        r,
+                        rng,
+                        "Ты чувствуешь, что все вокруг жаждут твоей смерти.",
+                    );
+                }
+                EnglishExamFeeling::StaminaGone => {
+                    writeln_random_color(
+                        r,
+                        rng,
+                        "Куда-то подевалась твоя уверенность в себе.",
+                    );
+                }
+                EnglishExamFeeling::BrainGotBetter => {
+                    writeln_random_color(r, rng, "Голова стала работать заметно лучше.");
+                }
+                EnglishExamFeeling::LoveForTheWorld => {
+                    writeln_random_color(
+                        r,
+                        rng,
+                        "Ты проникся любовью к окружающему миру.",
+                    );
+                }
+                EnglishExamFeeling::ReadyForEverything => {
+                    writeln_random_color(r, rng, "Ты готов к любым испытаниям.");
+                }
+                EnglishExamFeeling::Money => {
+                    if state.player().money() == 0 {
+                        writeln_random_color(
+                            r,
+                            rng,
+                            "Пока твои глаза были закрыты, кто-то утащил твои деньги!!!",
+                        );
+                    } else {
+                        writeln_random_color(
+                            r,
+                            rng,
+                            "Ты нашел в своем кармане какие-то деньги!",
+                        );
+                    }
+                }
+                EnglishExamFeeling::SmellOfGarlic => {
+                    writeln_random_color(
+                        r,
+                        rng,
+                        "Ты чувствуешь, что от тебя сильно несет чесноком.",
+                    );
+                    writeln_random_color(
+                        r,
+                        rng,
+                        "Не знаю, выветрится ли такой сильный запах...",
+                    );
+                }
+                EnglishExamFeeling::QuicklyFadedAway => {
+                    writeln_random_color(r, rng, "Странное чувство быстро прошло.");
+                }
+            }
+            wait_for_any_key(r)
+        }
+        ExamScene::ExamPassed(state, subject) => {
+            display_exam_header(r, state, *subject);
+            r.move_cursor_to(9, 0);
+            writeln_colored!(Green, r, "Твоя зачетка пополнилась еще одной записью.");
+            wait_for_any_key(r)
+        }
     }
+}
+
+fn writeln_random_color(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    rng: &mut crate::random::Rng,
+    s: &str,
+) {
+    let colors = [
+        Color::RedBright,
+        Color::Green,
+        Color::YellowBright,
+        Color::BlueBright,
+        Color::MagentaBright,
+        Color::CyanBright,
+        Color::WhiteBright,
+    ];
+    r.set_color(*rng.random_element(&colors), Color::Black);
+    writeln!(r, "{s}")
 }
 
 fn display_exam_header(
@@ -265,6 +421,14 @@ fn display_exam_header(
         r.move_cursor_to(6, 0);
         write_colored!(Green, r, "У вас все зачтено, можете быть свободны.");
     }
+}
+
+fn display_exam_info(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    state: &GameState,
+    subject: Subject,
+) {
+    display_exam_header(r, state, subject);
     r.move_cursor_to(7, 0);
     writeln_colored!(
         YellowBright,
@@ -310,7 +474,7 @@ pub(in crate::ui) fn display_exam_router(
     available_actions: &[Action],
     subject: Subject,
 ) -> WaitingState {
-    display_exam_header(r, state, subject);
+    display_exam_info(r, state, subject);
     let problems_done = state.player().status_for_subject(subject).problems_done();
     let problems_required = subject.required_problems();
     r.move_cursor_to(6, 0);

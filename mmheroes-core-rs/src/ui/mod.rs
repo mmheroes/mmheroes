@@ -40,21 +40,21 @@ use core::fmt::Display;
 #[repr(C)]
 pub enum Color {
     #[default]
-    Black = 0,
-    Red = 1,
-    Yellow = 3,
-    Blue = 4,
-    Magenta = 5,
-    Cyan = 6,
-    White = 7,
-    Gray = 8,
-    RedBright = 9,
-    Green = 10,
-    YellowBright = 11,
-    BlueBright = 12,
-    MagentaBright = 13,
-    CyanBright = 14,
-    WhiteBright = 15,
+    Black = 0, // 0x0
+    Red = 1,            // 0x4
+    Yellow = 3,         // 0x6
+    Blue = 4,           // 0x1
+    Magenta = 5,        // 0x5
+    Cyan = 6,           // 0x3
+    White = 7,          // 0x7
+    Gray = 8,           // 0x8
+    RedBright = 9,      // 0xC
+    Green = 10,         // 0xA
+    YellowBright = 11,  // 0xE
+    BlueBright = 12,    // 0x9
+    MagentaBright = 13, // 0xD
+    CyanBright = 14,    // 0xB
+    WhiteBright = 15,   // 0xF
 }
 
 impl TryFrom<u8> for Color {
@@ -342,6 +342,7 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
             }
             Exam(scene) => screens::exam::display_exam(
                 &mut self.renderer,
+                &mut self.rng,
                 self.state_holder.observable_state().available_actions(),
                 scene,
             ),

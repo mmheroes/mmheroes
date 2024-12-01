@@ -78,6 +78,14 @@ impl<T, const N: usize, const CAPACITY: usize> From<[T; N]> for TinyVec<T, CAPAC
     }
 }
 
+impl<T: Clone, const CAPACITY: usize> From<&[T]> for TinyVec<T, CAPACITY> {
+    fn from(slice: &[T]) -> Self {
+        let mut vec = Self::new();
+        vec.extend_from_slice(slice);
+        vec
+    }
+}
+
 impl<T: Clone, const CAPACITY: usize> TinyVec<T, CAPACITY> {
     pub(crate) fn extend_from_slice(&mut self, other: &[T]) {
         for element in other {

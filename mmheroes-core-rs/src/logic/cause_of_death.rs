@@ -57,6 +57,12 @@ pub enum CauseOfDeath {
     /// <препод> замучил.
     TorturedByProfessor(Subject),
 
+    /// Всемирнов М.А. изничтожил.
+    DestroyedByVsemirnov,
+
+    /// Фея была явно не в настроении.
+    FairyWasNotInTheMood,
+
     /// <NPC> лучше игнорировать не надо.
     BetterNotIgnoreClassmate(Classmate),
 

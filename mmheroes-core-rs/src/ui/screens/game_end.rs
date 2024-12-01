@@ -46,6 +46,8 @@ fn display_game_end_dead(
             };
             writeln!(r, "{} замучил{}.", professor_name(subject), verb_ending)
         }
+        DestroyedByVsemirnov => writeln!(r, "Всемирнов М.А. изничтожил."),
+        FairyWasNotInTheMood => writeln!(r, "Фея была явно не в настроении."),
         BetterNotIgnoreClassmate(classmate) => {
             writeln!(
                 r,

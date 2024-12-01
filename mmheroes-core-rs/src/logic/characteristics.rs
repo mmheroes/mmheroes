@@ -52,6 +52,12 @@ macro_rules! define_characteristic {
             }
         }
 
+        impl core::ops::DivAssign<i16> for $name {
+            fn div_assign(&mut self, rhs: i16) {
+                self.0 /= rhs
+            }
+        }
+
         impl core::cmp::PartialEq<i16> for $name {
             fn eq(&self, other: &i16) -> bool {
                 self.0 == *other

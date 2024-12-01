@@ -1,6 +1,7 @@
 use super::*;
 use crate::logic::scene_router::train::BaltiyskiyRailwayStationScene;
 use crate::util::bitset::BitSet;
+use crate::util::TinyVec;
 use actions::{
     BaltiyskiyRailwayStationAction, ContinueSufferingWithExamInTrainAction,
     NpcApproachAction,
@@ -232,13 +233,25 @@ pub enum ExamScene {
 
     /// Преподаватель задерживается ещё на час
     ProfessorLingers(GameState, Subject),
+
+    /// "Всемирнов медленно рисует минус ...
+    /// И так же медленно пририсовывает к нему вертикальную палочку!
+    /// Уф! Ну и шуточки у него!
+    /// Хорошо хоть, зачет поставил..."
+    AlgebraExamPassed(GameState),
+
+    /// "Закройте глаза ..."
+    EnglishExamPassed(GameState, EnglishExamFeeling),
+
+    /// "Твоя зачетка пополнилась еще одной записью."
+    ExamPassed(GameState, Subject),
 }
 
 async fn exam(g: &mut InternalGameState<'_>, state: &mut GameState, subject: Subject) {
     loop {
         let day_index = state.current_day_index();
         let status = state.player.status_for_subject_mut(subject);
-        if status.solved_all_problems() {
+        if status.solved_all_problems() && !status.passed() {
             status.set_passed_exam_day_index(day_index);
             if exam_passed(g, state, subject).await == ExamResult::Exit
                 || state.player().cause_of_death().is_some()
@@ -431,12 +444,153 @@ async fn suffer_exam(
     }
 }
 
+#[derive(Debug, Copy, Clone, VariantArray)]
+pub enum EnglishExamFeeling {
+    /// "Тебе сильно поплохело.
+    /// Фея была явно не в настроении."
+    ReallyBad,
+
+    /// "Ты почувствовал себя где-то в другом месте."
+    SomeplaceElse,
+
+    /// "Ты чувствуешь, что подзабыл алгебру..."
+    ForgotAlgebra,
+
+    /// "Ты чувствуешь, что анализ придется учить заново."
+    ForgotCalculus,
+
+    /// "В голову постоянно лезут мысли о всяких феях..."
+    ThoughtsAboutFairies,
+
+    /// "Ты чувствуешь, что все вокруг жаждут твоей смерти."
+    EveryoneWantsYouDead,
+
+    /// "Куда-то подевалась твоя уверенность в себе."
+    StaminaGone,
+
+    /// "Голова стала работать заметно лучше."
+    BrainGotBetter,
+
+    /// "Ты проникся любовью к окружающему миру.",
+    LoveForTheWorld,
+
+    /// "Ты готов к любым испытаниям."
+    ReadyForEverything,
+
+    /// "Пока твои глаза были закрыты, кто-то утащил твои деньги!!!"
+    /// или
+    /// "Ты нашел в своем кармане какие-то деньги!"
+    Money,
+
+    /// "Ты чувствуешь, что от тебя сильно несет чесноком.
+    /// Не знаю, выветрится ли такой сильный запах..."
+    SmellOfGarlic,
+
+    /// "Странное чувство быстро прошло."
+    QuicklyFadedAway,
+}
+
 async fn exam_passed(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
     subject: Subject,
 ) -> ExamResult {
-    todo!("exam_passed")
+    match subject {
+        Subject::AlgebraAndNumberTheory => {
+            g.set_screen_and_wait_for_any_key(GameScreen::Exam(
+                ExamScene::AlgebraExamPassed(state.clone()),
+            ))
+            .await;
+            misc::decrease_health(
+                state,
+                HealthLevel(g.rng.random(6)),
+                CauseOfDeath::DestroyedByVsemirnov,
+            );
+        }
+        Subject::English => {
+            const FEELING_COUNT: usize = EnglishExamFeeling::VARIANTS.len() + 2;
+            let mut possible_feelings =
+                TinyVec::<_, FEELING_COUNT>::from(EnglishExamFeeling::VARIANTS);
+
+            // Запах чеснока чуть более вероятен
+            possible_feelings
+                .extend(core::iter::repeat(EnglishExamFeeling::SmellOfGarlic).take(2));
+
+            let feeling = *g.rng.random_element(&possible_feelings);
+            g.set_screen_and_wait_for_any_key(GameScreen::Exam(
+                ExamScene::EnglishExamPassed(state.clone(), feeling),
+            ))
+            .await;
+            match feeling {
+                EnglishExamFeeling::ReallyBad => {
+                    misc::decrease_health(
+                        state,
+                        HealthLevel(30),
+                        CauseOfDeath::FairyWasNotInTheMood,
+                    );
+                }
+                EnglishExamFeeling::SomeplaceElse => {
+                    state.set_location(Location::PDMI);
+                    return ExamResult::Exit;
+                }
+                EnglishExamFeeling::ForgotAlgebra => {
+                    state
+                        .player
+                        .status_for_subject_mut(Subject::AlgebraAndNumberTheory)
+                        .knowledge /= 2;
+                }
+                EnglishExamFeeling::ForgotCalculus => {
+                    state
+                        .player
+                        .status_for_subject_mut(Subject::Calculus)
+                        .knowledge /= 2;
+                }
+                EnglishExamFeeling::ThoughtsAboutFairies => {
+                    state.player.brain -= g.rng.random_in_range(1..3);
+                }
+                EnglishExamFeeling::EveryoneWantsYouDead => {
+                    state.player.charisma -= g.rng.random_in_range(1..3);
+                }
+                EnglishExamFeeling::StaminaGone => {
+                    state.player.stamina -= g.rng.random_in_range(1..3);
+                }
+                EnglishExamFeeling::BrainGotBetter => {
+                    state.player.brain += g.rng.random_in_range(1..4);
+                }
+                EnglishExamFeeling::LoveForTheWorld => {
+                    state.player.charisma += g.rng.random_in_range(1..4);
+                }
+                EnglishExamFeeling::ReadyForEverything => {
+                    state.player.stamina += g.rng.random_in_range(1..4);
+                }
+                EnglishExamFeeling::Money => {
+                    if state.player.money > 0 {
+                        state.player.money = Money(0)
+                    } else {
+                        state.player.money = Money(20)
+                    }
+                }
+                EnglishExamFeeling::SmellOfGarlic => {
+                    let garlic = g.rng.random_in_range(1..5);
+                    state.player.garlic = garlic;
+                    state.player.charisma -= g.rng.random(garlic / 2);
+                }
+                EnglishExamFeeling::QuicklyFadedAway => (),
+            }
+        }
+        Subject::Calculus
+        | Subject::GeometryAndTopology
+        | Subject::ComputerScience
+        | Subject::PhysicalEducation => {
+            g.set_screen_and_wait_for_any_key(GameScreen::Exam(ExamScene::ExamPassed(
+                state.clone(),
+                subject,
+            )))
+            .await
+        }
+    }
+
+    ExamResult::Continue
 }
 
 async fn exam_ends(
