@@ -160,6 +160,14 @@ pub enum TennisAction {
 
 action_conversion!(TennisAction, Tennis);
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum HelpFromAndrewAction {
+    YesAmIWorseThanEveryoneElse,
+    IWillDoItMyself,
+}
+
+action_conversion!(HelpFromAndrewAction, HelpFromAndrew);
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     AnyKey,
@@ -209,6 +217,7 @@ pub enum Action {
     Nil(NilAction),
     BugSquasher(BugSquasherAction),
     Tennis(TennisAction),
+    HelpFromAndrew(HelpFromAndrewAction),
     GoToWork,
     LookAtBaobab,
     LookAtBulletinBoard,

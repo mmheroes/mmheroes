@@ -143,6 +143,12 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         }
         Action::Tennis(actions::TennisAction::Sure) => "\"Обязательно!\"",
         Action::Tennis(actions::TennisAction::SorryMaybeLater) => "\"Извини, потом.\"",
+        Action::HelpFromAndrew(
+            actions::HelpFromAndrewAction::YesAmIWorseThanEveryoneElse,
+        ) => "Да, чем я хуже других?",
+        Action::HelpFromAndrew(actions::HelpFromAndrewAction::IWillDoItMyself) => {
+            "Нет, я уж как-нибудь сам..."
+        }
         Action::GoToWork => "Пойти в ТЕРКОМ, поработать",
         Action::LookAtBaobab => "Посмотреть на баобаб",
         Action::LookAtBulletinBoard => "Посмотреть на доску объявлений",

@@ -66,6 +66,9 @@ pub enum CauseOfDeath {
     /// Загонял тебя Миша.
     ExhaustedByMisha,
 
+    /// Эндрю тоже умеет отбиваться от разных нехороших людей.
+    AndrewCanDefendHimself,
+
     /// Не общайся с тормозами!
     DontTalkToDjug,
 

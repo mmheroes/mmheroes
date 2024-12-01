@@ -336,6 +336,38 @@ async fn npc_try_approach(
     ExamResult::Continue
 }
 
+pub(in crate::logic) fn number_of_problems_accepted(
+    rng: &mut random::Rng,
+    state: &GameState,
+    subject: Subject,
+    in_train: bool,
+) -> u8 {
+    let mut mental_capacity = state.player.status_for_subject(subject).knowledge
+        + rng.random(state.player.brain)
+        - subject.mental_load();
+
+    if in_train {
+        mental_capacity = BrainLevel(mental_capacity.0 * 3 / 4);
+    }
+
+    mental_capacity -= rng.random(BrainLevel(max(5 - state.player.health.0, 0)));
+
+    let accepted_problems = if mental_capacity > 0 {
+        ((mental_capacity.0 as f32).sqrt() / subject.single_problem_mental_factor())
+            .round() as u8
+    } else {
+        0
+    };
+
+    min(
+        state
+            .player
+            .status_for_subject(subject)
+            .problems_remaining(),
+        accepted_problems,
+    )
+}
+
 async fn suffer_exam(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
@@ -343,28 +375,8 @@ async fn suffer_exam(
     subject: Subject,
 ) {
     let charisma = state.player.charisma;
-    let mut mental_capacity = state.player.status_for_subject(subject).knowledge
-        + g.rng.random(state.player.brain)
-        - subject.mental_load();
-
-    if in_train {
-        mental_capacity = BrainLevel(mental_capacity.0 * 3 / 4);
-    }
-
-    mental_capacity -= g.rng.random(BrainLevel(max(5 - state.player.health.0, 0)));
-
-    let mut solved_problems = if mental_capacity > BrainLevel(0) {
-        ((mental_capacity.0 as f32).sqrt() / subject.single_problem_mental_factor())
-            .round() as u8
-    } else {
-        0
-    };
-
-    solved_problems = min(
-        subject.required_problems()
-            - state.player.status_for_subject(subject).problems_done(),
-        solved_problems,
-    );
+    let mut solved_problems =
+        number_of_problems_accepted(&mut g.rng, state, subject, in_train);
 
     let knowledge_penalty = g.rng.random(subject.mental_load())
         - g.rng.random(BrainLevel(state.player.stamina.0));

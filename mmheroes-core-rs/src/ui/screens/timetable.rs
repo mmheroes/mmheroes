@@ -9,10 +9,7 @@ fn output_remaining_problems(
     subject_status: &SubjectStatus,
 ) {
     let (line, column) = r.get_cursor_position();
-    let problems_remaining = subject_status
-        .subject()
-        .required_problems()
-        .saturating_sub(subject_status.problems_done());
+    let problems_remaining = subject_status.problems_remaining();
     if let Some(passed_day) = subject_status.passed_exam_day(timetable) {
         write_colored!(WhiteBright, r, "ЗАЧЕТ");
         r.move_cursor_to(line + 1, column);

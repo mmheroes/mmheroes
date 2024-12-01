@@ -62,6 +62,9 @@ pub enum GameScreen {
     /// Взаимодействие с Мишей
     MishaInteraction(npc::misha::MishaInteraction),
 
+    /// Взаимодействие с Эндрю
+    AndrewInteraction(npc::andrew::AndrewInteraction),
+
     /// Взаимодействие с DJuG
     DjugInteraction(GameState),
 
@@ -168,6 +171,7 @@ impl GameScreen {
             | MishaInteraction(misha::MishaInteraction::PromptBugSquasher(state))
             | MishaInteraction(misha::MishaInteraction::PromptTennis(state))
             | MishaInteraction(misha::MishaInteraction::RandomReply(state, _))
+            | AndrewInteraction(andrew::AndrewInteraction::PromptHelpFromAndrew(state))
             | DjugInteraction(state)
             | Terkom(state, _)
             | GoToProfessor(state)
@@ -203,6 +207,12 @@ impl GameScreen {
             | MishaInteraction(misha::MishaInteraction::TooBad)
             | MishaInteraction(misha::MishaInteraction::PlayedBugSquasherWithMisha)
             | MishaInteraction(misha::MishaInteraction::PlayedTennisWithMisha)
+            | AndrewInteraction(andrew::AndrewInteraction::ScorePrediction { .. })
+            | AndrewInteraction(andrew::AndrewInteraction::RandomReply(_))
+            | AndrewInteraction(andrew::AndrewInteraction::AndrewIgnoresYou)
+            | AndrewInteraction(andrew::AndrewInteraction::AndrewSolvedProblems {
+                ..
+            })
             | WannaTryAgain
             | Disclaimer
             | Terminal => None,

@@ -1,7 +1,7 @@
 use super::*;
-use strum::{EnumCount, EnumIter, FromRepr};
+use strum::{EnumCount, FromRepr, VariantArray};
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq, FromRepr, EnumIter, EnumCount)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, FromRepr, EnumCount, VariantArray)]
 pub enum Subject {
     AlgebraAndNumberTheory = 0,
     Calculus,
@@ -15,7 +15,7 @@ use Subject::*;
 
 impl Subject {
     pub fn all_subjects() -> impl DoubleEndedIterator<Item = Subject> {
-        Self::iter()
+        Self::VARIANTS.iter().cloned()
     }
 
     pub(super) fn math_subjects() -> impl DoubleEndedIterator<Item = Subject> {

@@ -71,6 +71,12 @@ impl SubjectStatus {
         self.bits.problems_done()
     }
 
+    pub fn problems_remaining(&self) -> u8 {
+        self.subject()
+            .required_problems()
+            .saturating_sub(self.problems_done())
+    }
+
     pub fn solved_all_problems(&self) -> bool {
         self.problems_done() >= self.subject().required_problems()
     }

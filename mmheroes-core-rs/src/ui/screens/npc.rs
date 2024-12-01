@@ -1,3 +1,4 @@
+use crate::logic::andrew::{AndrewInteraction, AndrewReply};
 use crate::logic::diamond::DiamondInteraction;
 use crate::logic::grisha::GrishaReply;
 use crate::logic::misha::{MishaInteraction, MishaReply};
@@ -737,4 +738,129 @@ pub(crate) fn display_djug_interaction<C: RendererRequestConsumer>(
         "\"У Вас какой-то школьный метод решения задач...\""
     );
     wait_for_any_key(r)
+}
+
+pub(crate) fn display_andrew_interaction<C: RendererRequestConsumer>(
+    r: &mut Renderer<C>,
+    available_actions: &[Action],
+    interaction: &AndrewInteraction,
+) -> WaitingState {
+    use AndrewInteraction::*;
+    use AndrewReply::*;
+    match interaction {
+        PromptHelpFromAndrew(state) => {
+            r.clear_screen();
+            scene_router::display_header_stats(r, state);
+            r.move_cursor_to(7, 0);
+            writeln_colored!(White, r, "Обратиться к Эндрю за помощью?");
+            r.move_cursor_to(9, 0);
+            dialog(r, available_actions)
+        }
+        RandomReply(reply) => {
+            r.move_cursor_to(12, 0);
+            write_colored!(White, r, "Эндрю: ");
+            let reply_text = match reply {
+                TellDiamondTooLittleDescriptions => {
+                    "Скажи Diamond'у, что маловато описалова!"
+                }
+                DiamondThoughtAboutRewritingThisInJavaScript => {
+                    "А еще Diamond думал переписать это на JavaScript."
+                }
+                IKnowTheWinningStrategy => {
+                    "А я знаю выигрышную стратегию! Если только не замочат..."
+                }
+                ThisIsHappeningInMay1998 => "Вообще-то, все это происходит в мае 1998 г.",
+                ISawASignOnATable => {
+                    "Я видел надпись на парте: ЗАКОН ВСЕМИРНОВА ТЯГОТЕНИЯ"
+                }
+                VisitMmheroesWebsite => "Загляни на mmheroes.chat.ru!",
+                DontSuggestRewritingThisInProlog => {
+                    "Только не предлагай Diamond'у переписать все на Прологе!"
+                }
+                WhenWillLinuxPortBeReady => "Ну когда же будет порт под Linux?",
+                VmwareSuxx => "VMWARE - SUXX... Но под ним идут Heroes of Mat & Mech!",
+                SeemsLikeMyStrategyIsNotWorkingOut => {
+                    "Похоже, что моя стратегия обламывается..."
+                }
+                Gamma314ThereIsSomethingInIt => "Ух ты! Гамма 3.14 - в этом что-то есть.",
+                MaybeDiamondIsCrazyAboutEllipsis => {
+                    "Может быть, Diamond'а просто заклинило на многоточиях?"
+                }
+                YouCanEarnMoneyByDoingNothing => {
+                    "Говорят, можно зарабатывать деньги, почти ничего не делая."
+                }
+                SometimesItsHardForMe => {
+                    "Вот, иногда мне приходится тяжко - когда пристают всякие..."
+                }
+                IsItGoodThatManyRepliesAreAboutTheGame => {
+                    "Хорошо ли, что многие реплики персонажей посвящены самой игре?"
+                }
+                HelpMeIWantInternet => "Помогите мне! Хочу в Inet!",
+                WhatNothing => "А что? А ничего.",
+                IfItsBurgundyYouAreDreaming => {
+                    "Если оно цвета бордо - значит, оно тебе снится."
+                }
+                HappyMathMechDay => "Всех с ДНЕМ МАТ-МЕХА!",
+                ThinkOfAPhraseForACharacter => "Придумай свою фразу для персонажа!",
+                MmheroesIs120kOfSources => "120К исходников - вот что такое mmHeroes!",
+                MmheroesIs120kOfSloppySources => {
+                    "120К весьма кривых исходников - вот что такое mmHeroes!"
+                }
+            };
+            writeln_colored!(WhiteBright, r, "\"{reply_text}\"");
+            wait_for_any_key(r)
+        }
+        ScorePrediction {
+            subject,
+            prediction,
+        } => {
+            r.move_cursor_to(12, 0);
+            write_colored!(White, r, "Эндрю: ");
+            write_colored!(
+                WhiteBright,
+                r,
+                "\"Я подозреваю, что {}",
+                professor_name(*subject)
+            );
+            if *prediction > 0 {
+                writeln!(
+                    r,
+                    " зачтет тебе за 1 заход {} {}.\"",
+                    *prediction,
+                    problems_inflected(*prediction)
+                );
+            } else {
+                writeln!(r, " ничего тебе не засчитает.\"");
+            }
+            wait_for_any_key(r)
+        }
+        AndrewSolvedProblems {
+            solved_by_andrew,
+            no_problems_remaining,
+        } => {
+            r.move_cursor_to(12, 0);
+            writeln_colored!(White, r, "Эндрю вглядывается в твои задачки,");
+            writeln!(r, "и начинает думать очень громко...");
+            writeln!(
+                r,
+                "Пока Эндрю так напрягается, ты не можешь ни на чем сосредоточиться!"
+            );
+            if *solved_by_andrew > 0 {
+                write!(r, "Эндрю решил тебе ");
+                write_colored!(WhiteBright, r, "{}", *solved_by_andrew);
+                writeln_colored!(White, r, " {}!", problems_inflected(*solved_by_andrew));
+                if *no_problems_remaining {
+                    writeln!(r, "Надо будет подойти с зачеткой!");
+                }
+            } else {
+                writeln!(r, "У Эндрю ничего не вышло...")
+            }
+            wait_for_any_key(r)
+        }
+        AndrewIgnoresYou => {
+            r.move_cursor_to(12, 0);
+            writeln_colored!(RedBright, r, "Эндрю тебя игнорирует!");
+            wait_for_any_key(r)
+        }
+    }
 }

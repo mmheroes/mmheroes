@@ -38,10 +38,10 @@ fn can_solve_algebra_problems(rng: &mut crate::random::Rng, player: &mut Player)
     if player.charisma <= rng.random(CharismaLevel(10)) {
         return false;
     }
-    let problems_done = player
+    player
         .status_for_subject(AlgebraAndNumberTheory)
-        .problems_done();
-    problems_done + 2 <= AlgebraAndNumberTheory.required_problems()
+        .problems_remaining()
+        >= 2
 }
 
 async fn solve_algebra_problems(
