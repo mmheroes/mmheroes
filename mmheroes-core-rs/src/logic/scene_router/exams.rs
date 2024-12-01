@@ -182,7 +182,7 @@ async fn exam_intro(
                     .exam_mut(Subject::PhysicalEducation)
                     .unwrap()
                     .one_hour_more();
-                misc::hour_pass(g, state).await;
+                misc::hour_pass(g, state, Some(subject)).await;
             } else {
                 show_intro(g, ExamIntro::PhysicalEducation(None)).await;
             }
@@ -440,7 +440,7 @@ async fn suffer_exam(
     if !in_train || state.player.health > 0 {
         // Баг в оригинальной реализации: если умер в поезде, то экран смерти
         // не показывается и час не проходит.
-        misc::hour_pass(g, state).await;
+        misc::hour_pass(g, state, Some(subject)).await;
     }
 }
 
@@ -714,14 +714,14 @@ async fn exam_in_train(
                     HealthLevel(10),
                     CauseOfDeath::CorpseFoundInTheTrain,
                 );
-                misc::hour_pass(g, state).await;
+                misc::hour_pass(g, state, None).await;
             } else {
                 // Баг в оригинальной реализации: на экран должно быть выведено
                 // "Уф, доехал...", но поскольку нет вызова wait_for_key,
                 // эта надпись не успевает появиться на экране.
             }
             state.set_location(Location::PUNK);
-            misc::hour_pass(g, state).await;
+            misc::hour_pass(g, state, None).await;
         }
     };
 }

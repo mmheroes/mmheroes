@@ -58,6 +58,7 @@ fn display_game_end_dead(
         KilledByRai => writeln!(r, "RAI замочил."),
         ExhaustedByMisha => writeln!(r, "Загонял тебя Миша."),
         DontTalkToDjug => writeln!(r, "Не общайся с тормозами!"),
+        DjugIsDeadly => writeln!(r, "DJuG - это смертельно!"),
         AndrewCanDefendHimself => {
             writeln!(r, "Эндрю тоже умеет отбиваться от разных нехороших людей.")
         }

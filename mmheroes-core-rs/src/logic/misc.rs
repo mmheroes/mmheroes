@@ -2,7 +2,7 @@ use crate::logic::actions::{ActionVec, TryAgainAction};
 use crate::logic::entry_point::GameEnd;
 use crate::logic::{
     scene_router, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
-    HealthLevel, InternalGameState, Location,
+    HealthLevel, InternalGameState, Location, Subject,
 };
 
 pub(in crate::logic) fn decrease_health(
@@ -31,12 +31,18 @@ pub(in crate::logic) fn decrease_brain(
 pub(in crate::logic) async fn hour_pass(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
+    exam_in_progress: Option<Subject>,
 ) {
     state.set_terkom_has_places(true);
     g.run_classmate_routines(state);
     state.next_hour();
 
-    // TODO: Если сдаём экзамен по геометрии в ПОМИ, DJuG уменьшает здоровье.
+    if state.location() == Location::PDMI
+        && matches!(exam_in_progress, Some(Subject::GeometryAndTopology))
+    {
+        decrease_health(state, HealthLevel(6), CauseOfDeath::DjugIsDeadly);
+        state.player.set_knows_djug(true);
+    }
 
     // TODO: Написать на это тест
     if state.player.charisma <= CharismaLevel(0) {

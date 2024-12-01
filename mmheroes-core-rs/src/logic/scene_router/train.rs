@@ -46,9 +46,9 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
     state.set_location(Location::PDMI);
     let caught_by_inspectors =
         go_by_train(g, state, health_penalty, &GameScreen::TrainToPDMI).await;
-    misc::hour_pass(g, state).await;
+    misc::hour_pass(g, state, None).await;
     if caught_by_inspectors {
-        misc::hour_pass(g, state).await;
+        misc::hour_pass(g, state, None).await;
     }
 }
 

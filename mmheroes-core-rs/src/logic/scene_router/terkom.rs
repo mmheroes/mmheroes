@@ -74,7 +74,7 @@ pub(super) async fn work(g: &mut InternalGameState<'_>, state: &mut GameState) {
                     HealthLevel(income.0 * 2),
                     CauseOfDeath::Burnout,
                 );
-                misc::hour_pass(g, state).await;
+                misc::hour_pass(g, state, None).await;
             }
             Action::PlayMMHEROES => {
                 // Сперва нужно реализовать взаимодействие с Diamond
@@ -91,7 +91,7 @@ pub(super) async fn work(g: &mut InternalGameState<'_>, state: &mut GameState) {
                 ))
                 .await;
                 state.player.money += income;
-                misc::hour_pass(g, state).await;
+                misc::hour_pass(g, state, None).await;
             }
             Action::ExitTerkom => {
                 g.set_screen_and_wait_for_any_key(GameScreen::Terkom(

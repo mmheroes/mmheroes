@@ -58,7 +58,7 @@ async fn solve_algebra_problems(
         .player
         .status_for_subject_mut(AlgebraAndNumberTheory)
         .more_problems_solved(2);
-    misc::hour_pass(g, state).await
+    misc::hour_pass(g, state, None).await
 }
 
 pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {

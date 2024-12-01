@@ -96,7 +96,7 @@ pub(super) async fn interact(
 ) {
     match exam_in_progress {
         Some(subject) if subject != Subject::ComputerScience => {
-            maybe_play_bug_squasher_with_misha(g, state).await;
+            maybe_play_bug_squasher_with_misha(g, state, exam_in_progress).await;
             return;
         }
         _ => (),
@@ -106,7 +106,7 @@ pub(super) async fn interact(
         && state.player().is_employed_at_terkom()
         && state.player().charisma() > g.rng.random(8)
     {
-        maybe_play_tennis_with_misha(g, state).await;
+        maybe_play_tennis_with_misha(g, state, exam_in_progress).await;
         return;
     }
 
@@ -121,6 +121,7 @@ pub(super) async fn interact(
 async fn maybe_play_bug_squasher_with_misha(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
+    exam_in_progress: Option<Subject>,
 ) {
     match g
         .set_screen_and_wait_for_action(GameScreen::MishaInteraction(PromptBugSquasher(
@@ -134,7 +135,7 @@ async fn maybe_play_bug_squasher_with_misha(
             ))
             .await;
             state.player.charisma += 1;
-            misc::hour_pass(g, state).await;
+            misc::hour_pass(g, state, exam_in_progress).await;
         }
         actions::BugSquasherAction::NoIWontPlay => {
             g.set_screen_and_wait_for_any_key(GameScreen::MishaInteraction(TooBad))
@@ -147,6 +148,7 @@ async fn maybe_play_bug_squasher_with_misha(
 async fn maybe_play_tennis_with_misha(
     g: &mut InternalGameState<'_>,
     state: &mut GameState,
+    exam_in_progress: Option<Subject>,
 ) {
     match g
         .set_screen_and_wait_for_action(GameScreen::MishaInteraction(PromptTennis(
@@ -167,7 +169,7 @@ async fn maybe_play_tennis_with_misha(
                     CauseOfDeath::ExhaustedByMisha,
                 )
             }
-            misc::hour_pass(g, state).await;
+            misc::hour_pass(g, state, exam_in_progress).await;
         }
         actions::TennisAction::SorryMaybeLater => {
             g.set_screen_and_wait_for_any_key(GameScreen::MishaInteraction(NoWorries))

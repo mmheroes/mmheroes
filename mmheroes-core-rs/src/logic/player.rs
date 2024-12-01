@@ -172,6 +172,14 @@ impl Player {
         self.bits.set_has_roundtrip_train_ticket(true);
     }
 
+    pub fn knows_djug(&self) -> bool {
+        self.bits.knows_djug()
+    }
+
+    pub(in crate::logic) fn set_knows_djug(&mut self, value: bool) {
+        self.bits.set_knows_djug(value);
+    }
+
     #[allow(dead_code)]
     pub(in crate::logic) fn last_exam(&self) -> Option<Subject> {
         self.bits.last_exam()

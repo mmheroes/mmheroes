@@ -136,12 +136,12 @@ async fn study_subject(
     {
         misc::decrease_health(state, HealthLevel(10), CauseOfDeath::StudiedTooWell);
     }
-    misc::hour_pass(g, state).await
+    misc::hour_pass(g, state, None).await
 }
 
 async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) {
     state.player.health += g.rng.random_in_range(7..15);
-    misc::hour_pass(g, state).await
+    misc::hour_pass(g, state, None).await
 }
 
 pub(in crate::logic) async fn sleep(

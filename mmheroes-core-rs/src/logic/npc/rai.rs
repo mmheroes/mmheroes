@@ -56,7 +56,7 @@ pub(super) async fn interact(
                         ))
                         .await;
                     }
-                    misc::hour_pass(g, state).await;
+                    misc::hour_pass(g, state, exam_in_progress).await;
                 }
                 RaiAction::NoSorry => {
                     g.set_screen_and_wait_for_any_key(GameScreen::RaiInteraction(TakeIt))

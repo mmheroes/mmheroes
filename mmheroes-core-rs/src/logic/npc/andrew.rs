@@ -134,7 +134,7 @@ pub(super) async fn interact(
                 ))
                 .await;
                 state.player.stamina -= g.rng.random(2);
-                misc::hour_pass(g, state).await;
+                misc::hour_pass(g, state, exam_in_progress).await;
             } else {
                 g.set_screen_and_wait_for_any_key(GameScreen::AndrewInteraction(
                     AndrewIgnoresYou,

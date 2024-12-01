@@ -133,7 +133,7 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
             state.player.charisma += g.rng.random(2);
         }
         if hour_pass {
-            misc::hour_pass(g, state).await;
+            misc::hour_pass(g, state, None).await;
         }
     }
 }

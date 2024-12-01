@@ -37,5 +37,5 @@ pub(super) async fn go(
     } else {
         illegal_action!(selected_action);
     }
-    misc::hour_pass(g, state).await;
+    misc::hour_pass(g, state, None).await;
 }

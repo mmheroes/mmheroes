@@ -82,5 +82,5 @@ async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) {
         Action::NoRestIsNoGood => return,
         action => illegal_action!(action),
     }
-    misc::hour_pass(g, state).await
+    misc::hour_pass(g, state, None).await
 }

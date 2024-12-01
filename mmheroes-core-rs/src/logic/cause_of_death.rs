@@ -78,6 +78,9 @@ pub enum CauseOfDeath {
     /// Не общайся с тормозами!
     DontTalkToDjug,
 
+    /// DJuG - это смертельно!
+    DjugIsDeadly,
+
     /// Бурно прогрессирующая паранойя
     Paranoia,
 

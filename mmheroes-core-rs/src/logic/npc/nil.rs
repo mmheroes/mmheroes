@@ -59,13 +59,13 @@ pub(super) async fn interact(
                     subject.health_penalty(),
                     CauseOfDeath::Altruism,
                 );
-                misc::hour_pass(g, state).await;
+                misc::hour_pass(g, state, exam_in_progress).await;
             } else {
                 g.set_screen_and_wait_for_any_key(GameScreen::NilInteraction(
                     DidntWorkOut,
                 ))
                 .await;
-                misc::hour_pass(g, state).await;
+                misc::hour_pass(g, state, exam_in_progress).await;
                 misc::decrease_health(
                     state,
                     subject.health_penalty(),

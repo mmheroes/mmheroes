@@ -60,5 +60,5 @@ async fn surf_internet(g: &mut InternalGameState<'_>, state: &mut GameState) {
     } else if state.player.brain < BrainLevel(5) && g.rng.roll_dice(3) {
         state.player.brain += 1;
     }
-    misc::hour_pass(g, state).await
+    misc::hour_pass(g, state, None).await
 }
