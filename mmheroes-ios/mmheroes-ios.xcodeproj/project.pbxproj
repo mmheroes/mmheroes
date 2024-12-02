@@ -209,7 +209,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# The $PATH used by Xcode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\n# Needed for Rust compilation and linking, see https://users.rust-lang.org/t/ld-library-not-found-for-lsystem-on-a-mac-monterrey/69741\nexport PATH=\"$SDKROOT/usr/lib:$PATH\"\nexport LIBRARY_PATH=\"$LIBRARY_PATH:$SDKROOT/usr/lib\"\n\nfor arch in $ARCHS\ndo\n    if [ \"$arch\" == \"arm64\" ]; then\n        arch=\"aarch64\"\n    fi\n\n    target=\"$arch-apple-ios\"\n    if [ \"$target\" == \"aarch64-apple-ios\" ] && [ \"$__IS_NOT_SIMULATOR\" == \"NO\" ]; then\n      target=\"$target-sim\"\n    fi;\n\n    config=\"\"\n    if [ \"$CONFIGURATION\" == \"Release\" ]; then\n        config=\"--release\"\n    fi\n    cargo_command=\"cargo build --target $target $config --manifest-path $SRCROOT/../mmheroes-core-rs/iOS/Cargo.toml\"\n    echo $cargo_command >&2\n    `$cargo_command`\ndone\n";
+			shellScript = "# The $PATH used by Xcode likely won't contain Cargo, fix that.\n# This assumes a default `rustup` setup.\nexport PATH=\"$HOME/.cargo/bin:$PATH\"\n\n# Needed for Rust compilation and linking, see https://users.rust-lang.org/t/ld-library-not-found-for-lsystem-on-a-mac-monterrey/69741\nexport PATH=\"$SDKROOT/usr/lib:$PATH\"\nexport LIBRARY_PATH=\"$LIBRARY_PATH:$SDKROOT/usr/lib\"\n\nfor arch in $ARCHS\ndo\n    if [ \"$arch\" == \"arm64\" ]; then\n        arch=\"aarch64\"\n    fi\n\n    target=\"$arch-apple-ios\"\n    if [ \"$target\" == \"aarch64-apple-ios\" ] && [ \"$__IS_NOT_SIMULATOR\" == \"NO\" ]; then\n      target=\"$target-sim\"\n    fi;\n\n    config=\"\"\n    if [ \"$CONFIGURATION\" == \"Release\" ]; then\n        config=\"--release\"\n    fi\n\n    cargo_command=\"cargo rustc \\\n        --package mmheroes-core \\\n        --crate-type staticlib \\\n        --target $target \\\n        $config \\\n        --manifest-path $SRCROOT/../Cargo.toml \\\n        --target-dir $BUILT_PRODUCTS_DIR/mmheroes-core\"\n    echo $cargo_command >&2\n    `$cargo_command`\ndone\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -382,10 +382,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/aarch64-apple-ios/debug";
-				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=x86_64]" = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/x86_64-apple-ios/debug";
-				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/aarch64-apple-ios-sim/debug";
-				OTHER_LDFLAGS = "-lmmheroes_core_ios";
+				LIBRARY_SEARCH_PATHS = "$(BUILT_PRODUCTS_DIR)/mmheroes-core/aarch64-apple-ios/debug";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(BUILT_PRODUCTS_DIR)/mmheroes-core/aarch64-apple-ios-sim/debug";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=x86_64]" = "$(BUILT_PRODUCTS_DIR)/mmheroes-core/x86_64-apple-ios/debug";
+				OTHER_LDFLAGS = "-lmmheroes_core";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(ORGANIZATION_IDENTIFIER).mmheroes.ios";
 				PRODUCT_NAME = MMHEROES.EXE;
 				SUPPORTS_MACCATALYST = NO;
@@ -409,10 +409,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				LIBRARY_SEARCH_PATHS = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/aarch64-apple-ios/release";
-				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=x86_64]" = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/x86_64-apple-ios/release";
-				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(SRCROOT)/../mmheroes-core-rs/iOS/target/aarch64-apple-ios-sim/release";
-				OTHER_LDFLAGS = "-lmmheroes_core_ios";
+				LIBRARY_SEARCH_PATHS = "$(BUILT_PRODUCTS_DIR)/mmheroes-core/aarch64-apple-ios/release";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=arm64]" = "$(BUILT_PRODUCTS_DIR)/mmheroes-core/aarch64-apple-ios-sim/release";
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*][arch=x86_64]" = "$(BUILT_PRODUCTS_DIR)/mmheroes-core/x86_64-apple-ios/release";
+				OTHER_LDFLAGS = "-lmmheroes_core";
 				PRODUCT_BUNDLE_IDENTIFIER = "$(ORGANIZATION_IDENTIFIER).mmheroes.ios";
 				PRODUCT_NAME = MMHEROES.EXE;
 				SUPPORTS_MACCATALYST = NO;
