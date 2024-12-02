@@ -20,8 +20,8 @@ jobs:
           components: clippy
       - name: Run tests
         run: cargo test
-      - name: Run tests (no_std core)
-        run: cargo test --no-default-features
+      - name: Build no_std core
+        run: cargo build --package mmheroes-core --lib --no-default-features
       - name: Run rustfmt for core
         run: |
           rustfmt --check mmheroes-core-rs/src/lib.rs

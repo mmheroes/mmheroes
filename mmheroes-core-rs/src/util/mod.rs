@@ -46,5 +46,5 @@ pub(crate) fn catch_unwind_mut<
         }
     }
     #[cfg(not(feature = "std"))]
-    f()
+    f(arg)
 }

@@ -1,5 +1,4 @@
 use super::*;
-use std::cmp::Ordering;
 
 macro_rules! define_characteristic {
     ($name:ident) => {
@@ -65,7 +64,7 @@ macro_rules! define_characteristic {
         }
 
         impl core::cmp::PartialOrd<i16> for $name {
-            fn partial_cmp(&self, other: &i16) -> Option<Ordering> {
+            fn partial_cmp(&self, other: &i16) -> Option<core::cmp::Ordering> {
                 i16::partial_cmp(&self.0, other)
             }
         }
