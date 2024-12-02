@@ -12,11 +12,12 @@ pub(in crate::ui) fn display_i_am_done(
     dialog(r, available_actions)
 }
 
-fn display_game_end_dead(
+pub(in crate::ui) fn display_game_end_dead(
     r: &mut Renderer<impl RendererRequestConsumer>,
     cause: CauseOfDeath,
 ) -> WaitingState {
     use CauseOfDeath::*;
+    r.clear_screen();
     r.set_color(Color::RedBright, Color::Black);
     writeln!(r, "Легче лбом колоть орехи,");
     writeln!(r, "чем учиться на МАТ-МЕХе.");
@@ -66,7 +67,6 @@ fn display_game_end_dead(
         TimeOut => writeln!(r, "Время вышло."),
         Suicide => writeln!(r, "Вышел сам."),
         SoftwareBug => {
-            debug_assert!(false);
             writeln!(r, "Раздавлен безжалостной ошибкой в программе.")
         }
     }
@@ -76,6 +76,7 @@ fn display_game_end_dead(
 fn display_game_end_alive(
     r: &mut Renderer<impl RendererRequestConsumer>,
 ) -> WaitingState {
+    r.clear_screen();
     // TODO: Display proper text based on the final state
     // (cause of expelling, or congratulation)
     writeln_colored!(MagentaBright, r, "Уффффф! Во всяком случае, ты еще живой.");
@@ -97,7 +98,6 @@ pub(in crate::ui) fn display_game_end(
     r: &mut Renderer<impl RendererRequestConsumer>,
     state: &GameState,
 ) -> WaitingState {
-    r.clear_screen();
     if let Some(cause_of_death) = state.player().cause_of_death() {
         display_game_end_dead(r, cause_of_death)
     } else {
@@ -164,5 +164,21 @@ pub(in crate::ui) fn display_disclaimer(
         "Автор не несет ответственность за психическое состояние игрока."
     );
 
+    wait_for_any_key(r)
+}
+
+pub(in crate::ui) fn display_software_bug<StepLog: Display>(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    cause: &str,
+    seed: u64,
+    steps: StepLog,
+) -> WaitingState {
+    r.clear_screen();
+    r.set_color(Color::WhiteBright, Color::Gray);
+    writeln!(r, "В программе буга!");
+    writeln!(r, "{cause}");
+    writeln!(r, "Зерно: {seed}");
+    writeln!(r, "Шаги: {steps}");
+    writeln!(r, "Срочно обратитесь к разработчику ;)");
     wait_for_any_key(r)
 }

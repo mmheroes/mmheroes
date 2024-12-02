@@ -9,11 +9,10 @@ use mmheroes_core::{
     },
 };
 use pancurses::*;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::pin::pin;
+use std::process::ExitCode;
 use std::str::FromStr;
-use std::sync::Mutex;
 
 fn env_seed() -> Option<u64> {
     if cfg!(debug_assertions) {
@@ -104,9 +103,9 @@ mod high_scores {
 use screen::ScreenRAII;
 
 type Log = String;
-type Logger = Mutex<RefCell<recording::InputRecorder<'static, Log>>>;
+type Logger<'a> = recording::InputRecorder<'a, Log>;
 
-fn getch(window: &ScreenRAII, logger: &Logger) -> ui::Input {
+fn getch(window: &ScreenRAII, logger: &mut Logger) -> ui::Input {
     loop {
         let ui_input = match window.getch() {
             None | Some(pancurses::Input::KeyResize) => continue,
@@ -115,20 +114,8 @@ fn getch(window: &ScreenRAII, logger: &Logger) -> ui::Input {
             Some(pancurses::Input::Character('\n')) => ui::Input::Enter,
             Some(_) => ui::Input::Other,
         };
-        {
-            let logger = logger.lock().unwrap();
-            logger.borrow_mut().record_input(ui_input).unwrap();
-        }
+        logger.record_input(ui_input).unwrap();
         break ui_input;
-    }
-}
-
-fn pause() {
-    if cfg!(windows) {
-        let _ = std::process::Command::new("cmd.exe")
-            .arg("/c")
-            .arg("pause")
-            .status();
     }
 }
 
@@ -169,7 +156,7 @@ impl RendererRequestConsumer for RendererRequestEvaluator<'_, '_> {
     }
 }
 
-fn main() {
+fn main() -> ExitCode {
     let window = ScreenRAII::new();
     start_color();
     set_blink(true);
@@ -196,6 +183,7 @@ fn main() {
         (Color::Cyan, Color::Black),
         (Color::CyanBright, Color::Black),
         (Color::WhiteBright, Color::Black),
+        (Color::WhiteBright, Color::Gray),
         (Color::Black, Color::White),
         (Color::Black, Color::Yellow),
         (Color::Black, Color::Gray),
@@ -218,14 +206,8 @@ fn main() {
 
     // We save each pressed key to this log, so that if a panic occurs,
     // we could print it and the player could send a useful bug report.
-    let logger = {
-        let log = &mut *Box::leak(Box::new(Log::new()));
-        let logger = Box::new(Mutex::new(RefCell::new(recording::InputRecorder::new(log))));
-
-        // Leak the log and the logger object so that we could obtain a reference with
-        // static lifetime. This is needed for accessing it in the panic handler.
-        &*Box::leak(logger)
-    };
+    let mut log = Log::new();
+    let mut input_recorder = recording::InputRecorder::new(&mut log);
 
     let mode = match std::env::args().nth(1).as_deref() {
         Some("-3dec-happy-birthday-Diamond") => GameMode::God,
@@ -259,38 +241,33 @@ fn main() {
         renderer_request_evaluator,
     );
 
-    let default_hook = std::panic::take_hook();
-    std::panic::set_hook(Box::new(move |panic_info| {
-        endwin(); // Switch back to normal terminal I/O.
-        default_hook(panic_info); // Print panic message and optionally a backtrace.
-        eprintln!("Зерно игры: {}", seed);
-        let logger = logger.lock().unwrap();
-        logger.borrow_mut().flush().unwrap();
-        eprintln!(
-            "Шаги для воспроизведения бага: {:?}",
-            logger.borrow_mut().output()
-        );
-        eprintln!("Пожалуйста, отправь зерно игры и шаги для воспроизведения бага разработчику.");
-        pause();
-    }));
+    // Мы обрабатываем панику прямо в игре, поэтому убираем дефолтный хук, чтобы
+    // не загрязнять вывод.
+    std::panic::set_hook(Box::new(|_| {}));
 
     let mut input = if let Some(steps) = steps {
         let mut steps_parser = InputRecordingParser::new(&steps);
         match steps_parser.parse_all(|input| {
             napms(300);
-            game_ui.continue_game(input)
+            game_ui.continue_game_with_panic_handling(input, &mut input_recorder)
         }) {
             Ok(()) => {}
             Err(error) => panic!("Parsing steps failed: {:?}", error),
         }
-        getch(&window, logger)
+        getch(&window, &mut input_recorder)
     } else {
         ui::Input::Enter
     };
 
-    while game_ui.continue_game(input) {
-        input = getch(&window, logger);
+    while game_ui.continue_game_with_panic_handling(input, &mut input_recorder) {
+        input = getch(&window, &mut input_recorder);
+    }
+
+    if game_ui.has_bug() {
+        return ExitCode::FAILURE;
     }
 
     high_scores::save(&game_ui.high_scores);
+
+    ExitCode::SUCCESS
 }

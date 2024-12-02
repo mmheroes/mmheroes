@@ -20,3 +20,31 @@ pub(crate) fn assess<'a, 'b: 'a, T: PartialOrd, U>(
         .find(|&(bound, _)| bound > value)
         .map_or(default, |(_, assessment)| assessment)
 }
+
+pub(crate) fn catch_unwind_mut<
+    T,
+    F: FnOnce(&mut T) -> R,
+    Handler: FnOnce(&mut T, &str) -> R,
+    R,
+>(
+    arg: &mut T,
+    f: F,
+    handler: Handler,
+) -> R {
+    #[cfg(feature = "std")]
+    match std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| f(arg))) {
+        Ok(result) => result,
+        Err(cause) => {
+            let cause_str = if let Some(s) = cause.downcast_ref::<String>() {
+                &s[..]
+            } else if let Some(s) = cause.downcast_ref::<&str>() {
+                *s
+            } else {
+                std::panic::resume_unwind(cause)
+            };
+            handler(arg, cause_str)
+        }
+    }
+    #[cfg(not(feature = "std"))]
+    f()
+}

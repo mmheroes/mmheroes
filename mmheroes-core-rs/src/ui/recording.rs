@@ -141,7 +141,6 @@ impl<'input> InputRecordingParser<'input> {
 #[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
-
     use assert_matches::*;
 
     use super::*;

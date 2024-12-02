@@ -324,6 +324,7 @@ pub unsafe extern "C" fn mmheroes_replay(
         Err(_) => return false,
     };
     let mut parser = recording::InputRecordingParser::new(s);
+    // TODO: Use continue_game_with_panic_handling
     parser
         .parse_all(|input| game.game_ui.assume_init_mut().continue_game(input))
         .is_ok()
@@ -335,6 +336,8 @@ pub unsafe extern "C" fn mmheroes_replay(
 #[no_mangle]
 pub unsafe extern "C" fn mmheroes_continue(game: *mut c_void, input: Input) -> bool {
     let game = game_or_return!(mut game, return false);
+
+    // TODO: Use continue_game_with_panic_handling
     game.game_ui.assume_init_mut().continue_game(input)
 }
 

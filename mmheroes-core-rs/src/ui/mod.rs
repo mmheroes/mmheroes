@@ -34,6 +34,7 @@ use high_scores::HighScore;
 
 use crate::logic::*;
 
+use crate::ui::recording::InputRecorder;
 use core::fmt::Display;
 
 #[derive(Default, Copy, Clone, Eq, PartialEq, Hash, Debug)]
@@ -106,12 +107,20 @@ enum WaitingState {
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub struct Milliseconds(pub i32);
 
+enum SoftwareState {
+    Healthy,
+    BugShown,
+    DeathScreenShown,
+}
+
 pub struct GameUI<'game, G, C: RendererRequestConsumer> {
+    seed: u64,
     renderer: Renderer<C>,
     state_holder: &'game StateHolder,
     game: core::pin::Pin<&'game mut G>,
     rng: crate::random::Rng,
     pub high_scores: [HighScore; high_scores::SCORE_COUNT],
+    software_state: SoftwareState,
 }
 
 impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
@@ -124,11 +133,52 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
     ) -> Self {
         let default_high_scores = high_scores::default_high_scores();
         GameUI {
+            seed,
             renderer: Renderer::new(renderer_request_consumer),
             state_holder,
             game,
             rng: crate::random::Rng::new(seed),
             high_scores: high_scores.unwrap_or(default_high_scores),
+            software_state: SoftwareState::Healthy,
+        }
+    }
+
+    pub fn has_bug(&self) -> bool {
+        !matches!(self.software_state, SoftwareState::Healthy)
+    }
+
+    pub fn continue_game_with_panic_handling<'a, StepLog: core::fmt::Write + Display>(
+        &mut self,
+        input: Input,
+        input_recorder: &'a mut InputRecorder<StepLog>,
+    ) -> bool {
+        match self.software_state {
+            SoftwareState::Healthy => crate::util::catch_unwind_mut(
+                self,
+                |game_ui| game_ui.continue_game(input),
+                |game_ui, cause| {
+                    input_recorder.flush().unwrap();
+                    game_ui.renderer.waiting_state =
+                        Some(screens::game_end::display_software_bug(
+                            &mut game_ui.renderer,
+                            cause,
+                            game_ui.seed,
+                            input_recorder.output(),
+                        ));
+                    game_ui.software_state = SoftwareState::BugShown;
+                    true
+                },
+            ),
+            SoftwareState::BugShown => {
+                self.renderer.waiting_state =
+                    Some(screens::game_end::display_game_end_dead(
+                        &mut self.renderer,
+                        CauseOfDeath::SoftwareBug,
+                    ));
+                self.software_state = SoftwareState::DeathScreenShown;
+                true
+            }
+            SoftwareState::DeathScreenShown => false,
         }
     }
 
