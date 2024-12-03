@@ -1,7 +1,7 @@
 import UIKit
 
 private let gameStateRestorationKey =
-    "com.jaskiewiczs.mmheroes.gameStateRestorationKey"
+    "com.broadwaylamb.mmheroes.ios.gameStateRestorationKey"
 
 final class MainSceneViewController: UIViewController {
 
@@ -24,8 +24,8 @@ final class MainSceneViewController: UIViewController {
         }
     }()
 
-    private let selectionFeedbackGenerator = makeSelectionFeedbackGenerator()
-    private let confirmationFeedbackGenerator = makeImpactFeedbackGenerator(style: .medium)
+    private let selectionFeedbackGenerator = UISelectionFeedbackGenerator()
+    private let confirmationFeedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
 
     override init(nibName nibNameOrNil: String?, bundle nibBundleOrNil: Bundle?) {
         super.init(nibName: nibNameOrNil, bundle: nibBundleOrNil)
@@ -125,23 +125,16 @@ final class MainSceneViewController: UIViewController {
         var maxX = minX + view.bounds.width
         var maxY = minY + view.bounds.height
 
-        if #available(iOS 11.0, *) {
-            let maxHorizontalInset = max(view.safeAreaInsets.left,
-                                         view.safeAreaInsets.right,
-                                         minimumContentMargin)
-            let maxVerticalInset = max(view.safeAreaInsets.top,
-                                       view.safeAreaInsets.bottom,
-                                       minimumContentMargin)
-            minX += maxHorizontalInset
-            maxX -= maxHorizontalInset
-            minY += maxVerticalInset
-            maxY -= maxVerticalInset
-        } else {
-            minX += minimumContentMargin
-            maxX -= minimumContentMargin
-            minY += minimumContentMargin
-            maxY -= minimumContentMargin
-        }
+        let maxHorizontalInset = max(view.safeAreaInsets.left,
+                                     view.safeAreaInsets.right,
+                                     minimumContentMargin)
+        let maxVerticalInset = max(view.safeAreaInsets.top,
+                                   view.safeAreaInsets.bottom,
+                                   minimumContentMargin)
+        minX += maxHorizontalInset
+        maxX -= maxHorizontalInset
+        minY += maxVerticalInset
+        maxY -= maxVerticalInset
 
         var width = maxX - minX
         var height = maxY - minY

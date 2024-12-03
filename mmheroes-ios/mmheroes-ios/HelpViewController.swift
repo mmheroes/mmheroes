@@ -69,11 +69,7 @@ extension HelpViewController: WKNavigationDelegate {
         if navigationAction.navigationType == .linkActivated,
            let url = navigationAction.request.url,
            UIApplication.shared.canOpenURL(url)  {
-            if #available(iOS 10.0, *) {
-                UIApplication.shared.open(url)
-            } else {
-                UIApplication.shared.openURL(url)
-            }
+            UIApplication.shared.open(url)
             decisionHandler(.cancel)
         } else {
             decisionHandler(.allow)

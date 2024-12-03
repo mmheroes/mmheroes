@@ -97,7 +97,6 @@ final class GameView: UIView {
         ).applying(transform)
 
         let caretRect = CGRect(origin: caretPosition, size: caretSize)
-        caretRect.applying(CGAffineTransform(scaleX: factor, y: factor))
         caretLayer.path = CGPath(rect: caretRect, transform: nil)
 
         if caretLayer.superlayer == nil {
