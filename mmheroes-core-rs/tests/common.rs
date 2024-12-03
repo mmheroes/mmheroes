@@ -89,7 +89,8 @@ impl RendererRequestConsumer for TestRendererRequestConsumer {
     }
 }
 
-pub type TestGameUI<'game, G> = GameUI<'game, G, TestRendererRequestConsumer>;
+pub type TestGameUI<'game, G> =
+    GameUI<'game, 'static, G, TestRendererRequestConsumer, recording::NoInputRecording>;
 
 /// Возвращает `true` как только [GameUI::continue_game] возвращает `false`,
 /// то есть, когда игра закончилась. Пока игра не закончилась, возвращает `false`.
@@ -150,6 +151,7 @@ macro_rules! initialize_game {
             $seed,
             $high_scores,
             $crate::common::TestRendererRequestConsumer::new(),
+            None,
         );
         let $game_ui = &mut game_ui;
         $game_ui.continue_game(mmheroes_core::ui::Input::Enter)

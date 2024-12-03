@@ -1,13 +1,13 @@
 use crate::ui::Input;
 use core::fmt::{Result as FmtResult, Write};
 
-pub struct InputRecorder<'output, Output: Write> {
-    output: &'output mut Output,
+pub struct InputRecorder<Output> {
+    output: Output,
     last_input: Option<(Input, usize)>,
 }
 
-impl<'output, Output: Write> InputRecorder<'output, Output> {
-    pub fn new(output: &'output mut Output) -> Self {
+impl<Output: Write> InputRecorder<Output> {
+    pub fn new(output: Output) -> Self {
         InputRecorder {
             output,
             last_input: None,
@@ -47,7 +47,21 @@ impl<'output, Output: Write> InputRecorder<'output, Output> {
     }
 
     pub fn output(&self) -> &Output {
-        self.output
+        &self.output
+    }
+}
+
+pub enum NoInputRecording {}
+
+impl Write for NoInputRecording {
+    fn write_str(&mut self, _s: &str) -> core::fmt::Result {
+        match *self {}
+    }
+}
+
+impl core::fmt::Display for NoInputRecording {
+    fn fmt(&self, _f: &mut core::fmt::Formatter<'_>) -> FmtResult {
+        match *self {}
     }
 }
 

@@ -1,7 +1,6 @@
 #![allow(clippy::missing_safety_doc)]
 
 use crate::ui::high_scores;
-use crate::ui::recording::InputRecorder;
 use crate::ui::Milliseconds;
 use crate::ui::*;
 
@@ -41,7 +40,8 @@ impl RendererRequestConsumer for FfiRendererRequestConsumer {
 struct FfiGame<G: 'static> {
     state_holder: StateHolder,
     game: MaybeUninit<G>,
-    game_ui: MaybeUninit<GameUI<'static, G, FfiRendererRequestConsumer>>,
+    game_ui:
+        MaybeUninit<GameUI<'static, G, FfiRendererRequestConsumer, InputRecorderSink>>,
 }
 
 impl<G: Game> FfiGame<G> {
@@ -153,6 +153,7 @@ pub unsafe extern "C" fn mmheroes_game_create(
     allocator: Allocator,
     renderer_request_callback_context: *mut c_void,
     renderer_request_callback: RendererRequestCallback,
+    input_recorder_sink: InputRecorderSink,
 ) -> *mut c_void {
     use core::ptr::{null_mut, NonNull};
 
@@ -188,6 +189,7 @@ pub unsafe extern "C" fn mmheroes_game_create(
         seed,
         scores,
         renderer_request_consumer,
+        Some(input_recorder_sink),
     ));
 
     memory.as_ptr() as *mut c_void
@@ -324,7 +326,6 @@ pub unsafe extern "C" fn mmheroes_replay(
         Err(_) => return false,
     };
     let mut parser = recording::InputRecordingParser::new(s);
-    // TODO: Use continue_game_with_panic_handling
     parser
         .parse_all(|input| game.game_ui.assume_init_mut().continue_game(input))
         .is_ok()
@@ -336,72 +337,67 @@ pub unsafe extern "C" fn mmheroes_replay(
 #[no_mangle]
 pub unsafe extern "C" fn mmheroes_continue(game: *mut c_void, input: Input) -> bool {
     let game = game_or_return!(mut game, return false);
-
-    // TODO: Use continue_game_with_panic_handling
     game.game_ui.assume_init_mut().continue_game(input)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn mmheroes_flush_input_recorder(game: *mut c_void) -> bool {
+    let game = game_or_return!(mut game, return false);
+    game.game_ui
+        .assume_init_mut()
+        .flush_input_recorder()
+        .is_ok()
 }
 
 #[repr(C)]
 pub struct InputRecorderSink {
     context: *mut c_void,
-    sink: fn(*mut c_void, *const u8, usize) -> bool,
+    sink: Option<unsafe extern "C" fn(*mut c_void, *const u8, usize) -> bool>,
+    display: Option<unsafe extern "C" fn(*mut c_void, *mut c_void) -> bool>,
 }
 
 impl core::fmt::Write for InputRecorderSink {
     fn write_str(&mut self, s: &str) -> core::fmt::Result {
-        if (self.sink)(self.context, s.as_ptr(), s.len()) {
-            Ok(())
+        if let Some(sink) = self.sink {
+            unsafe {
+                if sink(self.context, s.as_ptr(), s.len()) {
+                    Ok(())
+                } else {
+                    Err(core::fmt::Error)
+                }
+            }
         } else {
-            Err(core::fmt::Error)
+            Ok(())
+        }
+    }
+}
+
+impl core::fmt::Display for InputRecorderSink {
+    fn fmt(&self, f: &mut core::fmt::Formatter) -> core::fmt::Result {
+        if let Some(display) = self.display {
+            unsafe {
+                if display(self.context, f as *mut core::fmt::Formatter as *mut c_void) {
+                    Ok(())
+                } else {
+                    Err(core::fmt::Error)
+                }
+            }
+        } else {
+            Ok(())
         }
     }
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn mmheroes_input_recorder_create<'a>(
-    sink: &'a mut InputRecorderSink,
-    allocator_context: AllocatorContext,
-    allocator: Allocator,
-) -> *mut InputRecorder<'a, InputRecorderSink> {
-    use core::ptr::{null_mut, write};
-
-    let value = InputRecorder::<'a, InputRecorderSink>::new(sink);
-    let memory = allocator(allocator_context, size_of_val(&value), align_of_val(&value))
-        as *mut InputRecorder<'a, InputRecorderSink>;
-    if memory.is_null() {
-        return null_mut();
-    }
-    write(memory, value);
-    memory
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn mmheroes_input_recorder_destroy(
-    recorder: *mut InputRecorder<InputRecorderSink>,
-    deallocator_context: AllocatorContext,
-    deallocator: Deallocator,
-) {
-    if recorder.is_null() {
-        return;
-    }
-    let size = size_of_val(&*recorder);
-    recorder.drop_in_place();
-    deallocator(deallocator_context, recorder as *mut c_void, size)
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn mmheroes_input_recorder_record(
-    recorder: &mut InputRecorder<InputRecorderSink>,
-    input: Input,
+pub unsafe extern "C" fn mmheroes_rust_display(
+    string: *const u8,
+    len: usize,
+    formatter: *mut c_void,
 ) -> bool {
-    recorder.record_input(input).is_ok()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn mmheroes_input_recorder_flush(
-    recorder: &mut InputRecorder<InputRecorderSink>,
-) -> bool {
-    recorder.flush().is_ok()
+    let formatter = (formatter as *mut core::fmt::Formatter).as_mut().unwrap();
+    let bytes = core::slice::from_raw_parts(string, len);
+    let str = core::str::from_utf8(bytes).unwrap();
+    write!(formatter, "{}", str).is_ok()
 }
 
 #[cfg(feature = "std")]
@@ -447,6 +443,22 @@ mod tests {
         ]
     }
 
+    unsafe extern "C" fn sink(context: *mut c_void, data: *const u8, len: usize) -> bool {
+        let log = (context as *mut String).as_mut().unwrap();
+        match core::str::from_utf8(core::slice::from_raw_parts(data, len)) {
+            Ok(s) => {
+                log.push_str(s);
+                true
+            }
+            Err(_) => false,
+        }
+    }
+
+    unsafe extern "C" fn display(context: *mut c_void, formatter: *mut c_void) -> bool {
+        let log = (context as *mut String).as_mut().unwrap();
+        mmheroes_rust_display(log.as_ptr(), log.len(), formatter)
+    }
+
     #[test]
     fn test_ffi() {
         unsafe {
@@ -461,6 +473,14 @@ mod tests {
                 unsafe { (*(context as *mut Vec<_>)).push(renderer_request) }
             }
 
+            let mut log = String::new();
+
+            let sink = InputRecorderSink {
+                context: &mut log as *mut String as *mut c_void,
+                sink: Some(sink),
+                display: Some(display),
+            };
+
             let game = mmheroes_game_create(
                 GameMode::Normal,
                 0,
@@ -469,6 +489,7 @@ mod tests {
                 allocator,
                 &mut requests as *mut _ as *mut c_void,
                 renderer_request_callback,
+                sink,
             );
 
             let mut scores =
@@ -502,6 +523,10 @@ mod tests {
             assert!(mmheroes_game_get_current_time(game, &mut day, &mut time));
             assert_eq!(day, 0);
             assert_eq!(time, Time(9));
+
+            assert_eq!(log, "4r2↓");
+            mmheroes_flush_input_recorder(game);
+            assert_eq!(log, "4r2↓r");
 
             mmheroes_game_destroy(game, null_mut(), deallocator);
         }

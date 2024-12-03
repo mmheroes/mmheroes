@@ -44,8 +44,6 @@ final class GameRunner {
     private let font: UIFont
     private let requestDrawingRenderedContent: (NSAttributedString, Caret) -> Void
 
-    let inputRecorder = InputRecorder()
-
     init(worker: DispatchQueue,
          font: UIFont,
          _ requestDrawingRenderedContent: @escaping (NSAttributedString, Caret) -> Void) {
@@ -80,7 +78,6 @@ final class GameRunner {
             return
         }
         inputState = .ignoringInput
-        inputRecorder.record(input)
         guard game.continueGame(input: input) else {
             worker.async { completion(.gameEnded) }
             return
@@ -234,12 +231,11 @@ extension GameRunner {
         foregroundColor = restorableState.foregroundColor
         backgroundColor = restorableState.backgorundColor
         game = Game(mode: restorableState.mode, seed: restorableState.seed)
-        inputRecorder.recording = restorableState.recordedInput
         game.replay(recordedInput: restorableState.recordedInput)
     }
 
     func encodeGameState(to coder: NSCoder) throws {
-        inputRecorder.flush()
+        game.flushInputRecorder()
         let restorableState = RestorableState(lines: lines,
                                               currentLine: currentLine,
                                               currentColumn: currentColumn,
@@ -248,7 +244,7 @@ extension GameRunner {
                                               backgorundColor: backgroundColor,
                                               seed: game.seed,
                                               mode: game.mode,
-                                              recordedInput: inputRecorder.recording)
+                                              recordedInput: game.inputLog)
         try coder.encodeEncodable(
             restorableState,
             forKey: Bundle.main.bundleIdentifier! + "GameRunner.restorableState"

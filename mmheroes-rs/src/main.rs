@@ -3,7 +3,7 @@ use mmheroes_core::ui::recording::InputRecordingParser;
 use mmheroes_core::{
     logic::GameMode,
     ui::{
-        self, recording,
+        self,
         renderer::{RendererRequest, RendererRequestConsumer},
         *,
     },
@@ -102,10 +102,7 @@ mod high_scores {
 
 use screen::ScreenRAII;
 
-type Log = String;
-type Logger<'a> = recording::InputRecorder<'a, Log>;
-
-fn getch(window: &ScreenRAII, logger: &mut Logger) -> ui::Input {
+fn getch(window: &ScreenRAII) -> ui::Input {
     loop {
         let ui_input = match window.getch() {
             None | Some(pancurses::Input::KeyResize) => continue,
@@ -114,7 +111,6 @@ fn getch(window: &ScreenRAII, logger: &mut Logger) -> ui::Input {
             Some(pancurses::Input::Character('\n')) => ui::Input::Enter,
             Some(_) => ui::Input::Other,
         };
-        logger.record_input(ui_input).unwrap();
         break ui_input;
     }
 }
@@ -204,11 +200,6 @@ fn main() -> ExitCode {
         *color_pairs_map.get(&(Color::White, Color::Black)).unwrap() as chtype,
     ));
 
-    // We save each pressed key to this log, so that if a panic occurs,
-    // we could print it and the player could send a useful bug report.
-    let mut log = Log::new();
-    let mut input_recorder = recording::InputRecorder::new(&mut log);
-
     let mode = match std::env::args().nth(1).as_deref() {
         Some("-3dec-happy-birthday-Diamond") => GameMode::God,
         Some(_) => GameMode::SelectInitialParameters,
@@ -239,6 +230,7 @@ fn main() -> ExitCode {
         seed,
         high_scores::load(),
         renderer_request_evaluator,
+        Some(String::new()),
     );
 
     // Мы обрабатываем панику прямо в игре, поэтому убираем дефолтный хук, чтобы
@@ -249,18 +241,18 @@ fn main() -> ExitCode {
         let mut steps_parser = InputRecordingParser::new(&steps);
         match steps_parser.parse_all(|input| {
             napms(300);
-            game_ui.continue_game_with_panic_handling(input, &mut input_recorder)
+            game_ui.continue_game(input)
         }) {
             Ok(()) => {}
             Err(error) => panic!("Parsing steps failed: {:?}", error),
         }
-        getch(&window, &mut input_recorder)
+        getch(&window)
     } else {
         ui::Input::Enter
     };
 
-    while game_ui.continue_game_with_panic_handling(input, &mut input_recorder) {
-        input = getch(&window, &mut input_recorder);
+    while game_ui.continue_game(input) {
+        input = getch(&window);
     }
 
     if game_ui.has_bug() {

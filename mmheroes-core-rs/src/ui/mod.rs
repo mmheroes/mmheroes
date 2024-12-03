@@ -113,7 +113,12 @@ enum SoftwareState {
     DeathScreenShown,
 }
 
-pub struct GameUI<'game, G, C: RendererRequestConsumer> {
+pub struct GameUI<
+    'game,
+    G,
+    C: RendererRequestConsumer,
+    InputSink: core::fmt::Write + Display,
+> {
     seed: u64,
     renderer: Renderer<C>,
     state_holder: &'game StateHolder,
@@ -121,15 +126,23 @@ pub struct GameUI<'game, G, C: RendererRequestConsumer> {
     rng: crate::random::Rng,
     pub high_scores: [HighScore; high_scores::SCORE_COUNT],
     software_state: SoftwareState,
+    input_recorder: Option<InputRecorder<InputSink>>,
 }
 
-impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
+impl<
+        'game,
+        G: Game,
+        C: RendererRequestConsumer,
+        InputSink: core::fmt::Write + Display,
+    > GameUI<'game, G, C, InputSink>
+{
     pub fn new(
         state_holder: &'game StateHolder,
         game: core::pin::Pin<&'game mut G>,
         seed: u64,
         high_scores: Option<[HighScore; high_scores::SCORE_COUNT]>,
         renderer_request_consumer: C,
+        input_sink: Option<InputSink>,
     ) -> Self {
         let default_high_scores = high_scores::default_high_scores();
         GameUI {
@@ -140,6 +153,15 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
             rng: crate::random::Rng::new(seed),
             high_scores: high_scores.unwrap_or(default_high_scores),
             software_state: SoftwareState::Healthy,
+            input_recorder: input_sink.map(InputRecorder::new),
+        }
+    }
+
+    pub fn flush_input_recorder(&mut self) -> core::fmt::Result {
+        if let Some(input_recorder) = &mut self.input_recorder {
+            input_recorder.flush()
+        } else {
+            Ok(())
         }
     }
 
@@ -147,23 +169,25 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
         !matches!(self.software_state, SoftwareState::Healthy)
     }
 
-    pub fn continue_game_with_panic_handling<'a, StepLog: core::fmt::Write + Display>(
-        &mut self,
-        input: Input,
-        input_recorder: &'a mut InputRecorder<StepLog>,
-    ) -> bool {
+    pub fn continue_game(&mut self, input: Input) -> bool {
+        if let Some(input_recorder) = &mut self.input_recorder {
+            input_recorder.record_input(input).unwrap();
+        }
         match self.software_state {
             SoftwareState::Healthy => crate::util::catch_unwind_mut(
                 self,
-                |game_ui| game_ui.continue_game(input),
+                |game_ui| game_ui.continue_game_impl(input),
                 |game_ui, cause| {
-                    input_recorder.flush().unwrap();
+                    let output = game_ui.input_recorder.as_mut().map(|input_recorder| {
+                        input_recorder.flush().unwrap();
+                        input_recorder.output()
+                    });
                     game_ui.renderer.waiting_state =
                         Some(screens::game_end::display_software_bug(
                             &mut game_ui.renderer,
                             cause,
                             game_ui.seed,
-                            input_recorder.output(),
+                            output,
                         ));
                     game_ui.software_state = SoftwareState::BugShown;
                     true
@@ -182,7 +206,7 @@ impl<'game, G: Game, C: RendererRequestConsumer> GameUI<'game, G, C> {
         }
     }
 
-    pub fn continue_game(&mut self, input: Input) -> bool {
+    fn continue_game_impl(&mut self, input: Input) -> bool {
         use GameScreen::*;
 
         if let Some(ref waiting_state) = self.renderer.waiting_state {

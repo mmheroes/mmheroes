@@ -171,14 +171,16 @@ pub(in crate::ui) fn display_software_bug<StepLog: Display>(
     r: &mut Renderer<impl RendererRequestConsumer>,
     cause: &str,
     seed: u64,
-    steps: StepLog,
+    steps: Option<StepLog>,
 ) -> WaitingState {
     r.clear_screen();
     r.set_color(Color::WhiteBright, Color::Gray);
     writeln!(r, "В программе буга!");
     writeln!(r, "{cause}");
     writeln!(r, "Зерно: {seed}");
-    writeln!(r, "Шаги: {steps}");
+    if let Some(steps) = steps {
+        writeln!(r, "Шаги: {steps}");
+    }
     writeln!(r, "Срочно обратитесь к разработчику ;)");
     wait_for_any_key(r)
 }

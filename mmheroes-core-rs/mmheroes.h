@@ -75,8 +75,6 @@ typedef enum MMHEROES_Input {
   MMHEROES_Input_Other,
 } MMHEROES_Input;
 
-typedef struct MMHEROES_InputRecorder_InputRecorderSink MMHEROES_InputRecorder_InputRecorderSink;
-
 /**
  * Количество часов, прошедших с полуночи.
  *
@@ -145,17 +143,18 @@ typedef struct MMHEROES_RendererRequest {
 
 typedef void (*MMHEROES_RendererRequestCallback)(void*, struct MMHEROES_RendererRequest);
 
+typedef struct MMHEROES_InputRecorderSink {
+  void *context;
+  bool (*sink)(void*, const uint8_t*, uintptr_t);
+  bool (*display)(void*, void*);
+} MMHEROES_InputRecorderSink;
+
 /**
  * Функция, принимающая в качестве первого аргумента некоторый контекст,
  * в качестве второго — указатель на освобождаемый блок памяти,
  * а в качестве третьего — размер освобождаемого блока.
  */
 typedef void (*MMHEROES_Deallocator)(MMHEROES_AllocatorContext, void*, uintptr_t);
-
-typedef struct MMHEROES_InputRecorderSink {
-  void *context;
-  bool (*sink)(void*, const uint8_t*, uintptr_t);
-} MMHEROES_InputRecorderSink;
 
 #define MMHEROES_WORKDAY_BEGINS 9
 
@@ -194,7 +193,8 @@ void *mmheroes_game_create(enum MMHEROES_GameMode mode,
                            MMHEROES_AllocatorContext allocator_context,
                            MMHEROES_Allocator allocator,
                            void *renderer_request_callback_context,
-                           MMHEROES_RendererRequestCallback renderer_request_callback);
+                           MMHEROES_RendererRequestCallback renderer_request_callback,
+                           struct MMHEROES_InputRecorderSink input_recorder_sink);
 
 void mmheroes_game_destroy(void *game,
                            MMHEROES_AllocatorContext allocator_context,
@@ -233,18 +233,9 @@ bool mmheroes_replay(void *game,
 bool mmheroes_continue(void *game,
                        enum MMHEROES_Input input);
 
-struct MMHEROES_InputRecorder_InputRecorderSink *mmheroes_input_recorder_create(struct MMHEROES_InputRecorderSink *sink,
-                                                                                MMHEROES_AllocatorContext allocator_context,
-                                                                                MMHEROES_Allocator allocator);
+bool mmheroes_flush_input_recorder(void *game);
 
-void mmheroes_input_recorder_destroy(struct MMHEROES_InputRecorder_InputRecorderSink *recorder,
-                                     MMHEROES_AllocatorContext deallocator_context,
-                                     MMHEROES_Deallocator deallocator);
-
-bool mmheroes_input_recorder_record(struct MMHEROES_InputRecorder_InputRecorderSink *recorder,
-                                    enum MMHEROES_Input input);
-
-bool mmheroes_input_recorder_flush(struct MMHEROES_InputRecorder_InputRecorderSink *recorder);
+bool mmheroes_rust_display(const uint8_t *string, uintptr_t len, void *formatter);
 
 #ifdef __cplusplus
 }  // extern "C"

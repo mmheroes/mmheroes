@@ -33,9 +33,35 @@ final class Game {
     let seed: UInt64
     fileprivate var handle: UnsafeMutableRawPointer! = nil
 
+    private let inputLogPtr = UnsafeMutablePointer<String>.allocate(capacity: 1)
+    
+    var inputLog: String {
+        return inputLogPtr.pointee
+    }
+
     init(mode: MMHEROES_GameMode, seed: UInt64, highScores: [HighScore]? = nil) {
         self.mode = mode
         self.seed = seed
+        inputLogPtr.initialize(to: "")
+        let inputRecorderSink = MMHEROES_InputRecorderSink(
+            context: inputLogPtr,
+            sink: { context, data, len in
+                let log = context!.assumingMemoryBound(to: String.self)
+                let bytes = UnsafeBufferPointer(start: data, count: Int(len))
+                log.pointee += String(decoding: bytes, as: UTF8.self)
+                return true
+            },
+            display: { context, formatter in
+                let log = context!.assumingMemoryBound(to: String.self)
+                return log.pointee.withUTF8 { buffer in
+                    mmheroes_rust_display(
+                        buffer.baseAddress, UInt(buffer.count),
+                        formatter
+                    )
+                }
+
+            }
+        )
         if let highScores = highScores {
             handle = convertHighScoresToFFIFriendlyPointer(highScores) { buffer in
                 mmheroes_game_create(
@@ -45,7 +71,8 @@ final class Game {
                     nil,
                     allocator,
                     Unmanaged.passUnretained(self).toOpaque(),
-                    Self.rendererRequestCallback
+                    Self.rendererRequestCallback,
+                    inputRecorderSink
                 )
             }
         } else {
@@ -56,7 +83,8 @@ final class Game {
                 nil,
                 allocator,
                 Unmanaged.passUnretained(self).toOpaque(),
-                Self.rendererRequestCallback
+                Self.rendererRequestCallback,
+                inputRecorderSink
             )
         }
     }
@@ -109,9 +137,17 @@ final class Game {
             mmheroes_continue(handle, input)
         }
     }
+    
+    func flushInputRecorder() {
+        withExtendedLifetime(self) {
+            _ = mmheroes_flush_input_recorder(handle)
+        }
+    }
 
     deinit {
         mmheroes_game_destroy(handle, nil, deallocator)
+        inputLogPtr.deinitialize(count: 1)
+        inputLogPtr.deallocate()
     }
 }
 
@@ -174,41 +210,3 @@ extension RendererRequest {
         }
     }
 }
-
-final class InputRecorder {
-
-    private let handle: OpaquePointer
-
-    private var sink: UnsafeMutablePointer<MMHEROES_InputRecorderSink>
-
-    var recording: String
-
-    init(recording: String = "") {
-        self.recording = recording
-        sink = .allocate(capacity: 1)
-        sink.initialize(to: .init())
-        handle = mmheroes_input_recorder_create(sink, nil, allocator)
-        sink.pointee =
-            .init(context: Unmanaged.passRetained(self).toOpaque()) { context, buf, len in
-                let recorder = Unmanaged<InputRecorder>.fromOpaque(context!)
-                    .takeUnretainedValue()
-                let buffer = UnsafeBufferPointer(start: buf, count: Int(len))
-                recorder.recording += String(decoding: buffer, as: UTF8.self)
-                return true
-            }
-    }
-
-    deinit {
-        mmheroes_input_recorder_destroy(handle, nil, deallocator)
-        sink.deallocate()
-    }
-
-    func record(_ input: MMHEROES_Input) {
-        mmheroes_input_recorder_record(handle, input)
-    }
-
-    func flush() {
-        mmheroes_input_recorder_flush(handle)
-    }
-}
-
