@@ -3,7 +3,7 @@ import Version
 
 private let applicationInfoKey = "com.jaskiewiczs.mmheroes.applicationInfoKey"
 
-@UIApplicationMain
+@main
 final class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?

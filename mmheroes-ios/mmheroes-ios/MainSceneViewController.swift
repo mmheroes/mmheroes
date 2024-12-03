@@ -184,8 +184,7 @@ final class MainSceneViewController: UIViewController {
     private func startGame(restoredState: NSCoder?) {
         gameHasStarted = true
 
-        let runner = GameRunner(worker: .main,
-                                font: consoleFont) { [weak self] text, caret in
+        let runner = GameRunner(font: consoleFont) { [weak self] text, caret in
             self?.gameView.text = text
             self?.gameView.caret = caret
             self?.gameView.setNeedsDisplay()
@@ -196,7 +195,9 @@ final class MainSceneViewController: UIViewController {
         do {
             if let restoredState = restoredState {
                 try runner.restoreGameState(from: restoredState)
-                runner.render(completion: { _ in })
+                Task.detached {
+                    try await runner.render()
+                }
                 return
             }
         } catch DecodingError.valueNotFound {
@@ -205,7 +206,9 @@ final class MainSceneViewController: UIViewController {
             assertionFailure(String(describing: error))
         }
 
-        continueGame(MMHEROES_Input_Enter)
+        Task.detached {
+            try await self.continueGame(MMHEROES_Input_Enter)
+        }
     }
 
     override var keyCommands: [UIKeyCommand]? {
@@ -278,39 +281,47 @@ final class MainSceneViewController: UIViewController {
         if sender is UIGestureRecognizer {
             selectionFeedbackGenerator.selectionChanged()
         }
-        continueGame(MMHEROES_Input_KeyUp)
+        Task.detached {
+            try await self.continueGame(MMHEROES_Input_KeyUp)
+        }
     }
 
     @IBAction func moveDown(_ sender: Any) {
         if sender is UIGestureRecognizer {
             selectionFeedbackGenerator.selectionChanged()
         }
-        continueGame(MMHEROES_Input_KeyDown)
+        Task.detached {
+            try await self.continueGame(MMHEROES_Input_KeyDown)
+        }
     }
 
     @IBAction func confirm(_ sender: Any) {
         if sender is UIGestureRecognizer {
             confirmationFeedbackGenerator.impactOccurred()
         }
-        continueGame(MMHEROES_Input_Enter)
+        Task.detached {
+            try await self.continueGame(MMHEROES_Input_Enter)
+        }
     }
 
     @objc func anyKey(_ sender: Any) {
-        continueGame(MMHEROES_Input_Other)
+        Task.detached {
+            try await self.continueGame(MMHEROES_Input_Other)
+        }
     }
 
-    private func continueGame(_ input: MMHEROES_Input) {
-        gameRunner?.continueGame(input: input) { [weak self] status in
-            switch status {
-            case .unexpectedInput:
-                break // Do nothing
-            case .expectingMoreInput:
-                self?.selectionFeedbackGenerator.prepare()
-                self?.confirmationFeedbackGenerator.prepare()
-            case .gameEnded:
-                self?.startGame(restoredState: nil)
-            }
+    private func continueGame(_ input: MMHEROES_Input) async throws {
+        guard let gameRunner = self.gameRunner else { return }
+        switch try await gameRunner.continueGame(input: input) {
+        case .unexpectedInput:
+            break // Do nothing
+        case .expectingMoreInput:
+            selectionFeedbackGenerator.prepare()
+            confirmationFeedbackGenerator.prepare()
+        case .gameEnded:
+            startGame(restoredState: nil)
         }
+
         // TODO: Add various haptic feedback for events.
         // For example, vibration on the "ding" screen,
         // failure feedback on death and success feedback on success.
@@ -318,7 +329,7 @@ final class MainSceneViewController: UIViewController {
     }
 
     override var prefersHomeIndicatorAutoHidden: Bool {
-        return true
+        true
     }
 
     // MARK: - State restoration

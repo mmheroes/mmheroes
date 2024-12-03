@@ -34,7 +34,7 @@ final class Game {
     fileprivate var handle: UnsafeMutableRawPointer! = nil
 
     private let inputLogPtr = UnsafeMutablePointer<String>.allocate(capacity: 1)
-    
+
     var inputLog: String {
         return inputLogPtr.pointee
     }
@@ -137,7 +137,7 @@ final class Game {
             mmheroes_continue(handle, input)
         }
     }
-    
+
     func flushInputRecorder() {
         withExtendedLifetime(self) {
             _ = mmheroes_flush_input_recorder(handle)

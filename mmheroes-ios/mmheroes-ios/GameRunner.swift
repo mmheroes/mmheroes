@@ -14,7 +14,7 @@ private struct ConsoleLine: Codable {
     var fragments: [TextFragment] = []
 }
 
-/// This renderer runs in a background thread.
+@MainActor
 final class GameRunner {
 
     static let numberOfLines = 24
@@ -39,14 +39,12 @@ final class GameRunner {
 
     private var inputState = InputState.waitingForInput
 
-    private let worker: DispatchQueue
-    var game: Game
+    private var game: Game
     private let font: UIFont
-    private let requestDrawingRenderedContent: (NSAttributedString, Caret) -> Void
+    private let requestDrawingRenderedContent: @MainActor (NSAttributedString, Caret) -> Void
 
-    init(worker: DispatchQueue,
-         font: UIFont,
-         _ requestDrawingRenderedContent: @escaping (NSAttributedString, Caret) -> Void) {
+    init(font: UIFont,
+         _ requestDrawingRenderedContent: @escaping @MainActor (NSAttributedString, Caret) -> Void) {
 
         let diamondBirthday = DateComponents(month: 12, day: 3)
         let today = Calendar.current.dateComponents([.month, .day], from: Date())
@@ -58,7 +56,6 @@ final class GameRunner {
             mode = MMHEROES_GameMode_SelectInitialParameters
         }
 
-        self.worker = worker
         self.game = Game(mode: mode, seed: .random(in: 0 ... .max), highScores: nil)
         self.font = font
         self.requestDrawingRenderedContent = requestDrawingRenderedContent
@@ -72,48 +69,36 @@ final class GameRunner {
 
     /// Асинхронно продолжает игру до следующего запроса на ввод.
     /// `completion` выполняется в `worker`.
-    func continueGame(input: MMHEROES_Input, completion: @escaping (GameStatus) -> Void) {
+    func continueGame(input: MMHEROES_Input) async throws -> GameStatus {
         guard case .waitingForInput = inputState else {
-            worker.async { completion(.unexpectedInput) }
-            return
+            return .unexpectedInput
         }
         inputState = .ignoringInput
         guard game.continueGame(input: input) else {
-            worker.async { completion(.gameEnded) }
-            return
+            return .gameEnded
         }
-        render(completion: completion)
+        try await render()
+        return .expectingMoreInput
     }
 
-    func render(completion: @escaping (GameStatus) -> Void) {
-        var requests = game.requests.makeIterator()
-
-        // По очереди выполняем все запросы. Запрос 'sleep' — особый случай.
-        // Он асинхронный. Если встречаем его, то прерываем цикл и продолжаем его
-        // уже после того как sleep завершится.
-        func go() {
-            while let request = requests.next() {
-                switch request {
-                case .clearScreen:
-                    clearScreen()
-                case .flush:
-                    flush()
-                case .writeString(let s):
-                    writeString(s)
-                case .moveCursor(line: let line, column: let column):
-                    moveCursor(toLine: line, column: column)
-                case .setColor(foreground: let foreground, background: let background):
-                    setColor(foreground: foreground, background: background)
-                case .sleep(milliseconds: let milliseconds):
-                    sleep(ms: milliseconds, completion: go)
-                    return
-                }
+    func render() async throws {
+        for request in game.requests {
+            switch request {
+            case .clearScreen:
+                clearScreen()
+            case .flush:
+                flush()
+            case .writeString(let s):
+                writeString(s)
+            case .moveCursor(line: let line, column: let column):
+                moveCursor(toLine: line, column: column)
+            case .setColor(foreground: let foreground, background: let background):
+                setColor(foreground: foreground, background: background)
+            case .sleep(milliseconds: let milliseconds):
+                try await sleep(ms: milliseconds)
             }
-            inputState = .waitingForInput
-            completion(.expectingMoreInput)
         }
-
-        worker.async(execute: go)
+        inputState = .waitingForInput
     }
 
     private func clearScreen() {
@@ -127,12 +112,12 @@ final class GameRunner {
 
     private func flush() {
         let resultLines: [NSMutableAttributedString] =
-            (0 ..< Self.numberOfLines).map { _ in
+            (0..<Self.numberOfLines).map { _ in
                 let spaces = String(repeating: " ", count: Self.numberOfColumns)
                 return NSMutableAttributedString(string: spaces,
-                                                 attributes: [.font : font])
+                                                 attributes: [.font: font])
             }
-        for i in 0 ..< lines.count {
+        for i in 0..<lines.count {
             lines[i].fragments.sort { lhs, rhs in
                 if lhs.startColumn == rhs.startColumn {
                     return lhs.priority < rhs.priority
@@ -146,13 +131,13 @@ final class GameRunner {
                     .index(resultLineString.startIndex, offsetBy: fragment.startColumn)
                 let endIndex = resultLineString
                     .index(resultLineString.startIndex, offsetBy: fragment.endColumn)
-                let range = NSRange(startIndex ..< endIndex, in: resultLineString)
+                let range = NSRange(startIndex..<endIndex, in: resultLineString)
                 let fragmentAttributedText = NSAttributedString(
                     string: fragment.text,
                     attributes: [
-                        .font : font,
-                        .foregroundColor : fragment.foregroundColor.makeUIColor(),
-                        .backgroundColor : fragment.backgroundColor.makeUIColor()
+                        .font: font,
+                        .foregroundColor: fragment.foregroundColor.makeUIColor(),
+                        .backgroundColor: fragment.backgroundColor.makeUIColor()
                     ]
                 )
                 resultLines[i].replaceCharacters(in: range, with: fragmentAttributedText)
@@ -164,6 +149,7 @@ final class GameRunner {
             result.append(line)
             result.append(NSAttributedString(string: "\n", attributes: [.font : font]))
         }
+
 
         let caret = Caret(line: currentLine,
                           column: currentColumn,
@@ -200,8 +186,8 @@ final class GameRunner {
         backgroundColor = background
     }
 
-    private func sleep(ms: Int, completion: @escaping () -> Void) {
-        worker.asyncAfter(deadline: .now() + .milliseconds(ms), execute: completion)
+    private func sleep(ms: Int) async throws {
+        try await Task.sleep(nanoseconds: UInt64(ms * 1_000_000))
     }
 }
 
@@ -218,7 +204,7 @@ extension GameRunner {
         var mode: MMHEROES_GameMode
         var recordedInput: String
     }
-    
+
     func restoreGameState(from coder: NSCoder) throws {
         let restorableState = try coder.decodeDecodable(
             RestorableState.self,

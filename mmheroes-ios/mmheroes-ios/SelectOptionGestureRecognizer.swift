@@ -12,6 +12,7 @@ final class SelectOptionGestureRecognizer: UIPanGestureRecognizer {
     private class Target: NSObject {
         private var previousY: CGFloat = 0
 
+        @MainActor
         @objc
         func callCallback(_ gestureRecognizer: SelectOptionGestureRecognizer) {
 

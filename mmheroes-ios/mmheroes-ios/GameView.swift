@@ -1,5 +1,6 @@
 import UIKit
 
+@MainActor
 private let terminalWindow = (0 ..< GameRunner.numberOfLines).map { _ in
     String(repeating: " ", count: GameRunner.numberOfColumns)
 }.joined(separator: "\n") as NSString

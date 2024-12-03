@@ -56,16 +56,15 @@ final class HelpViewController: UIViewController {
 }
 
 extension HelpViewController: WKNavigationDelegate {
-    func webView(_ webView: WKWebView,
-                 decidePolicyFor navigationAction: WKNavigationAction,
-                 decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
-        if navigationAction.navigationType == .linkActivated,
-           let url = navigationAction.request.url,
-           UIApplication.shared.canOpenURL(url)  {
-            UIApplication.shared.open(url)
-            decisionHandler(.cancel)
-        } else {
-            decisionHandler(.allow)
-        }
+    func webView(
+        _ webView: WKWebView,
+        decidePolicyFor navigationAction: WKNavigationAction
+    ) async -> WKNavigationActionPolicy {
+        guard navigationAction.navigationType == .linkActivated,
+              let url = navigationAction.request.url,
+              UIApplication.shared.canOpenURL(url) else { return .allow }
+
+        await UIApplication.shared.open(url)
+        return .cancel
     }
 }
