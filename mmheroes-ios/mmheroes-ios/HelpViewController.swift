@@ -17,16 +17,9 @@ final class HelpViewController: UIViewController {
         navigationItem.title = "Информация"
 
         let closeButton: UIBarButtonItem
-        if #available(iOS 13.0, *) {
-            closeButton = UIBarButtonItem(barButtonSystemItem: .close,
-                                          target: self,
-                                          action: #selector(done))
-        } else {
-            closeButton = UIBarButtonItem(title: "Закрыть",
-                                          style: .done,
-                                          target: self,
-                                          action: #selector(done))
-        }
+        closeButton = UIBarButtonItem(barButtonSystemItem: .close,
+                                      target: self,
+                                      action: #selector(done))
 
         navigationItem.rightBarButtonItem = closeButton
 

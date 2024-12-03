@@ -16,13 +16,7 @@ final class MainSceneViewController: UIViewController {
 
     private var gameHasStarted = false
 
-    private let consoleFont: UIFont = {
-        if #available(iOS 13.0, *) {
-            return .monospacedSystemFont(ofSize: 12, weight: .regular)
-        } else {
-            return UIFont(name: "Menlo", size: 12)!
-        }
-    }()
+    private let consoleFont: UIFont = .monospacedSystemFont(ofSize: 12, weight: .regular)
 
     private let selectionFeedbackGenerator = UISelectionFeedbackGenerator()
     private let confirmationFeedbackGenerator = UIImpactFeedbackGenerator(style: .medium)
