@@ -25,7 +25,7 @@ pub(super) fn available_actions(state: &GameState) -> ActionVec {
             let mut available_actions = ActionVec::from([
                 Action::GoToProfessor,
                 Action::LookAtBulletinBoard,
-                Action::RestInCafePDMI,
+                Action::GoToCafePDMI,
                 Action::GoToPUNKFromPDMI,
             ]);
             add_classmates(&mut available_actions);

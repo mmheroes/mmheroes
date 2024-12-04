@@ -12,7 +12,7 @@ pub(in crate::logic) async fn handle_router_action(
             g.set_screen_and_wait_for_any_key(GameScreen::HighScores(state.clone()))
                 .await;
         }
-        Action::RestInCafePDMI => todo!("Пойти в кафе"),
+        Action::GoToCafePDMI => go_to_cafe(g, state).await,
         Action::GoToPUNKFromPDMI => todo!("Поехать в ПУНК"),
         Action::InteractWithClassmate(classmate) => {
             assert_matches!(
@@ -23,4 +23,23 @@ pub(in crate::logic) async fn handle_router_action(
         }
         _ => illegal_action!(action),
     }
+}
+
+async fn go_to_cafe(g: &mut InternalGameState<'_>, state: &mut GameState) {
+    cafe::go(
+        g,
+        state,
+        &[
+            (Action::OrderCoffee, Money::drink_cost(), HealthLevel(3)),
+            (Action::OrderPastry, Money::pastry_cost(), HealthLevel(6)),
+            (
+                Action::OrderCoffeeWithPastry,
+                Money::drink_with_pastry_cost(),
+                HealthLevel(10),
+            ),
+        ],
+        Action::RestInCafePDMI,
+        Action::LeaveCafePDMI,
+    )
+    .await
 }

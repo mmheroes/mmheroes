@@ -9,7 +9,6 @@ pub(super) async fn go(
     menu: &[(Action, Money, HealthLevel)],
     rest_action: Action,
     exit_action: Action,
-    mut cafe_screen: impl FnMut(GameState) -> GameScreen,
 ) {
     let mut available_actions = ActionVec::new();
     let available_money = state.player.money;
@@ -20,7 +19,7 @@ pub(super) async fn go(
     }
     available_actions.push(rest_action);
     available_actions.push(exit_action);
-    g.set_screen_and_action_vec(cafe_screen(state.clone()), available_actions);
+    g.set_screen_and_action_vec(GameScreen::Cafe(state.clone()), available_actions);
     let selected_action = g.wait_for_action().await;
     let charisma_dependent_health_gain =
         HealthLevel(g.rng.random(state.player.charisma.0));

@@ -169,22 +169,39 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         }
         Action::OrderTea => {
             set_color(r, Color::CyanBright);
-            write!(r, "Чай за {} р.", Money::tea_cost());
+            write!(r, "Чай за {} р.", Money::drink_cost());
             return;
         }
         Action::OrderCake => {
             set_color(r, Color::CyanBright);
-            write!(r, "Кекс за {} р.", Money::cake_cost());
+            write!(r, "Кекс за {} р.", Money::pastry_cost());
             return;
         }
         Action::OrderTeaWithCake => {
             set_color(r, Color::CyanBright);
-            write!(r, "Чай и выпечку, {} р.", Money::tea_with_cake_cost());
+            write!(r, "Чай и выпечку, {} р.", Money::drink_with_pastry_cost());
             return;
         }
         Action::RestInCafePUNK => "Просто посижу с приятелями.",
         Action::ShouldntHaveComeToCafePUNK => "Я вообще зря сюда зашел.",
-        Action::RestInCafePDMI => "Пойти в кафе",
+        Action::GoToCafePDMI => "Пойти в кафе",
+        Action::OrderCoffee => {
+            set_color(r, Color::CyanBright);
+            write!(r, "Кофе за {} р.", Money::drink_cost());
+            return;
+        }
+        Action::OrderPastry => {
+            set_color(r, Color::CyanBright);
+            write!(r, "Корж за {} р.", Money::pastry_cost());
+            return;
+        }
+        Action::OrderCoffeeWithPastry => {
+            set_color(r, Color::CyanBright);
+            write!(r, "Кофе и выпечку, {} р.", Money::drink_with_pastry_cost());
+            return;
+        }
+        Action::RestInCafePDMI => "Ничего, просто просидеть здесь часок.",
+        Action::LeaveCafePDMI => "Совсем ничего. Бывает.",
         Action::MmheroesFloppy(actions::MmheroesFloppyAction::WantToTestNewMMHEROES) => {
             "ДА, КОНЕЧНО, ОЧЕНЬ ХОЧУ!"
         }

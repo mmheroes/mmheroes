@@ -298,12 +298,12 @@ impl<
                 &mut self.renderer,
                 &self.high_scores,
             ),
-            RestInMausoleum(state) => screens::rest::display_rest_in_mausoleum(
+            RestInMausoleum(state) => screens::cafe::display_cafe(
                 &mut self.renderer,
                 self.state_holder.observable_state().available_actions(),
                 state,
             ),
-            CafePUNK(state) => screens::rest::display_cafe(
+            Cafe(state) => screens::cafe::display_cafe(
                 &mut self.renderer,
                 self.state_holder.observable_state().available_actions(),
                 state,

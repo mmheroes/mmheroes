@@ -31,8 +31,8 @@ pub enum GameScreen {
     /// Отдых в мавзолее.
     RestInMausoleum(GameState),
 
-    /// Кафе в ПУНКе
-    CafePUNK(GameState),
+    /// Кафе в ПУНКе или ПОМИ
+    Cafe(GameState),
 
     TrainToPDMI(GameState, scene_router::train::TrainScene),
 
@@ -187,7 +187,7 @@ impl GameScreen {
             | Exam(ExamScene::ExamPassed(state, _))
             | BaltiyskiyRailwayStation(BaltiyskiyRailwayStationScene::Prompt(state))
             | RestInMausoleum(state)
-            | CafePUNK(state)
+            | Cafe(state)
             | TrainToPDMI(state, _) => Some(state),
             Intro
             | InitialParameters

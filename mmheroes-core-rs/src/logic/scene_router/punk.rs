@@ -57,17 +57,16 @@ async fn go_to_cafe(g: &mut InternalGameState<'_>, state: &mut GameState) {
         g,
         state,
         &[
-            (Action::OrderTea, Money::tea_cost(), HealthLevel(2)),
-            (Action::OrderCake, Money::cake_cost(), HealthLevel(4)),
+            (Action::OrderTea, Money::drink_cost(), HealthLevel(2)),
+            (Action::OrderCake, Money::pastry_cost(), HealthLevel(4)),
             (
                 Action::OrderTeaWithCake,
-                Money::tea_with_cake_cost(),
+                Money::drink_with_pastry_cost(),
                 HealthLevel(7),
             ),
         ],
         Action::RestInCafePUNK,
         Action::ShouldntHaveComeToCafePUNK,
-        GameScreen::CafePUNK,
     )
     .await
 }

@@ -176,18 +176,18 @@ impl Money {
         Money(8)
     }
 
-    /// Стоимость чая в буфете ПУНКа/ПОМИ
-    pub const fn tea_cost() -> Money {
+    /// Стоимость чая/кофе в буфете ПУНКа/ПОМИ
+    pub const fn drink_cost() -> Money {
         Money(2)
     }
 
-    /// Стоимость кекса в буфете ПУНКа/ПОМИ
-    pub const fn cake_cost() -> Money {
+    /// Стоимость выпечки в буфете ПУНКа/ПОМИ
+    pub const fn pastry_cost() -> Money {
         Money(4)
     }
 
-    /// Стоимость чая с выпечкой в буфете ПУНКа/ПОМИ
-    pub const fn tea_with_cake_cost() -> Money {
+    /// Стоимость чая/кофе с выпечкой в буфете ПУНКа/ПОМИ
+    pub const fn drink_with_pastry_cost() -> Money {
         Money(6)
     }
 
