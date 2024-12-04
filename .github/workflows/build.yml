@@ -46,7 +46,7 @@ jobs:
 
   build-ios:
     needs: build-rust
-    runs-on: macos-latest
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v2
       - name: Install the latest stable Rust toolchain
