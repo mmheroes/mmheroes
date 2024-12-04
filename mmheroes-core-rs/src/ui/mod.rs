@@ -117,7 +117,7 @@ pub struct GameUI<
     'game,
     G,
     C: RendererRequestConsumer,
-    InputSink: core::fmt::Write + Display,
+    InputSink: core::fmt::Write + Display = recording::NoInputRecording,
 > {
     seed: u64,
     renderer: Renderer<C>,

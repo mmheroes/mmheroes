@@ -89,8 +89,7 @@ impl RendererRequestConsumer for TestRendererRequestConsumer {
     }
 }
 
-pub type TestGameUI<'game, G> =
-    GameUI<'game, 'static, G, TestRendererRequestConsumer, recording::NoInputRecording>;
+pub type TestGameUI<'game, G> = GameUI<'game, G, TestRendererRequestConsumer>;
 
 /// Возвращает `true` как только [GameUI::continue_game] возвращает `false`,
 /// то есть, когда игра закончилась. Пока игра не закончилась, возвращает `false`.
