@@ -1,9 +1,5 @@
-use crate::logic::actions::{ActionVec, TryAgainAction};
+use super::*;
 use crate::logic::entry_point::GameEnd;
-use crate::logic::{
-    scene_router, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
-    HealthLevel, InternalGameState, Location, Subject,
-};
 
 pub(in crate::logic) fn decrease_health(
     state: &mut GameState,
@@ -35,7 +31,7 @@ pub(in crate::logic) async fn hour_pass(
 ) {
     state.set_terkom_has_places(true);
     g.run_classmate_routines(state);
-    state.next_hour();
+    state.adjust_time(Duration(1));
 
     if state.location() == Location::PDMI
         && matches!(exam_in_progress, Some(Subject::GeometryAndTopology))
@@ -50,9 +46,9 @@ pub(in crate::logic) async fn hour_pass(
         state.player.cause_of_death = Some(CauseOfDeath::Paranoia)
     }
 
-    if state.current_time().is_midnight() {
-        state.next_day();
+    if state.current_time() == Time(24) {
         state.midnight();
+        state.next_day();
         midnight(g, state).await;
     }
 }
@@ -67,7 +63,7 @@ pub(in crate::logic) async fn midnight(
         Location::ComputerClass => {
             unreachable!("Компьютерный класс уже должен быть закрыт в полночь!")
         }
-        Location::Dorm => scene_router::dorm::sleep(g, state).await,
+        Location::Dorm => sleep::sleep(g, state).await,
         Location::Mausoleum => todo!("sub_1E993"),
     }
 }
@@ -80,11 +76,11 @@ pub(in crate::logic) async fn game_end(
         .await;
     // Хочешь попробовать снова? Да или нет.
     match g
-        .set_screen_and_wait_for_action::<TryAgainAction>(GameScreen::WannaTryAgain)
+        .set_screen_and_wait_for_action(GameScreen::WannaTryAgain)
         .await
     {
-        TryAgainAction::WantToTryAgain => GameEnd::Restart,
-        TryAgainAction::DontWantToTryAgain => {
+        actions::TryAgainAction::WantToTryAgain => GameEnd::Restart,
+        actions::TryAgainAction::DontWantToTryAgain => {
             g.set_screen_and_wait_for_any_key(GameScreen::Disclaimer)
                 .await;
             g.set_screen_and_action_vec(GameScreen::Terminal, ActionVec::new());

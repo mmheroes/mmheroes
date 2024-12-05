@@ -13,7 +13,7 @@ pub(super) async fn handle_router_action(
             timetable::show(g, state).await;
         }
         Action::Rest => rest(g, state).await,
-        Action::GoToBed => sleep(g, state).await,
+        Action::GoToBed => try_sleep(g, state).await,
         Action::GoFromDormToPunk => {
             state.set_location(Location::PUNK);
             misc::decrease_health(
@@ -144,15 +144,12 @@ async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) {
     misc::hour_pass(g, state, None).await
 }
 
-pub(in crate::logic) async fn sleep(
-    g: &mut InternalGameState<'_>,
-    state: &mut GameState,
-) {
+async fn try_sleep(g: &mut InternalGameState<'_>, state: &mut GameState) {
     if state.current_time() > Time(3) && state.current_time() < Time(20) {
-        g.set_screen_and_wait_for_any_key(GameScreen::Sleep(state.clone()))
+        g.set_screen_and_wait_for_any_key(GameScreen::DontWantToSleep)
             .await;
     } else {
-        todo!("Реализовать что-то помимо неудавшегося сна")
+        sleep::sleep(g, state).await;
     }
 }
 

@@ -81,9 +81,12 @@ impl GameState {
         self.bits.set_current_time(Time(0));
     }
 
-    pub(in crate::logic) fn next_hour(&mut self) {
-        self.bits
-            .set_current_time(self.bits.current_time() + Duration(1));
+    pub(in crate::logic) fn set_current_time(&mut self, time: Time) {
+        self.bits.set_current_time(time);
+    }
+
+    pub(in crate::logic) fn adjust_time(&mut self, duration: Duration) {
+        self.set_current_time(self.bits.current_time() + duration);
     }
 
     pub fn player(&self) -> &Player {
@@ -260,7 +263,7 @@ mod tests {
         assert_eq!(state.bits.0, 0b1_100_101_10_01000_001);
         assert_eq!(state.current_day_index(), 1);
 
-        state.next_hour();
+        state.adjust_time(Duration(1));
         assert_eq!(state.bits.0, 0b1_100_101_10_01001_001);
         assert_eq!(state.current_time(), Time(9));
 

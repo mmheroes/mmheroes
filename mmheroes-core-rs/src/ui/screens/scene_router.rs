@@ -284,10 +284,7 @@ pub(in crate::ui::screens) fn display_short_today_timetable<
 
 pub(in crate::ui) fn display_sleeping(
     r: &mut Renderer<impl RendererRequestConsumer>,
-    state: &GameState,
 ) -> WaitingState {
-    // TODO: Реализовать что-то кроме неудавшегося сна.
-    assert!(state.location() == Location::Dorm);
     r.move_cursor_to(21, 0);
     write_colored!(White, r, "Тебя чего-то не тянет по-спать...");
     wait_for_any_key(r)

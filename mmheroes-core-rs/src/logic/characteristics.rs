@@ -39,6 +39,13 @@ macro_rules! define_characteristic {
             }
         }
 
+        impl core::ops::Sub<i16> for $name {
+            type Output = Self;
+            fn sub(self, rhs: i16) -> Self {
+                Self(self.0 - rhs)
+            }
+        }
+
         impl core::ops::SubAssign for $name {
             fn sub_assign(&mut self, rhs: Self) {
                 self.0 -= rhs.0

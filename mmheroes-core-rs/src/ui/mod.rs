@@ -291,8 +291,8 @@ impl<
                     self.state_holder.observable_state().available_actions(),
                 )
             }
-            Sleep(state) => {
-                screens::scene_router::display_sleeping(&mut self.renderer, state)
+            DontWantToSleep => {
+                screens::scene_router::display_sleeping(&mut self.renderer)
             }
             HighScores(_) => screens::high_scores::display_high_scores(
                 &mut self.renderer,

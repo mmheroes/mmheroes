@@ -117,6 +117,11 @@ pub(super) async fn run(
     mut state: GameState,
 ) -> entry_point::GameEnd {
     loop {
+        // TODO: Если в общаге, реализовать приглашения от соседа и
+        //   "тебя неумолимо клонит ко сну". Если игрок умер, нужно сразу перейти к
+        //   if state.player.cause_of_death.is_some() {
+        //       return misc::game_end(g, &state).await;
+        //   }
         g.set_screen_and_action_vec(
             GameScreen::SceneRouter(state.clone()),
             available_actions(&state),

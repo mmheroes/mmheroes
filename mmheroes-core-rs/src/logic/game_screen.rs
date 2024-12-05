@@ -94,9 +94,8 @@ pub enum GameScreen {
     /// дальше можно либо поехать в ПОМИ, либо обратно в ПУНК.
     BaltiyskiyRailwayStation(scene_router::train::BaltiyskiyRailwayStationScene),
 
-    // TODO: Добавить больше параметров. Сейчас поддерживается только "не тянет поспать"
-    /// Сон.
-    Sleep(GameState),
+    /// "Тебя чего-то не тянет поспать"
+    DontWantToSleep,
 
     /// Посидеть в интернете. Если `found_program` `true`, это означает, что
     /// герой нашёл в интернете решение задачи по информатике.
@@ -150,7 +149,6 @@ impl GameScreen {
             | SceneRouter(state)
             | Study(state)
             | PromptUseLectureNotes(state)
-            | Sleep(state)
             | HighScores(state)
             | IAmDone(state)
             | GameEnd(state)
@@ -195,6 +193,7 @@ impl GameScreen {
             Intro
             | InitialParameters
             | Ding
+            | DontWantToSleep
             | SurfInternet { .. }
             | ExamIntro(_)
             | Exam(ExamScene::ExamSuffering { .. })

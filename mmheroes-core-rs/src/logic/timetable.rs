@@ -2,7 +2,7 @@ pub use crate::logic::{Location, Subject};
 
 use crate::logic::{GameScreen, GameState, InternalGameState};
 use core::fmt::{Display, Formatter};
-use core::ops::{Add, AddAssign, Sub};
+use core::ops::{Add, AddAssign, Rem, Sub};
 use strum::EnumCount;
 
 pub const NUM_DAYS: usize = 6;
@@ -26,10 +26,6 @@ impl Time {
 
     pub(super) const fn into_bits(self) -> u8 {
         self.0
-    }
-
-    pub fn is_midnight(self) -> bool {
-        self.0 == 0 || self.0 == 24
     }
 
     pub fn is_between_9_and_19(self) -> bool {
@@ -93,6 +89,14 @@ impl Sub<Duration> for Time {
 
     fn sub(self, rhs: Duration) -> Self::Output {
         self + Duration(-rhs.0)
+    }
+}
+
+impl Rem<u8> for Time {
+    type Output = Time;
+
+    fn rem(self, rhs: u8) -> Self::Output {
+        Time(self.0 % rhs)
     }
 }
 
