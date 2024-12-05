@@ -191,9 +191,14 @@ impl Money {
         Money(6)
     }
 
-    /// Стоимость билета на электричку в ПОМИ
+    /// Стоимость билета на электричку в ПОМИ и обратно
     pub const fn roundtrip_train_ticket_cost() -> Money {
         Money(10)
+    }
+
+    /// Стоимость билета на электричку из ПОМИ в ПУНК
+    pub const fn one_way_train_ticket_cost() -> Money {
+        Money(5)
     }
 }
 

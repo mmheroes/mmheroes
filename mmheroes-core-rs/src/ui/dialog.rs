@@ -102,8 +102,8 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::LeaveComputerClass => "Покинуть класс",
         Action::GoToPDMI => "Поехать в ПОМИ",
         Action::GoToPUNKFromPDMI => "Поехать в ПУНК",
-        Action::TrainTicket(actions::TrainTicketAction::GatecrashTrain) => "Ехать зайцем",
-        Action::TrainTicket(actions::TrainTicketAction::BuyRoundtripTrainTicket) => {
+        Action::TrainToPDMIGatecrash => "Ехать зайцем",
+        Action::TrainToPDMIBuyTicket => {
             set_color(r, Color::CyanBright);
             return write!(
                 r,
@@ -111,6 +111,8 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
                 Money::roundtrip_train_ticket_cost()
             );
         }
+        Action::TrainFromPDMIGatecrash => "Нет, не будем",
+        Action::TrainFromPDMIBuyTicket => "Да, будем",
         Action::GoToMausoleum => "Пойти в мавзолей",
         Action::GoToCafePUNK => "Сходить в кафе",
         Action::SurfInternet => "Провести 1 час в Inet'е",

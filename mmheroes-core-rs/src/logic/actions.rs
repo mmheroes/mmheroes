@@ -86,14 +86,6 @@ pub enum TryAgainAction {
 action_conversion!(TryAgainAction, TryAgain);
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
-pub enum TrainTicketAction {
-    GatecrashTrain,
-    BuyRoundtripTrainTicket,
-}
-
-action_conversion!(TrainTicketAction, TrainTicket);
-
-#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
 pub enum MmheroesFloppyAction {
     WantToTestNewMMHEROES,
     DontWantToTestNewMMHEROES,
@@ -199,7 +191,10 @@ pub enum Action {
     LeaveComputerClass,
     GoToPDMI,
     GoToPUNKFromPDMI,
-    TrainTicket(TrainTicketAction),
+    TrainToPDMIGatecrash,
+    TrainToPDMIBuyTicket,
+    TrainFromPDMIGatecrash,
+    TrainFromPDMIBuyTicket,
     GoToMausoleum,
     GoToCafePUNK,
     SurfInternet,

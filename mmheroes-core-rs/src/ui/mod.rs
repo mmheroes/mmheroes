@@ -314,6 +314,12 @@ impl<
                 state,
                 *interaction,
             ),
+            TrainFromPDMI(state, interaction) => screens::train::display_train_from_pdmi(
+                &mut self.renderer,
+                self.state_holder.observable_state().available_actions(),
+                state,
+                *interaction,
+            ),
             BaltiyskiyRailwayStation(scene) => {
                 screens::train::display_baltiyskiy_railway_station(
                     &mut self.renderer,

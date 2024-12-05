@@ -663,7 +663,7 @@ async fn exam_in_train(
         unreachable!("Экзамен по алгебре после 20:00? Это как?")
     }
     let caught_by_inspectors =
-        train::go_by_train(g, state, HealthLevel(0), &|state, train| {
+        train::go_by_train(g, state, HealthLevel(0), false, &|state, train| {
             GameScreen::Exam(ExamScene::Train(state, train))
         })
         .await;
@@ -700,7 +700,7 @@ async fn exam_in_train(
             // Баг в оригинальной реализации: даже если есть деньги, билет купить
             // не предлагается.
             // Кроме того, не отнимается здоровье.
-            if state.player.has_roundtrip_train_ticket() {
+            if state.player.has_train_ticket() {
                 // Баг в оригинальной реализации: на экран должно быть выведено
                 // "Хорошо, билет есть...", но поскольку нет вызова wait_for_key,
                 // эта надпись не успевает появиться на экране.

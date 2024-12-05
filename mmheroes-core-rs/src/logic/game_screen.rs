@@ -34,7 +34,11 @@ pub enum GameScreen {
     /// Кафе в ПУНКе или ПОМИ
     Cafe(GameState),
 
+    /// Электричка из ПУНКа в ПОМИ
     TrainToPDMI(GameState, scene_router::train::TrainScene),
+
+    /// Электричка из ПОМИ в ПУНК
+    TrainFromPDMI(GameState, scene_router::train::TrainScene),
 
     /// Взаимодействие с Колей.
     KolyaInteraction(GameState, npc::kolya::KolyaInteraction),
@@ -96,9 +100,7 @@ pub enum GameScreen {
 
     /// Посидеть в интернете. Если `found_program` `true`, это означает, что
     /// герой нашёл в интернете решение задачи по информатике.
-    SurfInternet {
-        found_program: bool,
-    },
+    SurfInternet { found_program: bool },
 
     /// Экран "ты серьёзно хочешь закончить игру?"
     IAmDone(GameState),
@@ -188,7 +190,8 @@ impl GameScreen {
             | BaltiyskiyRailwayStation(BaltiyskiyRailwayStationScene::Prompt(state))
             | RestInMausoleum(state)
             | Cafe(state)
-            | TrainToPDMI(state, _) => Some(state),
+            | TrainToPDMI(state, _)
+            | TrainFromPDMI(state, _) => Some(state),
             Intro
             | InitialParameters
             | Ding

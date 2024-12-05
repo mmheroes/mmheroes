@@ -13,7 +13,7 @@ pub(in crate::logic) async fn handle_router_action(
                 .await;
         }
         Action::GoToCafePDMI => go_to_cafe(g, state).await,
-        Action::GoToPUNKFromPDMI => todo!("Поехать в ПУНК"),
+        Action::GoToPUNKFromPDMI => train::go_from_pdmi(g, state).await,
         Action::InteractWithClassmate(classmate) => {
             assert_matches!(
                 state.classmates[classmate].current_location(),

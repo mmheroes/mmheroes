@@ -24,7 +24,7 @@ struct PlayerBits {
     got_stipend: bool,
 
     #[bits(1)]
-    has_roundtrip_train_ticket: bool,
+    has_train_ticket: bool,
 
     #[bits(1)]
     knows_djug: bool,
@@ -164,12 +164,12 @@ impl Player {
         self.bits.set_got_stipend(true);
     }
 
-    pub fn has_roundtrip_train_ticket(&self) -> bool {
-        self.bits.has_roundtrip_train_ticket()
+    pub fn has_train_ticket(&self) -> bool {
+        self.bits.has_train_ticket()
     }
 
-    pub(in crate::logic) fn set_has_roundtrip_train_ticket(&mut self) {
-        self.bits.set_has_roundtrip_train_ticket(true);
+    pub(in crate::logic) fn set_has_train_ticket(&mut self, value: bool) {
+        self.bits.set_has_train_ticket(value);
     }
 
     pub fn knows_djug(&self) -> bool {

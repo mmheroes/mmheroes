@@ -15,7 +15,7 @@ pub(in crate::ui) fn display_train_to_pdmi(
             r.clear_screen();
             scene_router::display_header_stats(r, state);
         }
-        TrainScene::GatecrashByChoice { .. } | TrainScene::BoughtRoundtripTicket => (),
+        TrainScene::GatecrashByChoice { .. } | TrainScene::BoughtRoundTripTicket => (),
     }
     display_train(
         r,
@@ -55,7 +55,7 @@ pub(in crate::ui) fn display_train_algebra_exam(
             );
             writeln!(r, "Правда, зачетной ведомости с собой туда не взять...");
         }
-        TrainScene::GatecrashByChoice { .. } | TrainScene::BoughtRoundtripTicket => (),
+        TrainScene::GatecrashByChoice { .. } | TrainScene::BoughtRoundTripTicket => (),
         TrainScene::NoPointToGoToPDMI => unreachable!(),
     }
     display_train(
@@ -127,7 +127,7 @@ fn display_train<R: RendererRequestConsumer>(
             gatecrash(r, caught_by_inspectors);
             wait_for_any_key(r)
         }
-        TrainScene::BoughtRoundtripTicket => wait_for_any_key(r),
+        TrainScene::BoughtRoundTripTicket => wait_for_any_key(r),
     }
 }
 
@@ -151,6 +151,46 @@ pub(in crate::ui) fn display_baltiyskiy_railway_station(
             writeln_colored!(White, r, "Тебя заловили контролеры!");
             writeln!(r, "Высадили в Красных зорях, гады!");
             wait_for_any_key(r)
+        }
+    }
+}
+
+pub(in crate::ui) fn display_train_from_pdmi(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    available_actions: &[Action],
+    state: &GameState,
+    scene: TrainScene,
+) -> WaitingState {
+    match scene {
+        TrainScene::PromptToBuyTickets => {
+            r.clear_screen();
+            scene_router::display_header_stats(r, state);
+            scene_router::display_short_today_timetable(r, 9, state);
+            r.move_cursor_to(7, 0);
+            writeln_colored!(
+                YellowBright,
+                r,
+                "Едем в ПУНК, билета нет. Будем покупать билет ({} рублей)?",
+                Money::one_way_train_ticket_cost()
+            );
+            r.move_cursor_to(9, 0);
+            dialog(r, available_actions)
+        }
+        TrainScene::GatecrashBecauseNoMoney {
+            caught_by_inspectors,
+        }
+        | TrainScene::GatecrashByChoice {
+            caught_by_inspectors,
+        } => {
+            r.move_cursor_to(21, 0);
+            write_colored!(White, r, "Едем зайцем... ");
+            if caught_by_inspectors {
+                writeln!(r, "Контролеры поймали! Высадили в Красных Зорях!");
+            }
+            wait_for_any_key(r)
+        }
+        TrainScene::BoughtRoundTripTicket | TrainScene::NoPointToGoToPDMI => {
+            unreachable!()
         }
     }
 }
