@@ -29,11 +29,14 @@ struct PlayerBits {
     #[bits(1)]
     knows_djug: bool,
 
-    /// Последний зачёт, который пытался сдать игрок. Он может присниться.
-    #[bits(3, default = None, from = subject_from_bits, into = subject_into_bits)]
-    last_exam: Option<Subject>,
+    #[bits(1)]
+    is_invited_to_party: bool,
 
-    #[bits(4)]
+    /// Последний зачёт, который пытался сдать игрок. Он может присниться.
+    #[bits(3, default = Subject::AlgebraAndNumberTheory)]
+    last_exam: Subject,
+
+    #[bits(3)]
     _padding: u16,
 
     #[bits(1)]
@@ -180,13 +183,20 @@ impl Player {
         self.bits.set_knows_djug(value);
     }
 
-    #[allow(dead_code)]
-    pub(in crate::logic) fn last_exam(&self) -> Option<Subject> {
+    pub(in crate::logic) fn is_invited_to_party(&self) -> bool {
+        self.bits.is_invited_to_party()
+    }
+
+    pub(in crate::logic) fn set_invited_to_party(&mut self, value: bool) {
+        self.bits.set_is_invited_to_party(value);
+    }
+
+    pub(in crate::logic) fn last_exam(&self) -> Subject {
         self.bits.last_exam()
     }
 
     pub(in crate::logic) fn set_last_exam(&mut self, subject: Subject) {
-        self.bits.set_last_exam(Some(subject))
+        self.bits.set_last_exam(subject)
     }
 
     pub fn brain(&self) -> BrainLevel {

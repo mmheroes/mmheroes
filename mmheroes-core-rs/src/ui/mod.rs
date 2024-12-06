@@ -292,7 +292,10 @@ impl<
                 )
             }
             DontWantToSleep => {
-                screens::scene_router::display_sleeping(&mut self.renderer)
+                screens::sleep::display_dont_want_to_sleep(&mut self.renderer)
+            }
+            Dreaming(dream_screen) => {
+                screens::sleep::display_dreams(&mut self.renderer, dream_screen)
             }
             HighScores(_) => screens::high_scores::display_high_scores(
                 &mut self.renderer,

@@ -97,6 +97,9 @@ pub enum GameScreen {
     /// "Тебя чего-то не тянет поспать"
     DontWantToSleep,
 
+    /// Разные сновидения
+    Dreaming(sleep::DreamScreen),
+
     /// Посидеть в интернете. Если `found_program` `true`, это означает, что
     /// герой нашёл в интернете решение задачи по информатике.
     SurfInternet { found_program: bool },
@@ -194,6 +197,7 @@ impl GameScreen {
             | InitialParameters
             | Ding
             | DontWantToSleep
+            | Dreaming(_)
             | SurfInternet { .. }
             | ExamIntro(_)
             | Exam(ExamScene::ExamSuffering { .. })
