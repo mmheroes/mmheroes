@@ -294,6 +294,9 @@ impl<
             DontWantToSleep => {
                 screens::sleep::display_dont_want_to_sleep(&mut self.renderer)
             }
+            CantStayAwake(state) => {
+                screens::sleep::display_cant_stay_awake(&mut self.renderer, state)
+            }
             Dreaming(dream_screen) => {
                 screens::sleep::display_dreams(&mut self.renderer, dream_screen)
             }

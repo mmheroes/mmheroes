@@ -121,12 +121,14 @@ pub(in crate::logic) async fn sleep(
     assert!(health_gain >= 0, "negative health_gain ({})", health_gain,);
     state.player.health += health_gain;
     let sleep_duration = 7 + g.rng.random(health_gain / 4);
-    state.adjust_time(Duration(sleep_duration as i8));
+    let new_time = state.current_time() + Duration(sleep_duration as i8);
 
-    if state.current_time() >= Time(24) {
-        state.set_current_time(state.current_time() % 24);
+    if new_time >= Time(24) {
+        state.set_current_time(new_time % 24);
         state.next_day();
         die_if_time_out(state);
+    } else {
+        state.set_current_time(new_time);
     }
 
     for subject in Subject::math_subjects() {

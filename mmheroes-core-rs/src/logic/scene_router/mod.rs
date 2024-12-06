@@ -99,13 +99,29 @@ async fn scene_computer_class(
     Some(available_actions)
 }
 
-async fn scene_dorm(_g: &mut InternalGameState<'_>, _state: &mut GameState) -> ActionVec {
-    // TODO: Если в общаге, реализовать приглашения от соседа и
-    //   "тебя неумолимо клонит ко сну". Если игрок умер, нужно сразу перейти к
-    //   if state.player.cause_of_death.is_some() {
-    //       return misc::game_end(g, &state).await;
-    //   }
-    ActionVec::from([
+async fn scene_dorm(
+    g: &mut InternalGameState<'_>,
+    state: &mut GameState,
+) -> Option<ActionVec> {
+    let time_to_sleep =
+        Time((23 - core::cmp::max(50 - state.player.health.0, 0) / 12) as u8);
+    let current_time = state.current_time();
+    if current_time > time_to_sleep || current_time <= Time(3) {
+        // В оригинальной реализации есть проверка current_time <= Time(3), но она,
+        // кажется, никогда не должна быть истинной.
+        assert!(current_time > Time(3), "В такое время уже нужно спать");
+        g.set_screen_and_wait_for_any_key(GameScreen::CantStayAwake(state.clone()))
+            .await;
+        sleep::sleep(g, state).await;
+        return None;
+    } else if current_time >= Time(18)
+        && g.rng.random(10) < 3
+        && state.player.is_invited_to_party()
+    {
+        state.player.set_invited_to_party(true);
+        todo!("Приглашение от соседа")
+    }
+    Some(ActionVec::from([
         Action::Study,
         Action::ViewTimetable,
         Action::Rest,
@@ -115,7 +131,7 @@ async fn scene_dorm(_g: &mut InternalGameState<'_>, _state: &mut GameState) -> A
         Action::GoToMausoleum,
         Action::IAmDone,
         Action::WhatToDo,
-    ])
+    ]))
 }
 
 fn scene_mausoleum(state: &mut GameState) -> ActionVec {
@@ -142,7 +158,10 @@ pub(super) async fn run(
                 Some(available_actions) => available_actions,
                 None => continue,
             },
-            Location::Dorm => scene_dorm(g, &mut state).await,
+            Location::Dorm => match scene_dorm(g, &mut state).await {
+                Some(available_actions) => available_actions,
+                None => continue,
+            },
             Location::Mausoleum => scene_mausoleum(&mut state),
         };
         g.set_screen_and_action_vec(

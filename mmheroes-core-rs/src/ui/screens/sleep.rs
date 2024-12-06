@@ -189,3 +189,14 @@ fn subject_related_dream(
     r.flush();
     WaitingState::PressAnyKey
 }
+
+pub(in crate::ui) fn display_cant_stay_awake(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    state: &GameState,
+) -> WaitingState {
+    r.clear_screen();
+    screens::scene_router::display_header_stats(r, state);
+    r.move_cursor_to(7, 0);
+    writeln_colored!(White, r, "Тебя неумолимо клонит ко сну ...");
+    wait_for_any_key(r)
+}

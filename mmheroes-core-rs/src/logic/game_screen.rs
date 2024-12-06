@@ -94,8 +94,11 @@ pub enum GameScreen {
     /// дальше можно либо поехать в ПОМИ, либо обратно в ПУНК.
     BaltiyskiyRailwayStation(scene_router::train::BaltiyskiyRailwayStationScene),
 
-    /// "Тебя чего-то не тянет поспать"
+    /// Экран "Тебя чего-то не тянет поспать"
     DontWantToSleep,
+
+    /// Экран "Тебя неумолимо клонит ко сну ..."
+    CantStayAwake(GameState),
 
     /// Разные сновидения
     Dreaming(sleep::DreamScreen),
@@ -195,6 +198,7 @@ impl GameScreen {
             | RestInMausoleum(state)
             | Cafe(state)
             | ComputerClassClosing(state)
+            | CantStayAwake(state)
             | TrainToPDMI(state, _)
             | TrainFromPDMI(state, _) => Some(state),
             Intro
