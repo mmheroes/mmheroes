@@ -104,6 +104,9 @@ pub enum GameScreen {
     /// герой нашёл в интернете решение задачи по информатике.
     SurfInternet { found_program: bool },
 
+    /// Экран "Класс закрывается. Пошли домой!"
+    ComputerClassClosing(GameState),
+
     /// Экран "ты серьёзно хочешь закончить игру?"
     IAmDone(GameState),
 
@@ -191,6 +194,7 @@ impl GameScreen {
             | BaltiyskiyRailwayStation(BaltiyskiyRailwayStationScene::Prompt(state))
             | RestInMausoleum(state)
             | Cafe(state)
+            | ComputerClassClosing(state)
             | TrainToPDMI(state, _)
             | TrainFromPDMI(state, _) => Some(state),
             Intro

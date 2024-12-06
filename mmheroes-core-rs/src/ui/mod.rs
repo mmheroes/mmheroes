@@ -435,6 +435,12 @@ impl<
                     *found_program,
                 )
             }
+            ComputerClassClosing(state) => {
+                screens::scene_router::display_computer_class_closing(
+                    &mut self.renderer,
+                    state,
+                )
+            }
             IAmDone(_) => screens::game_end::display_i_am_done(
                 &mut self.renderer,
                 self.state_holder.observable_state().available_actions(),

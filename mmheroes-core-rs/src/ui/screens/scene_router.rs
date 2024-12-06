@@ -315,3 +315,14 @@ pub(in crate::ui) fn display_available_professors(
     writeln!(r);
     dialog(r, available_actions)
 }
+
+pub(in crate::ui) fn display_computer_class_closing(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    state: &GameState,
+) -> WaitingState {
+    r.clear_screen();
+    display_header_stats(r, state);
+    r.move_cursor_to(7, 0);
+    writeln_colored!(White, r, "Класс закрывается. Пошли домой!");
+    wait_for_any_key(r)
+}

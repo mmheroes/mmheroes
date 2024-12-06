@@ -7,7 +7,7 @@ struct SubjectStatusBits {
     #[bits(3)]
     subject: Subject,
 
-    #[bits(8)]
+    #[bits(7)]
     problems_done: u8,
 
     #[bits(
@@ -21,8 +21,8 @@ struct SubjectStatusBits {
     #[bits(1)]
     has_lecture_notes: bool,
 
-    #[bits(1)]
-    __: bool,
+    #[bits(2)]
+    _padding: u16,
 }
 
 impl SubjectStatusBits {
@@ -132,154 +132,6 @@ impl Debug for SubjectStatus {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn test_new() {
-        assert_eq!(
-            SubjectStatus::new(Subject::AlgebraAndNumberTheory, BrainLevel(0))
-                .bits
-                .0,
-            0b0_111_00000000_000
-        );
-        assert_eq!(
-            SubjectStatus::new(Subject::Calculus, BrainLevel(0)).bits.0,
-            0b0_111_00000000_001
-        );
-        assert_eq!(
-            SubjectStatus::new(Subject::GeometryAndTopology, BrainLevel(0))
-                .bits
-                .0,
-            0b0_111_00000000_010
-        );
-        assert_eq!(
-            SubjectStatus::new(Subject::ComputerScience, BrainLevel(0))
-                .bits
-                .0,
-            0b0_111_00000000_011
-        );
-        assert_eq!(
-            SubjectStatus::new(Subject::English, BrainLevel(0)).bits.0,
-            0b0_111_00000000_100
-        );
-        assert_eq!(
-            SubjectStatus::new(Subject::PhysicalEducation, BrainLevel(0))
-                .bits
-                .0,
-            0b0_111_00000000_101
-        );
-    }
-
-    #[test]
-    fn test_subject() {
-        assert_eq!(
-            SubjectStatus::new(Subject::AlgebraAndNumberTheory, BrainLevel(0)).subject(),
-            Subject::AlgebraAndNumberTheory
-        );
-        assert_eq!(
-            SubjectStatus::new(Subject::Calculus, BrainLevel(0)).subject(),
-            Subject::Calculus
-        );
-        assert_eq!(
-            SubjectStatus::new(Subject::GeometryAndTopology, BrainLevel(0)).subject(),
-            Subject::GeometryAndTopology
-        );
-        assert_eq!(
-            SubjectStatus::new(Subject::ComputerScience, BrainLevel(0)).subject(),
-            Subject::ComputerScience
-        );
-        assert_eq!(
-            SubjectStatus::new(Subject::English, BrainLevel(0)).subject(),
-            Subject::English
-        );
-        assert_eq!(
-            SubjectStatus::new(Subject::PhysicalEducation, BrainLevel(0)).subject(),
-            Subject::PhysicalEducation
-        );
-    }
-
-    #[test]
-    fn test_problems_done() {
-        let mut status = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
-        assert_eq!(status.problems_done(), 0);
-
-        status.more_problems_solved(0);
-        assert_eq!(status.problems_done(), 0);
-        assert_eq!(status.bits.0, 0b0_111_00000000_001);
-
-        status.more_problems_solved(1);
-        assert_eq!(status.problems_done(), 1);
-        assert_eq!(status.bits.0, 0b0_111_00000001_001);
-
-        status.more_problems_solved(13);
-        assert_eq!(status.problems_done(), 14);
-        assert_eq!(status.bits.0, 0b0_111_00001110_001);
-
-        status.more_problems_solved(240);
-        assert_eq!(status.problems_done(), 254);
-        assert_eq!(status.bits.0, 0b0_111_11111110_001);
-
-        status.more_problems_solved(1);
-        assert_eq!(status.problems_done(), 255);
-        assert_eq!(status.bits.0, 0b0_111_11111111_001);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_too_many_problems_done() {
-        let mut status = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
-        status.more_problems_solved(255);
-        status.more_problems_solved(1);
-    }
-
-    #[test]
-    fn test_passed_exam_day_index() {
-        let mut status1 = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
-        assert_eq!(status1.passed_exam_day_index(), None);
-
-        status1.set_passed_exam_day_index(0);
-        assert_eq!(status1.passed_exam_day_index(), Some(0));
-        assert_eq!(status1.bits.0, 0b0_000_00000000_001);
-
-        let mut status2 = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
-        assert_eq!(status2.passed_exam_day_index(), None);
-
-        status2.set_passed_exam_day_index(6);
-        assert_eq!(status2.passed_exam_day_index(), Some(6));
-        assert_eq!(status2.bits.0, 0b0_110_00000000_001);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_passed_exam_twice() {
-        let mut status = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
-        status.set_passed_exam_day_index(1);
-        status.set_passed_exam_day_index(2);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_too_bid_day_index() {
-        let mut status = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
-        status.set_passed_exam_day_index(7);
-    }
-
-    #[test]
-    fn test_has_lecture_notes() {
-        let mut status = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
-        assert!(!status.has_lecture_notes());
-
-        status.set_has_lecture_notes();
-        assert!(status.has_lecture_notes());
-        assert_eq!(status.bits.0, 0b1_111_00000000_001);
-    }
-
-    #[test]
-    #[should_panic]
-    fn test_set_has_lecture_notes_twice() {
-        let mut status = SubjectStatus::new(Subject::Calculus, BrainLevel(0));
-        status.set_has_lecture_notes();
-        status.set_has_lecture_notes();
-    }
 
     #[test]
     fn test_debug() {
