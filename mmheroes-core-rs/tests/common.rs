@@ -34,6 +34,7 @@ impl TestRendererRequestConsumer {
         }
     }
 
+    #[allow(dead_code)] // false positive
     pub fn to_string(&self) -> String {
         let mut output = String::new();
         for i in 0..HEIGHT {
