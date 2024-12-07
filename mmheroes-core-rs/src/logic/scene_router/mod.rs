@@ -1,6 +1,6 @@
 mod cafe;
 pub(in crate::logic) mod computer_class;
-pub(in crate::logic) mod dorm;
+pub mod dorm;
 pub mod exams;
 pub(in crate::logic) mod mausoleum;
 pub(in crate::logic) mod pdmi;
@@ -47,7 +47,7 @@ fn scene_punk(state: &GameState) -> ActionVec {
     available_actions
 }
 
-async fn scene_pdmi(g: &mut InternalGameState<'_>, state: &mut GameState) -> ActionVec {
+fn scene_pdmi(state: &GameState) -> ActionVec {
     let mut available_actions = ActionVec::from([
         Action::GoToProfessor,
         Action::LookAtBulletinBoard,
@@ -116,10 +116,11 @@ async fn scene_dorm(
         return None;
     } else if current_time >= Time(18)
         && g.rng.random(10) < 3
-        && state.player.is_invited_to_party()
+        && !state.player.is_invited_to_party()
     {
         state.player.set_invited_to_party(true);
-        todo!("Приглашение от соседа")
+        dorm::invite_from_neighbor(g, state).await;
+        return None;
     }
     Some(ActionVec::from([
         Action::Study,
@@ -134,7 +135,7 @@ async fn scene_dorm(
     ]))
 }
 
-fn scene_mausoleum(state: &mut GameState) -> ActionVec {
+fn scene_mausoleum(state: &GameState) -> ActionVec {
     let mut available_actions = ActionVec::from([
         Action::GoFromMausoleumToPunk,
         Action::GoToPDMI,
@@ -153,7 +154,7 @@ pub(super) async fn run(
     loop {
         let available_actions = match state.location() {
             Location::PUNK => scene_punk(&state),
-            Location::PDMI => scene_pdmi(g, &mut state).await,
+            Location::PDMI => scene_pdmi(&state),
             Location::ComputerClass => match scene_computer_class(g, &mut state).await {
                 Some(available_actions) => available_actions,
                 None => continue,
@@ -162,7 +163,7 @@ pub(super) async fn run(
                 Some(available_actions) => available_actions,
                 None => continue,
             },
-            Location::Mausoleum => scene_mausoleum(&mut state),
+            Location::Mausoleum => scene_mausoleum(&state),
         };
         g.set_screen_and_action_vec(
             GameScreen::SceneRouter(state.clone()),

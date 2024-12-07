@@ -160,6 +160,14 @@ pub enum HelpFromAndrewAction {
 
 action_conversion!(HelpFromAndrewAction, HelpFromAndrew);
 
+#[derive(Debug, Copy, Clone, Eq, PartialEq, EnumIter)]
+pub enum InvitationFromNeighborAction {
+    Accept,
+    Deny,
+}
+
+action_conversion!(InvitationFromNeighborAction, InvitationFromNeighbor);
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
 pub enum Action {
     AnyKey,
@@ -180,6 +188,7 @@ pub enum Action {
     ViewTimetable,
     Rest,
     GoToBed,
+    InvitationFromNeighbor(InvitationFromNeighborAction),
     GoFromPunkToDorm,
     GoFromDormToPunk,
     GoFromMausoleumToDorm,

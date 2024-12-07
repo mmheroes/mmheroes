@@ -297,6 +297,13 @@ impl<
             CantStayAwake(state) => {
                 screens::sleep::display_cant_stay_awake(&mut self.renderer, state)
             }
+            NeighborInvites(invitation) => {
+                screens::scene_router::display_invitation_from_neighbor(
+                    &mut self.renderer,
+                    self.state_holder.observable_state().available_actions(),
+                    invitation,
+                )
+            }
             Dreaming(dream_screen) => {
                 screens::sleep::display_dreams(&mut self.renderer, dream_screen)
             }

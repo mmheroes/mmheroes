@@ -92,6 +92,12 @@ fn display_action<RequestConsumer: RendererRequestConsumer>(
         Action::ViewTimetable => "Посмотреть расписание",
         Action::Rest => "Отдыхать",
         Action::GoToBed => "Лечь спать",
+        Action::InvitationFromNeighbor(actions::InvitationFromNeighborAction::Accept) => {
+            "\"Угу, я сейчас!!!\""
+        }
+        Action::InvitationFromNeighbor(actions::InvitationFromNeighborAction::Deny) => {
+            "\"Не, извини, мне готовиться надо...\""
+        }
         Action::GoFromPunkToDorm => "Пойти в общагу",
         Action::GoFromDormToPunk => "Пойти на факультет",
         Action::GoFromMausoleumToDorm => "Идти в общагу",

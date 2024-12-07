@@ -326,3 +326,41 @@ pub(in crate::ui) fn display_computer_class_closing(
     writeln_colored!(White, r, "Класс закрывается. Пошли домой!");
     wait_for_any_key(r)
 }
+
+pub(in crate::ui) fn display_invitation_from_neighbor(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    available_actions: &[Action],
+    invitation: &scene_router::dorm::NeighborInvitation,
+) -> WaitingState {
+    use scene_router::dorm::{NeighborInvitation::*, NeighborInvitationOccasion::*};
+    match invitation {
+        InvitePrompt(state, occasion) => {
+            r.clear_screen();
+            display_header_stats(r, state);
+            r.move_cursor_to(7, 0);
+            let occasion_text = match occasion {
+                Birthday => "на свой День Рожденья",
+                DiscoParty => "на дискотеку в \"Шайбе\"",
+                PlayMafia => "поиграть в мафию",
+                PlayQuake => "по-Quakать",
+            };
+            writeln_colored!(
+                White,
+                r,
+                "К тебе ломится сосед и приглашает тебя {occasion_text}."
+            );
+            r.move_cursor_to(9, 0);
+            dialog(r, available_actions)
+        }
+        LetsGo => {
+            r.move_cursor_to(13, 0);
+            writeln_colored!(White, r, "\"Пошли оттягиваться!\"");
+            wait_for_any_key(r)
+        }
+        TooBad => {
+            r.move_cursor_to(13, 0);
+            writeln_colored!(White, r, "\"Ну и зря!\"");
+            wait_for_any_key(r)
+        }
+    }
+}

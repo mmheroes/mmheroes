@@ -1,5 +1,5 @@
 use super::*;
-use crate::logic::scene_router::terkom;
+use crate::logic::scene_router::{dorm, terkom};
 
 #[derive(Debug)]
 pub enum GameScreen {
@@ -100,6 +100,9 @@ pub enum GameScreen {
     /// Экран "Тебя неумолимо клонит ко сну ..."
     CantStayAwake(GameState),
 
+    /// Экран, на котором сосед приглашает куда-то
+    NeighborInvites(dorm::NeighborInvitation),
+
     /// Разные сновидения
     Dreaming(sleep::DreamScreen),
 
@@ -199,12 +202,15 @@ impl GameScreen {
             | Cafe(state)
             | ComputerClassClosing(state)
             | CantStayAwake(state)
+            | NeighborInvites(dorm::NeighborInvitation::InvitePrompt(state, _))
             | TrainToPDMI(state, _)
             | TrainFromPDMI(state, _) => Some(state),
             Intro
             | InitialParameters
             | Ding
             | DontWantToSleep
+            | NeighborInvites(dorm::NeighborInvitation::LetsGo)
+            | NeighborInvites(dorm::NeighborInvitation::TooBad)
             | Dreaming(_)
             | SurfInternet { .. }
             | ExamIntro(_)
