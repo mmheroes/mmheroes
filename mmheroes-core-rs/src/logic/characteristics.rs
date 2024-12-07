@@ -261,7 +261,9 @@ impl BrainLevel {
             (BrainLevel(6), BrainIsFresh),
             (BrainLevel(101), ExtraordinaryEaseOfThought),
         ];
-        *crate::util::assess(&scale, self, &ContactTheDeveloper)
+        let assessment = *crate::util::assess(&scale, self, &ContactTheDeveloper);
+        assert_ne!(assessment, ContactTheDeveloper, "Чересчур умный");
+        assessment
     }
 
     pub fn absolute_knowledge_assessment(&self) -> KnowledgeAssessment {
