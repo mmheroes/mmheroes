@@ -61,8 +61,50 @@ pub(in crate::ui) fn display_terkom(
             write_income(r, rng, hiccup, income);
             wait_for_any_key(r)
         }
-        Terkom::MMHEROES { hiccup } => {
-            todo!("Поиграть в MMHEROES")
+        Terkom::MmheroesPhase1 { hiccup } => {
+            r.clear_screen();
+            r.set_color(Color::CyanBright, Color::Black);
+            write_with_hiccup(
+                r,
+                rng,
+                hiccup,
+                "По неизвестной причине, в помещении ТЕРКОМА",
+            );
+            writeln!(r);
+            write_with_hiccup(
+                r,
+                rng,
+                hiccup,
+                "MMHEROES не оказывают никакого метафизического воздействия",
+            );
+            writeln!(r);
+            write_with_hiccup(r, rng, hiccup, "на окружающий мир...");
+            writeln!(r);
+            r.flush();
+            WaitingState::PressAnyKey
+        }
+        Terkom::MmheroesPhase2 { hiccup } => {
+            write_with_hiccup(r, rng, hiccup, "Оглядевшись вокруг, ты обнаруживаешь,");
+            writeln!(r);
+            write_with_hiccup(r, rng, hiccup, "что все товарищи, здесь собравшиеся,");
+            writeln!(r);
+            writeln!(r, "РУБЯТСЯ В MMHEROES!");
+            write_with_hiccup(r, rng, hiccup, "Возможно, они все пытаются халявить,");
+            writeln!(r);
+            write_with_hiccup(
+                r,
+                rng,
+                hiccup,
+                "пытаются играть по \"тривиальному\" алгоритму,",
+            );
+            writeln!(r);
+            write_with_hiccup(
+                r,
+                rng,
+                hiccup,
+                "который срабатывает, увы, далеко, не всегда...",
+            );
+            wait_for_any_key(r)
         }
         Terkom::Leaving { hiccup } => {
             r.move_cursor_to(16, 0);

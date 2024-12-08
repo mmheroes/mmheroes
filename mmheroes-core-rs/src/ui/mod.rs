@@ -37,6 +37,9 @@ use crate::logic::*;
 use crate::ui::recording::InputRecorder;
 use core::fmt::Display;
 
+pub const TERMINAL_WIDTH: usize = 80;
+pub const TERMINAL_HEIGHT: usize = 24;
+
 #[derive(Default, Copy, Clone, Eq, PartialEq, Hash, Debug)]
 #[repr(C)]
 pub enum Color {

@@ -1,4 +1,4 @@
-use crate::ui::{Color, Milliseconds, WaitingState};
+use crate::ui::{Color, Milliseconds, WaitingState, TERMINAL_WIDTH};
 
 use core::fmt::Write;
 
@@ -71,6 +71,10 @@ impl<C: RendererRequestConsumer> Renderer<C> {
                 self.column = 0;
                 self.line += 1;
             } else {
+                if self.column >= TERMINAL_WIDTH as u8 {
+                    self.column = 0;
+                    self.line += 1;
+                }
                 self.column += 1;
             }
         }

@@ -12,7 +12,8 @@ pub enum Terkom {
     Prompt,
     YouEarnedByWorking { income: Money, hiccup: u8 },
     YouEarnedBySurfingInternet { income: Money, hiccup: u8 },
-    MMHEROES { hiccup: u8 },
+    MmheroesPhase1 { hiccup: u8 },
+    MmheroesPhase2 { hiccup: u8 },
     Leaving { hiccup: u8 },
     EndOfWorkDay { hiccup: u8 },
 }
@@ -57,15 +58,13 @@ pub(super) async fn work(g: &mut InternalGameState<'_>, state: &mut GameState) {
             GameScreen::Terkom(state.clone(), Prompt),
             available_actions,
         );
+        let hiccup = hiccup(state);
         match g.wait_for_action().await {
             Action::EarnAtTerkom => {
                 let income = earned_money(&mut g.rng, state.player());
                 g.set_screen_and_wait_for_any_key(GameScreen::Terkom(
                     state.clone(),
-                    YouEarnedByWorking {
-                        income,
-                        hiccup: hiccup(state),
-                    },
+                    YouEarnedByWorking { income, hiccup },
                 ))
                 .await;
                 state.player.money += income;
@@ -77,17 +76,22 @@ pub(super) async fn work(g: &mut InternalGameState<'_>, state: &mut GameState) {
                 misc::hour_pass(g, state, None).await;
             }
             Action::PlayMMHEROES => {
-                // Сперва нужно реализовать взаимодействие с Diamond
-                todo!("Поиграть в MMHEROES")
+                g.set_screen_and_wait_for_any_key(GameScreen::Terkom(
+                    state.clone(),
+                    MmheroesPhase1 { hiccup },
+                ))
+                .await;
+                g.set_screen_and_wait_for_any_key(GameScreen::Terkom(
+                    state.clone(),
+                    MmheroesPhase2 { hiccup },
+                ))
+                .await;
             }
             Action::SurfInternetAtTerkom => {
                 let income = earned_money(&mut g.rng, state.player());
                 g.set_screen_and_wait_for_any_key(GameScreen::Terkom(
                     state.clone(),
-                    YouEarnedBySurfingInternet {
-                        income,
-                        hiccup: hiccup(state),
-                    },
+                    YouEarnedBySurfingInternet { income, hiccup },
                 ))
                 .await;
                 state.player.money += income;
@@ -96,9 +100,7 @@ pub(super) async fn work(g: &mut InternalGameState<'_>, state: &mut GameState) {
             Action::ExitTerkom => {
                 g.set_screen_and_wait_for_any_key(GameScreen::Terkom(
                     state.clone(),
-                    Leaving {
-                        hiccup: hiccup(state),
-                    },
+                    Leaving { hiccup },
                 ))
                 .await;
                 break;
@@ -109,9 +111,7 @@ pub(super) async fn work(g: &mut InternalGameState<'_>, state: &mut GameState) {
         if state.current_time() >= Time::terkom_closing_time() {
             g.set_screen_and_wait_for_any_key(GameScreen::Terkom(
                 state.clone(),
-                EndOfWorkDay {
-                    hiccup: hiccup(state),
-                },
+                EndOfWorkDay { hiccup },
             ))
             .await;
             break;

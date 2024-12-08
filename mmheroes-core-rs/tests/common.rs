@@ -5,10 +5,7 @@ use mmheroes_core::ui::recording::{InputRecordingParser, InputRecordingParserErr
 use mmheroes_core::ui::renderer::RendererRequestConsumer;
 use mmheroes_core::ui::*;
 
-const WIDTH: usize = 80;
-const HEIGHT: usize = 24;
-
-type Canvas = [[char; WIDTH]; HEIGHT];
+type Canvas = [[char; TERMINAL_WIDTH]; TERMINAL_HEIGHT];
 
 pub struct TestRendererRequestConsumer {
     canvas: Canvas,
@@ -21,7 +18,7 @@ pub struct TestRendererRequestConsumer {
 #[allow(clippy::new_without_default, clippy::inherent_to_string)]
 impl TestRendererRequestConsumer {
     fn make_canvas() -> Canvas {
-        [[' '; WIDTH]; HEIGHT]
+        [[' '; TERMINAL_WIDTH]; TERMINAL_HEIGHT]
     }
 
     pub fn new() -> Self {
@@ -37,9 +34,9 @@ impl TestRendererRequestConsumer {
     #[allow(dead_code)] // false positive
     pub fn to_string(&self) -> String {
         let mut output = String::new();
-        for i in 0..HEIGHT {
+        for i in 0..TERMINAL_HEIGHT {
             let mut tmp = String::new();
-            for j in 0..WIDTH {
+            for j in 0..TERMINAL_WIDTH {
                 if self.line == i && self.column == j {
                     tmp.push('▁');
                 } else {
@@ -69,6 +66,10 @@ impl RendererRequestConsumer for TestRendererRequestConsumer {
                         self.line += 1;
                         self.column = 0;
                     } else {
+                        if self.column == TERMINAL_WIDTH {
+                            self.line += 1;
+                            self.column = 0;
+                        }
                         self.canvas[self.line][self.column] = c;
                         self.column += 1;
                     }
