@@ -21,8 +21,7 @@ pub(super) async fn go(
     available_actions.push(exit_action);
     g.set_screen_and_action_vec(GameScreen::Cafe(state.clone()), available_actions);
     let selected_action = g.wait_for_action().await;
-    let charisma_dependent_health_gain =
-        HealthLevel(g.rng.random(state.player.charisma.0));
+    let charisma_dependent_health_gain = g.rng.random(state.player.charisma.0);
     if let Some(&(_, cost, menu_health_gain)) = menu
         .iter()
         .find(|(action, _, _)| *action == selected_action)

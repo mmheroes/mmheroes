@@ -15,7 +15,7 @@ pub(super) async fn handle_router_action(
             state.set_location(Location::PUNK);
             misc::decrease_health(
                 state,
-                HealthLevel::location_change_small_penalty(),
+                LOCATION_CHANGE_SMALL_HEALTH_PENALTY,
                 CauseOfDeath::CouldntLeaveTheComputer,
             );
         }
@@ -24,7 +24,7 @@ pub(super) async fn handle_router_action(
             state.set_location(Location::Mausoleum);
             misc::decrease_health(
                 state,
-                HealthLevel::location_change_small_penalty(),
+                LOCATION_CHANGE_SMALL_HEALTH_PENALTY,
                 CauseOfDeath::OnTheWayToMausoleum,
             );
         }
@@ -84,7 +84,7 @@ async fn play_mmheroes(g: &mut InternalGameState<'_>, state: &mut GameState) {
         .await;
     if state.player.stamina.0 + state.player.brain.0 - (state.recursion() as i16 * 5) < 8
     {
-        misc::decrease_health(state, HealthLevel(100), CauseOfDeath::SplitPersonality);
+        misc::decrease_health(state, 100, CauseOfDeath::SplitPersonality);
     }
 
     misc::hour_pass(g, state, None).await;

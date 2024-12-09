@@ -241,7 +241,7 @@ mod tests {
         let mut rng = random::Rng::new(0);
         let player = Player::new(
             false,
-            HealthLevel(10),
+            10,
             BrainLevel(11),
             StaminaLevel(12),
             CharismaLevel(13),

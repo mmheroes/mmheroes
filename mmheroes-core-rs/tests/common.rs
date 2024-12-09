@@ -174,7 +174,7 @@ macro_rules! assert_characteristics {
     ) => {{
         #[derive(Debug, Eq, PartialEq)]
         struct Characterisctis {
-            health: i16,
+            health: mmheroes_core::logic::characteristics::HealthLevel,
             money: i16,
             brain: i16,
             stamina: i16,
@@ -182,7 +182,7 @@ macro_rules! assert_characteristics {
         }
         assert_eq!(
             Characterisctis {
-                health: $state.player().health().0,
+                health: $state.player().health(),
                 money: $state.player().money().0,
                 brain: $state.player().brain().0,
                 stamina: $state.player().stamina().0,

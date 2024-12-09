@@ -1,5 +1,5 @@
 use crate::logic::{
-    timetable, BrainLevel, CauseOfDeath, Duration, GameScreen, GameState, HealthLevel,
+    timetable, BrainLevel, CauseOfDeath, Duration, GameScreen, GameState,
     InternalGameState, Location, Subject, Time,
 };
 use strum::VariantArray;
@@ -115,9 +115,9 @@ pub(in crate::logic) async fn sleep(
     if die_if_time_out(state) {
         return;
     }
-    state.player.health = core::cmp::min(state.player.health, HealthLevel(40));
-    let health_gain = (state.player.health.0 + g.rng.random_in_range(15..35)).min(50)
-        - state.player.health.0;
+    state.player.health = core::cmp::min(state.player.health, 40);
+    let health_gain = (state.player.health + g.rng.random_in_range(15..35)).min(50)
+        - state.player.health;
     assert!(health_gain >= 0, "negative health_gain ({})", health_gain,);
     state.player.health += health_gain;
     let sleep_duration = 7 + g.rng.random(health_gain / 4);
@@ -142,7 +142,7 @@ pub(in crate::logic) async fn sleep(
         dream = DreamTheme::Stupid;
     }
     if state.player.stamina <= 0 {
-        state.player.health = HealthLevel(0);
+        state.player.health = 0;
         state.player.cause_of_death = Some(CauseOfDeath::TurnedToVegetable);
     }
     if state.player.knows_djug() {
@@ -168,7 +168,7 @@ pub(in crate::logic) async fn sleep(
         }
 
         if matches!(dream, DreamTheme::Stupid | DreamTheme::Djug) {
-            state.player.health = HealthLevel(g.rng.random_in_range(10..20));
+            state.player.health = g.rng.random_in_range(10..20);
         }
     }
 

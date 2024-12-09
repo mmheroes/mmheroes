@@ -40,9 +40,7 @@ pub(super) async fn enter_exam(
         exam_intro(g, state, subject).await;
     }
     state.player.set_last_exam(subject);
-    assert!(
-        state.player.health > HealthLevel(0) && state.player().cause_of_death().is_none(),
-    );
+    assert!(state.player.health > 0 && state.player().cause_of_death().is_none(),);
     exam(g, state, subject).await;
 }
 
@@ -363,7 +361,7 @@ pub(in crate::logic) fn number_of_problems_accepted(
         mental_capacity = BrainLevel(mental_capacity.0 * 3 / 4);
     }
 
-    mental_capacity -= rng.random(BrainLevel(max(5 - state.player.health.0, 0)));
+    mental_capacity -= rng.random(BrainLevel(max(5 - state.player.health, 0)));
 
     let accepted_problems = if mental_capacity > 0 {
         ((mental_capacity.0 as f32).sqrt() / subject.single_problem_mental_factor())
@@ -428,10 +426,7 @@ async fn suffer_exam(
         state.player.stamina.0
     };
 
-    let health_penalty = max(
-        subject.health_penalty() - g.rng.random(HealthLevel(stamina)),
-        HealthLevel(0),
-    );
+    let health_penalty = max(subject.health_penalty() - g.rng.random(stamina), 0);
     misc::decrease_health(
         state,
         health_penalty,
@@ -503,7 +498,7 @@ async fn exam_passed(
             .await;
             misc::decrease_health(
                 state,
-                HealthLevel(g.rng.random(6)),
+                g.rng.random(6),
                 CauseOfDeath::DestroyedByVsemirnov,
             );
         }
@@ -523,11 +518,7 @@ async fn exam_passed(
             .await;
             match feeling {
                 EnglishExamFeeling::ReallyBad => {
-                    misc::decrease_health(
-                        state,
-                        HealthLevel(30),
-                        CauseOfDeath::FairyWasNotInTheMood,
-                    );
+                    misc::decrease_health(state, 30, CauseOfDeath::FairyWasNotInTheMood);
                 }
                 EnglishExamFeeling::SomeplaceElse => {
                     state.set_location(Location::PDMI);
@@ -662,11 +653,10 @@ async fn exam_in_train(
         // а по расписанию экзамен не может заканчиваться позже 18:00.
         unreachable!("Экзамен по алгебре после 20:00? Это как?")
     }
-    let caught_by_inspectors =
-        train::go_by_train(g, state, HealthLevel(0), false, &|state, train| {
-            GameScreen::Exam(ExamScene::Train(state, train))
-        })
-        .await;
+    let caught_by_inspectors = train::go_by_train(g, state, 0, false, &|state, train| {
+        GameScreen::Exam(ExamScene::Train(state, train))
+    })
+    .await;
     if caught_by_inspectors {
         // Баг в оригинальной реализации.
         // Если поймали контролёры, то появляется лишний пустой экран с единственным
@@ -709,11 +699,7 @@ async fn exam_in_train(
                     BaltiyskiyRailwayStationScene::CaughtByInspectors,
                 ))
                 .await;
-                misc::decrease_health(
-                    state,
-                    HealthLevel(10),
-                    CauseOfDeath::CorpseFoundInTheTrain,
-                );
+                misc::decrease_health(state, 10, CauseOfDeath::CorpseFoundInTheTrain);
                 misc::hour_pass(g, state, None).await;
             } else {
                 // Баг в оригинальной реализации: на экран должно быть выведено

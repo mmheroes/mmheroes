@@ -100,7 +100,7 @@ macro_rules! define_characteristic {
     };
 }
 
-define_characteristic!(HealthLevel);
+pub type HealthLevel = i16;
 define_characteristic!(Money);
 define_characteristic!(BrainLevel);
 define_characteristic!(StaminaLevel);
@@ -130,26 +130,22 @@ pub enum HealthAssessment {
     Great,
 }
 
-impl HealthLevel {
-    pub fn assessment(&self) -> HealthAssessment {
+pub(in crate::logic) const LOCATION_CHANGE_LARGE_HEALTH_PENALTY: HealthLevel = 3;
+
+pub(in crate::logic) const LOCATION_CHANGE_SMALL_HEALTH_PENALTY: HealthLevel = 2;
+
+impl HealthAssessment {
+    pub fn from_health_level(level: HealthLevel) -> HealthAssessment {
         use HealthAssessment::*;
         let scale = [
-            (HealthLevel(1), LivingDead),
-            (HealthLevel(9), TimeToDie),
-            (HealthLevel(17), Bad),
-            (HealthLevel(25), SoSo),
-            (HealthLevel(33), Average),
-            (HealthLevel(41), Good),
+            (1, LivingDead),
+            (9, TimeToDie),
+            (17, Bad),
+            (25, SoSo),
+            (33, Average),
+            (41, Good),
         ];
-        *crate::util::assess(&scale, self, &Great)
-    }
-
-    pub(in crate::logic) const fn location_change_large_penalty() -> HealthLevel {
-        HealthLevel(3)
-    }
-
-    pub(in crate::logic) const fn location_change_small_penalty() -> HealthLevel {
-        HealthLevel(2)
+        *crate::util::assess(&scale, &level, &Great)
     }
 }
 

@@ -69,11 +69,7 @@ async fn scene_computer_class(
         ))
         .await;
         state.set_location(Location::Dorm);
-        misc::decrease_health(
-            state,
-            HealthLevel(g.rng.random(5)),
-            CauseOfDeath::OnTheWayToDorm,
-        );
+        misc::decrease_health(state, g.rng.random(5), CauseOfDeath::OnTheWayToDorm);
         return None;
     }
     let mut available_actions = ActionVec::new();
@@ -104,7 +100,7 @@ async fn scene_dorm(
     state: &mut GameState,
 ) -> Option<ActionVec> {
     let time_to_sleep =
-        Time((23 - core::cmp::max(50 - state.player.health.0, 0) / 12) as u8);
+        Time((23 - core::cmp::max(50 - state.player.health, 0) / 12) as u8);
     let current_time = state.current_time();
     if current_time > time_to_sleep || current_time <= Time(3) {
         // В оригинальной реализации есть проверка current_time <= Time(3), но она,

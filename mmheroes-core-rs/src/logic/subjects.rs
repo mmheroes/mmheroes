@@ -100,12 +100,12 @@ impl Subject {
     /// при попытке сдать зачёт.
     pub(super) const fn health_penalty(self) -> HealthLevel {
         match self {
-            AlgebraAndNumberTheory => HealthLevel(17),
-            Calculus => HealthLevel(14),
-            GeometryAndTopology => HealthLevel(8),
-            ComputerScience => HealthLevel(6),
-            English => HealthLevel(10),
-            PhysicalEducation => HealthLevel(20),
+            AlgebraAndNumberTheory => 17,
+            Calculus => 14,
+            GeometryAndTopology => 8,
+            ComputerScience => 6,
+            English => 10,
+            PhysicalEducation => 20,
         }
     }
 

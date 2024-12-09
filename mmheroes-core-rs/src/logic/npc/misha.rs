@@ -1,6 +1,6 @@
 use crate::logic::{
-    actions, misc, CauseOfDeath, GameScreen, GameState, HealthLevel, InternalGameState,
-    Location, Subject,
+    actions, misc, CauseOfDeath, GameScreen, GameState, InternalGameState, Location,
+    Subject,
 };
 use strum::VariantArray;
 
@@ -165,7 +165,7 @@ async fn maybe_play_tennis_with_misha(
             if state.player.charisma < g.rng.random(10) {
                 misc::decrease_health(
                     state,
-                    HealthLevel(g.rng.random_in_range(3..6)),
+                    g.rng.random_in_range(3..6),
                     CauseOfDeath::ExhaustedByMisha,
                 )
             }

@@ -10,5 +10,5 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
     if *geometry_knowledge > 5 {
         *geometry_knowledge -= g.rng.random(5);
     }
-    misc::decrease_health(state, HealthLevel(15), CauseOfDeath::DontTalkToDjug);
+    misc::decrease_health(state, 15, CauseOfDeath::DontTalkToDjug);
 }

@@ -20,7 +20,7 @@ pub(super) async fn handle_router_action(
             state.set_location(Location::Mausoleum);
             misc::decrease_health(
                 state,
-                HealthLevel::location_change_large_penalty(),
+                LOCATION_CHANGE_LARGE_HEALTH_PENALTY,
                 CauseOfDeath::OnTheWayToMausoleum,
             )
         }
@@ -29,7 +29,7 @@ pub(super) async fn handle_router_action(
             state.set_location(Location::ComputerClass);
             misc::decrease_health(
                 state,
-                HealthLevel::location_change_small_penalty(),
+                LOCATION_CHANGE_SMALL_HEALTH_PENALTY,
                 CauseOfDeath::FellFromStairs,
             )
         }
@@ -57,13 +57,9 @@ async fn go_to_cafe(g: &mut InternalGameState<'_>, state: &mut GameState) {
         g,
         state,
         &[
-            (Action::OrderTea, Money::drink_cost(), HealthLevel(2)),
-            (Action::OrderCake, Money::pastry_cost(), HealthLevel(4)),
-            (
-                Action::OrderTeaWithCake,
-                Money::drink_with_pastry_cost(),
-                HealthLevel(7),
-            ),
+            (Action::OrderTea, Money::drink_cost(), 2),
+            (Action::OrderCake, Money::pastry_cost(), 4),
+            (Action::OrderTeaWithCake, Money::drink_with_pastry_cost(), 7),
         ],
         Action::RestInCafePUNK,
         Action::ShouldntHaveComeToCafePUNK,

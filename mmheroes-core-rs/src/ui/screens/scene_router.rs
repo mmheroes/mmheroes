@@ -82,7 +82,7 @@ fn display_character_stats(
     writeln_colored!(MagentaBright, r, "Версия gamma3.14");
 
     write_colored!(White, r, "Самочувствие: ");
-    match player.health().assessment() {
+    match HealthAssessment::from_health_level(player.health()) {
         HealthAssessment::LivingDead => write_colored!(Magenta, r, "живой труп"),
         HealthAssessment::TimeToDie => write_colored!(Red, r, "пора помирать ..."),
         HealthAssessment::Bad => write_colored!(Red, r, "плохое"),

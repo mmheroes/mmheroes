@@ -92,7 +92,7 @@ pub(super) async fn interact(
     let serj_leaves = state.player.charisma < g.rng.random(CharismaLevel(9));
 
     if g.rng.random(state.player.charisma.0) > g.rng.random_in_range(2..5)
-        && state.player.charisma.0 * 2 + 20 > state.player.health.0
+        && state.player.charisma.0 * 2 + 20 > state.player.health
     {
         g.set_screen_and_wait_for_any_key(GameScreen::SerjInteraction(
             state.clone(),

@@ -200,7 +200,7 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             }
         };
 
-        let health = HealthLevel(self.rng.random(stamina.0 * 2) + 40);
+        let health = self.rng.random(stamina.0 * 2) + 40;
 
         Player::new(god_mode, health, brain, stamina, charisma, |_| {
             self.rng.random(brain)

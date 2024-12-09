@@ -1,7 +1,7 @@
 use crate::logic::actions::{illegal_action, ActionVec};
 use crate::logic::{
-    misc, Action, CauseOfDeath, GameScreen, GameState, HealthLevel, InternalGameState,
-    Money, Player, Time,
+    misc, Action, CauseOfDeath, GameScreen, GameState, InternalGameState, Money, Player,
+    Time,
 };
 use Terkom::AgainNoFreeComputers;
 
@@ -68,11 +68,7 @@ pub(super) async fn work(g: &mut InternalGameState<'_>, state: &mut GameState) {
                 ))
                 .await;
                 state.player.money += income;
-                misc::decrease_health(
-                    state,
-                    HealthLevel(income.0 * 2),
-                    CauseOfDeath::Burnout,
-                );
+                misc::decrease_health(state, income.0 * 2, CauseOfDeath::Burnout);
                 misc::hour_pass(g, state, None).await;
             }
             Action::PlayMMHEROES => {

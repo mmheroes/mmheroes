@@ -11,7 +11,7 @@ pub(in crate::logic) async fn handle_router_action(
             state.set_location(Location::PUNK);
             misc::decrease_health(
                 state,
-                HealthLevel::location_change_large_penalty(),
+                LOCATION_CHANGE_LARGE_HEALTH_PENALTY,
                 CauseOfDeath::OnTheWayToPUNK,
             );
         }
@@ -72,7 +72,7 @@ async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) {
             }
             player.health += g.rng.random(player.charisma.0);
             if player.brain <= BrainLevel(0) {
-                player.health = HealthLevel(0);
+                player.health = 0;
                 player.cause_of_death = Some(CauseOfDeath::BeerAlcoholism);
             }
         }

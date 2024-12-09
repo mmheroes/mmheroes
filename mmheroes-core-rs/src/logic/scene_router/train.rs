@@ -41,7 +41,7 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
         return;
     }
 
-    let health_penalty = HealthLevel(g.rng.random(10));
+    let health_penalty = g.rng.random(10);
     state.set_location(Location::PDMI);
     let caught_by_inspectors =
         go_by_train(g, state, health_penalty, false, &GameScreen::TrainToPDMI).await;
@@ -52,7 +52,7 @@ pub(super) async fn go_to_pdmi(g: &mut InternalGameState<'_>, state: &mut GameSt
 }
 
 pub(super) async fn go_from_pdmi(g: &mut InternalGameState<'_>, state: &mut GameState) {
-    let health_penalty = HealthLevel(g.rng.random(10));
+    let health_penalty = g.rng.random(10);
     go_by_train(g, state, health_penalty, true, &GameScreen::TrainFromPDMI).await;
 
     state.set_location(Location::PUNK);
@@ -140,7 +140,7 @@ pub(super) async fn go_by_train(
         // Баг в оригинальной реализации:
         // здоровье не уменьшается, если контролёры поймали на пути в ПОМИ и при этом
         // были деньги на билет.
-        misc::decrease_health(state, HealthLevel(10), CauseOfDeath::KilledByInspectors);
+        misc::decrease_health(state, 10, CauseOfDeath::KilledByInspectors);
     }
     caught_by_inspectors
 }

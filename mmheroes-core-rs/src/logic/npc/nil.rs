@@ -53,7 +53,7 @@ pub(super) async fn interact(
                 // При этом может возникнуть отрицательный уровень знания.
                 player.status_for_subject_mut(subject).knowledge -=
                     subject.single_problem_mental_factor() as i16
-                        + g.rng.random(subject.health_penalty().0);
+                        + g.rng.random(subject.health_penalty());
                 misc::decrease_health(
                     state,
                     subject.health_penalty(),

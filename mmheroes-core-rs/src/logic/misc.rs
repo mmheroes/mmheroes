@@ -19,7 +19,7 @@ pub(in crate::logic) fn decrease_brain(
 ) {
     state.player.brain -= delta;
     if state.player.brain <= BrainLevel(0) {
-        state.player.health = HealthLevel(0);
+        state.player.health = 0;
         state.player.cause_of_death = Some(cause_of_death);
     }
 }
@@ -36,13 +36,13 @@ pub(in crate::logic) async fn hour_pass(
     if state.location() == Location::PDMI
         && matches!(exam_in_progress, Some(Subject::GeometryAndTopology))
     {
-        decrease_health(state, HealthLevel(6), CauseOfDeath::DjugIsDeadly);
+        decrease_health(state, 6, CauseOfDeath::DjugIsDeadly);
         state.player.set_knows_djug(true);
     }
 
     // TODO: Написать на это тест
     if state.player.charisma <= CharismaLevel(0) {
-        state.player.health = HealthLevel(0);
+        state.player.health = 0;
         state.player.cause_of_death = Some(CauseOfDeath::Paranoia)
     }
 

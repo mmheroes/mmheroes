@@ -40,8 +40,8 @@ impl Classmate {
     pub(in crate::logic) fn health_penalty(self) -> HealthLevel {
         match self {
             Kolya | Pasha | Diamond | Kuzmenko | DJuG | Andrew | Grisha | Misha
-            | Serj | Sasha => HealthLevel(0),
-            RAI | NiL => HealthLevel(8),
+            | Serj | Sasha => 0,
+            RAI | NiL => 8,
         }
     }
 

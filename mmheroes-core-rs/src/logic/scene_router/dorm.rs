@@ -19,7 +19,7 @@ pub(super) async fn handle_router_action(
             state.set_location(Location::PUNK);
             misc::decrease_health(
                 state,
-                HealthLevel::location_change_large_penalty(),
+                LOCATION_CHANGE_LARGE_HEALTH_PENALTY,
                 CauseOfDeath::OnTheWayToPUNK,
             );
         }
@@ -28,7 +28,7 @@ pub(super) async fn handle_router_action(
             state.set_location(Location::Mausoleum);
             misc::decrease_health(
                 state,
-                HealthLevel::location_change_large_penalty(),
+                LOCATION_CHANGE_LARGE_HEALTH_PENALTY,
                 CauseOfDeath::OnTheWayToMausoleum,
             );
         }
@@ -111,7 +111,7 @@ async fn study_subject(
         brain_or_stamina * 2 / 3
     };
     *knowledge -= g.rng.random(brain_or_stamina / 2);
-    *knowledge += g.rng.random(health.0 / 18);
+    *knowledge += g.rng.random(health / 18);
     if use_lecture_notes {
         *knowledge += 10
     }
@@ -124,18 +124,14 @@ async fn study_subject(
     if current_time.is_suboptimal_study_time() {
         health_penalty += 12;
     }
-    misc::decrease_health(
-        state,
-        HealthLevel(health_penalty),
-        CauseOfDeath::Overstudied,
-    );
+    misc::decrease_health(state, health_penalty, CauseOfDeath::Overstudied);
     if state
         .player
         .status_for_subject(subject)
         .knowledge
         .is_lethal()
     {
-        misc::decrease_health(state, HealthLevel(10), CauseOfDeath::StudiedTooWell);
+        misc::decrease_health(state, 10, CauseOfDeath::StudiedTooWell);
     }
     misc::hour_pass(g, state, None).await
 }

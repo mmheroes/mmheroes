@@ -142,7 +142,7 @@ pub(super) async fn interact(
                 .await;
                 misc::decrease_health(
                     state,
-                    HealthLevel(g.rng.random_in_range(2..7)),
+                    g.rng.random_in_range(2..7),
                     CauseOfDeath::AndrewCanDefendHimself,
                 )
             }

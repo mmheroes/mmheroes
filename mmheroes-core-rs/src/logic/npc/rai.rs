@@ -61,11 +61,7 @@ pub(super) async fn interact(
                 RaiAction::NoSorry => {
                     g.set_screen_and_wait_for_any_key(GameScreen::RaiInteraction(TakeIt))
                         .await;
-                    misc::decrease_health(
-                        state,
-                        HealthLevel(10),
-                        CauseOfDeath::KilledByRai,
-                    )
+                    misc::decrease_health(state, 10, CauseOfDeath::KilledByRai)
                 }
             }
         }
