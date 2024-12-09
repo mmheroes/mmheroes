@@ -138,12 +138,12 @@ mod tests {
         use std::fmt::Write;
 
         let mut result = String::new();
-        let mut status = SubjectStatus::new(Subject::Calculus, BrainLevel(13));
+        let mut status = SubjectStatus::new(Subject::Calculus, 13);
         status.more_problems_solved(3);
         status.set_passed_exam_day_index(3);
         status.set_has_lecture_notes();
         writeln!(result, "{:?}", status).unwrap();
 
-        assert_eq!(result, "SubjectStatus { subject: Calculus, knowledge: BrainLevel(13), passed_exam_day_index: Some(3), problems_done: 3, has_lecture_notes: true }\n");
+        assert_eq!(result, "SubjectStatus { subject: Calculus, knowledge: 13, passed_exam_day_index: Some(3), problems_done: 3, has_lecture_notes: true }\n");
     }
 }

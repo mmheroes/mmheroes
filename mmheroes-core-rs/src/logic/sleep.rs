@@ -1,6 +1,6 @@
 use crate::logic::{
-    timetable, BrainLevel, CauseOfDeath, Duration, GameScreen, GameState,
-    InternalGameState, Location, Subject, Time,
+    timetable, CauseOfDeath, Duration, GameScreen, GameState, InternalGameState,
+    Location, Subject, Time,
 };
 use strum::VariantArray;
 
@@ -138,7 +138,7 @@ pub(in crate::logic) async fn sleep(
 
     let mut dream = DreamTheme::SubjectRelated;
     if state.player.brain <= 2 {
-        state.player.brain = BrainLevel(2);
+        state.player.brain = 2;
         dream = DreamTheme::Stupid;
     }
     if state.player.stamina <= 0 {

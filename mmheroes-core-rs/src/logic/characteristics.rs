@@ -102,7 +102,7 @@ macro_rules! define_characteristic {
 
 pub type HealthLevel = i16;
 define_characteristic!(Money);
-define_characteristic!(BrainLevel);
+pub type BrainLevel = i16;
 define_characteristic!(StaminaLevel);
 define_characteristic!(CharismaLevel);
 
@@ -244,45 +244,37 @@ pub enum BrainAssessment {
     ContactTheDeveloper, // TODO: Find out if this is ever reachable :)
 }
 
-impl BrainLevel {
-    pub fn assessment(&self) -> BrainAssessment {
+impl BrainAssessment {
+    pub fn from_brain_level(brain_level: BrainLevel) -> BrainAssessment {
         use BrainAssessment::*;
         let scale = [
-            (BrainLevel(0), ClinicalBrainDeath),
-            (BrainLevel(1), BrainIsAlmostNonFunctioning),
-            (BrainLevel(2), ThinkingIsAlmostImpossible),
-            (BrainLevel(3), ThinkingIsDifficult),
-            (BrainLevel(4), BrainIsAlmostOK),
-            (BrainLevel(5), BrainIsOK),
-            (BrainLevel(6), BrainIsFresh),
-            (BrainLevel(101), ExtraordinaryEaseOfThought),
+            (0, ClinicalBrainDeath),
+            (1, BrainIsAlmostNonFunctioning),
+            (2, ThinkingIsAlmostImpossible),
+            (3, ThinkingIsDifficult),
+            (4, BrainIsAlmostOK),
+            (5, BrainIsOK),
+            (6, BrainIsFresh),
+            (101, ExtraordinaryEaseOfThought),
         ];
-        let assessment = *crate::util::assess(&scale, self, &ContactTheDeveloper);
+        let assessment = *crate::util::assess(&scale, &brain_level, &ContactTheDeveloper);
         assert_ne!(assessment, ContactTheDeveloper, "Чересчур умный");
         assessment
     }
-
-    pub fn absolute_knowledge_assessment(&self) -> KnowledgeAssessment {
+}
+impl KnowledgeAssessment {
+    pub fn absolute(knowledge: BrainLevel) -> KnowledgeAssessment {
         use KnowledgeAssessment::*;
-        let scale = [
-            (BrainLevel(6), Bad),
-            (BrainLevel(13), Satisfactory),
-            (BrainLevel(21), Good),
-            (BrainLevel(31), VeryGood),
-        ];
-        *crate::util::assess(&scale, self, &Excellent)
+        let scale = [(6, Bad), (13, Satisfactory), (21, Good), (31, VeryGood)];
+        *crate::util::assess(&scale, &knowledge, &Excellent)
     }
 
-    pub fn relative_knowledge_assessment(&self, subject: Subject) -> KnowledgeAssessment {
+    pub fn relative(knowledge: BrainLevel, subject: Subject) -> KnowledgeAssessment {
         *crate::util::assess(
             subject.assessment_bounds(),
-            self,
+            &knowledge,
             &KnowledgeAssessment::Excellent,
         )
-    }
-
-    pub fn is_lethal(self) -> bool {
-        self.0 > 45
     }
 }
 

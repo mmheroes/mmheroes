@@ -173,30 +173,30 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
         let (god_mode, brain, stamina, charisma) = match style {
             actions::PlayStyle::RandomStudent => (
                 false,
-                BrainLevel(self.rng.random_in_range(4..7)),
+                self.rng.random_in_range(4..7),
                 StaminaLevel(self.rng.random_in_range(4..7)),
                 CharismaLevel(self.rng.random_in_range(4..7)),
             ),
             actions::PlayStyle::CleverStudent => (
                 false,
-                BrainLevel(self.rng.random_in_range(5..10)),
+                self.rng.random_in_range(5..10),
                 StaminaLevel(self.rng.random_in_range(2..5)),
                 CharismaLevel(self.rng.random_in_range(2..5)),
             ),
             actions::PlayStyle::ImpudentStudent => (
                 false,
-                BrainLevel(self.rng.random_in_range(2..5)),
+                self.rng.random_in_range(2..5),
                 StaminaLevel(self.rng.random_in_range(5..10)),
                 CharismaLevel(self.rng.random_in_range(2..5)),
             ),
             actions::PlayStyle::SociableStudent => (
                 false,
-                BrainLevel(self.rng.random_in_range(2..5)),
+                self.rng.random_in_range(2..5),
                 StaminaLevel(self.rng.random_in_range(2..5)),
                 CharismaLevel(self.rng.random_in_range(5..10)),
             ),
             actions::PlayStyle::GodMode => {
-                (true, BrainLevel(30), StaminaLevel(30), CharismaLevel(30))
+                (true, 30, StaminaLevel(30), CharismaLevel(30))
             }
         };
 

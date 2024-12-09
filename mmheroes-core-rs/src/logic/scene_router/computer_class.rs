@@ -48,8 +48,8 @@ async fn surf_internet(g: &mut InternalGameState<'_>, state: &mut GameState) {
         .solved_all_problems();
     // В GOD-режиме можно нафармить сколь угодно много решённых задач.
     // Наверное, баг в оригинальной реализации. А может и нет.
-    let found_program = player.is_god_mode()
-        || (g.rng.random(player.brain) > BrainLevel(6) && !solved_all_problems);
+    let found_program =
+        player.is_god_mode() || (g.rng.random(player.brain) > 6 && !solved_all_problems);
     g.set_screen_and_wait_for_any_key(GameScreen::SurfInternet { found_program })
         .await;
     if found_program {
@@ -57,7 +57,7 @@ async fn surf_internet(g: &mut InternalGameState<'_>, state: &mut GameState) {
             .player
             .status_for_subject_mut(Subject::ComputerScience)
             .more_problems_solved(1);
-    } else if state.player.brain < BrainLevel(5) && g.rng.roll_dice(3) {
+    } else if state.player.brain < 5 && g.rng.roll_dice(3) {
         state.player.brain += 1;
     }
     misc::hour_pass(g, state, None).await
@@ -82,7 +82,8 @@ async fn play_mmheroes(g: &mut InternalGameState<'_>, state: &mut GameState) {
         .await;
     g.set_screen_and_wait_for_any_key(GameScreen::PlayMmheroes(Wait))
         .await;
-    if state.player.stamina.0 + state.player.brain.0 - (state.recursion() as i16 * 5) < 8
+    if state.player.stamina.0 + state.player.brain as i16 - (state.recursion() as i16 * 5)
+        < 8
     {
         misc::decrease_health(state, 100, CauseOfDeath::SplitPersonality);
     }

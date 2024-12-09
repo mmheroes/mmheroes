@@ -242,10 +242,10 @@ mod tests {
         let player = Player::new(
             false,
             10,
-            BrainLevel(11),
+            11,
             StaminaLevel(12),
             CharismaLevel(13),
-            |subject| BrainLevel(subject as i16),
+            |subject| subject as i16,
         );
         let mut state =
             GameState::new(player, Timetable::random(&mut rng), Location::Dorm);

@@ -1,6 +1,6 @@
 use crate::logic::{
-    actions, misc, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
-    InternalGameState, Money, StaminaLevel, Subject,
+    actions, misc, CauseOfDeath, CharismaLevel, GameScreen, GameState, InternalGameState,
+    Money, StaminaLevel, Subject,
 };
 
 #[derive(Debug, Clone)]
@@ -42,12 +42,12 @@ pub(super) async fn interact(
             let player = &mut state.player;
             let subject_knowledge = player.status_for_subject(subject).knowledge();
             if subject_knowledge > subject.mental_load() {
-                let reward = Money(subject_knowledge.0);
+                let reward = Money(subject_knowledge);
                 g.set_screen_and_wait_for_any_key(GameScreen::NilInteraction(
                     ThanksHereIsYourMoney(reward),
                 ))
                 .await;
-                player.money += subject_knowledge.0;
+                player.money += subject_knowledge;
 
                 // Тут что-то странное, но так сделано в оригинале.
                 // При этом может возникнуть отрицательный уровень знания.
@@ -79,7 +79,7 @@ pub(super) async fn interact(
             // Баг в оригинальной реализации: если какая-то из этих характеристик
             // опускается до нуля, смерть не наступает.
             let player = &mut state.player;
-            player.brain -= g.rng.random(BrainLevel(2));
+            player.brain -= g.rng.random(2);
             player.charisma -= g.rng.random(CharismaLevel(2));
             player.stamina -= g.rng.random(StaminaLevel(2));
         }

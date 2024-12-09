@@ -18,7 +18,7 @@ pub(in crate::logic) fn decrease_brain(
     cause_of_death: CauseOfDeath,
 ) {
     state.player.brain -= delta;
-    if state.player.brain <= BrainLevel(0) {
+    if state.player.brain <= 0 {
         state.player.health = 0;
         state.player.cause_of_death = Some(cause_of_death);
     }

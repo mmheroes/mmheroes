@@ -109,12 +109,12 @@ pub(super) async fn interact(
                 .player
                 .status_for_subject_mut(current_subject)
                 .knowledge;
-            if *knowledge > BrainLevel(3) {
+            if *knowledge > 3 {
                 *knowledge -= g.rng.random(3);
             }
         }
     } else if g.rng.random(state.player.charisma.0) > g.rng.random_in_range(2..8) {
-        if state.player.status_for_subject(PhysicalEducation).knowledge < BrainLevel(10) {
+        if state.player.status_for_subject(PhysicalEducation).knowledge < 10 {
             g.set_screen_and_wait_for_any_key(GameScreen::SerjInteraction(
                 state.clone(),
                 IKnowWhereToCutInThePark,

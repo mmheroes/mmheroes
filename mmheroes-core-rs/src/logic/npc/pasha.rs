@@ -32,7 +32,7 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
             player.stamina += 1;
             for subject in Subject::all_subjects() {
                 let knowledge = &mut player.status_for_subject_mut(subject).knowledge;
-                if *knowledge > BrainLevel(3) {
+                if *knowledge > 3 {
                     *knowledge -= g.rng.random(3);
                 }
             }

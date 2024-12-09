@@ -107,7 +107,7 @@ fn display_character_stats(
         writeln_colored!(White, r, "Ты успел потратить все деньги.");
     }
 
-    match player.brain().assessment() {
+    match BrainAssessment::from_brain_level(player.brain()) {
         BrainAssessment::ClinicalBrainDeath => {
             write_colored!(Magenta, r, "Клиническая смерть мозга")
         }
@@ -220,12 +220,12 @@ fn display_knowledge(r: &mut Renderer<impl RendererRequestConsumer>, player: &Pl
         let knowledge = player.status_for_subject(subject).knowledge();
         r.move_cursor_to(line, 66);
         r.set_color(
-            color_for_assessment(knowledge.absolute_knowledge_assessment()),
+            color_for_assessment(KnowledgeAssessment::absolute(knowledge)),
             Color::Black,
         );
         write!(r, "{}", knowledge);
 
-        let relative_assessment = knowledge.relative_knowledge_assessment(subject);
+        let relative_assessment = KnowledgeAssessment::relative(knowledge, subject);
         r.move_cursor_to(line, 70);
         r.set_color(color_for_assessment(relative_assessment), Color::Black);
         let assessment_description = match relative_assessment {

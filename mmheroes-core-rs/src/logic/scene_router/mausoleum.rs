@@ -71,7 +71,7 @@ async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) {
                 player.stamina += 1;
             }
             player.health += g.rng.random(player.charisma.0);
-            if player.brain <= BrainLevel(0) {
+            if player.brain <= 0 {
                 player.health = 0;
                 player.cause_of_death = Some(CauseOfDeath::BeerAlcoholism);
             }

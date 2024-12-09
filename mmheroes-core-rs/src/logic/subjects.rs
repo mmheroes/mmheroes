@@ -88,11 +88,11 @@ impl Subject {
     /// чтобы преподаватель зачёл задачу.
     pub(super) const fn mental_load(self) -> BrainLevel {
         match self {
-            AlgebraAndNumberTheory => BrainLevel(10),
-            Calculus => BrainLevel(8),
-            GeometryAndTopology => BrainLevel(4),
-            ComputerScience => BrainLevel(5),
-            English | PhysicalEducation => BrainLevel(7),
+            AlgebraAndNumberTheory => 10,
+            Calculus => 8,
+            GeometryAndTopology => 4,
+            ComputerScience => 5,
+            English | PhysicalEducation => 7,
         }
     }
 
@@ -138,36 +138,12 @@ impl Subject {
     ) -> &'static [(BrainLevel, KnowledgeAssessment)] {
         use KnowledgeAssessment::*;
         match self {
-            AlgebraAndNumberTheory => &[
-                (BrainLevel(11), Bad),
-                (BrainLevel(21), Satisfactory),
-                (BrainLevel(51), Good),
-            ],
-            Calculus => &[
-                (BrainLevel(9), Bad),
-                (BrainLevel(19), Satisfactory),
-                (BrainLevel(41), Good),
-            ],
-            GeometryAndTopology => &[
-                (BrainLevel(6), Bad),
-                (BrainLevel(11), Satisfactory),
-                (BrainLevel(31), Good),
-            ],
-            ComputerScience => &[
-                (BrainLevel(10), Bad),
-                (BrainLevel(16), Satisfactory),
-                (BrainLevel(31), Good),
-            ],
-            English => &[
-                (BrainLevel(5), Bad),
-                (BrainLevel(9), Satisfactory),
-                (BrainLevel(16), Good),
-            ],
-            PhysicalEducation => &[
-                (BrainLevel(5), Bad),
-                (BrainLevel(9), Satisfactory),
-                (BrainLevel(16), Good),
-            ],
+            AlgebraAndNumberTheory => &[(11, Bad), (21, Satisfactory), (51, Good)],
+            Calculus => &[(9, Bad), (19, Satisfactory), (41, Good)],
+            GeometryAndTopology => &[(6, Bad), (11, Satisfactory), (31, Good)],
+            ComputerScience => &[(10, Bad), (16, Satisfactory), (31, Good)],
+            English => &[(5, Bad), (9, Satisfactory), (16, Good)],
+            PhysicalEducation => &[(5, Bad), (9, Satisfactory), (16, Good)],
         }
     }
 }

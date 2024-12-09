@@ -358,14 +358,14 @@ pub(in crate::logic) fn number_of_problems_accepted(
         - subject.mental_load();
 
     if in_train {
-        mental_capacity = BrainLevel(mental_capacity.0 * 3 / 4);
+        mental_capacity = mental_capacity * 3 / 4;
     }
 
-    mental_capacity -= rng.random(BrainLevel(max(5 - state.player.health, 0)));
+    mental_capacity -= rng.random(max(5 - state.player.health, 0));
 
     let accepted_problems = if mental_capacity > 0 {
-        ((mental_capacity.0 as f32).sqrt() / subject.single_problem_mental_factor())
-            .round() as u8
+        ((mental_capacity as f32).sqrt() / subject.single_problem_mental_factor()).round()
+            as u8
     } else {
         0
     };
@@ -389,13 +389,13 @@ async fn suffer_exam(
     let mut solved_problems =
         number_of_problems_accepted(&mut g.rng, state, subject, in_train);
 
-    let knowledge_penalty = g.rng.random(subject.mental_load())
-        - g.rng.random(BrainLevel(state.player.stamina.0));
+    let knowledge_penalty =
+        g.rng.random(subject.mental_load()) - g.rng.random(state.player.stamina.0);
     let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
-    *knowledge -= knowledge_penalty.clamp(BrainLevel(0), *knowledge);
+    *knowledge -= knowledge_penalty.clamp(0, *knowledge);
 
     let too_smart =
-        subject == Subject::GeometryAndTopology && charisma.0 * 2 + 26 < knowledge.0;
+        subject == Subject::GeometryAndTopology && charisma.0 * 2 + 26 < *knowledge;
     if too_smart {
         solved_problems = 0;
     }
@@ -618,7 +618,7 @@ async fn exam_ends(
                 // TODO: Написать на это тест
                 return ExamResult::Continue;
             }
-            if subject.mental_load().0 * 2 + state.current_time().0 as i16 * 6
+            if subject.mental_load() * 2 + state.current_time().0 as i16 * 6
                 < state.player.charisma.0 * 3 + g.rng.random_in_range(20..40)
             {
                 g.set_screen_and_wait_for_any_key(GameScreen::Exam(

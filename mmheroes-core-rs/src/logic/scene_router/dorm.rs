@@ -97,7 +97,7 @@ async fn study_subject(
     let brain_or_stamina = if subject == Subject::PhysicalEducation {
         state.player.stamina.0
     } else {
-        state.player.brain.0
+        state.player.brain
     };
     if brain_or_stamina <= 0 {
         return;
@@ -115,7 +115,7 @@ async fn study_subject(
     if use_lecture_notes {
         *knowledge += 10
     }
-    assert!(*knowledge >= BrainLevel(0));
+    assert!(*knowledge >= 0);
     assert!(state.player.stamina >= StaminaLevel(0));
     let mut health_penalty = 10 - g.rng.random(state.player.stamina.0);
     if health_penalty < 0 || use_lecture_notes {
@@ -125,12 +125,7 @@ async fn study_subject(
         health_penalty += 12;
     }
     misc::decrease_health(state, health_penalty, CauseOfDeath::Overstudied);
-    if state
-        .player
-        .status_for_subject(subject)
-        .knowledge
-        .is_lethal()
-    {
+    if state.player.status_for_subject(subject).knowledge > 45 {
         misc::decrease_health(state, 10, CauseOfDeath::StudiedTooWell);
     }
     misc::hour_pass(g, state, None).await
@@ -219,7 +214,7 @@ pub(super) async fn invite_from_neighbor(
                 let random_subject_status =
                     state.player.status_for_subject_mut(g.rng.random_variant());
                 random_subject_status.knowledge -= g.rng.random(
-                    ((random_subject_status.knowledge.0 * 2) as f32)
+                    ((random_subject_status.knowledge * 2) as f32)
                         .sqrt()
                         .round() as i16,
                 );
@@ -227,7 +222,7 @@ pub(super) async fn invite_from_neighbor(
                 // В оригинале этой проверки нет.
                 // Непонятно, может такое вообще быть или нет.
                 assert!(
-                    random_subject_status.knowledge >= BrainLevel(0),
+                    random_subject_status.knowledge >= 0,
                     "Отрицательное знание по предмету {:?}",
                     random_subject_status.subject()
                 );
@@ -240,7 +235,7 @@ pub(super) async fn invite_from_neighbor(
             state.player.charisma += 1;
 
             if state.player.brain < 2 {
-                state.player.brain = BrainLevel(g.rng.random_in_range(2..5));
+                state.player.brain = g.rng.random_in_range(2..5);
             }
         }
         Deny => {

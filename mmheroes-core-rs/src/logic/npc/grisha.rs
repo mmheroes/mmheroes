@@ -1,7 +1,6 @@
 use crate::logic::actions::TerkomEmploymentAction;
 use crate::logic::{
-    misc, BrainLevel, CauseOfDeath, CharismaLevel, GameScreen, GameState,
-    InternalGameState, Location,
+    misc, CauseOfDeath, CharismaLevel, GameScreen, GameState, InternalGameState, Location,
 };
 use strum::VariantArray;
 
@@ -125,11 +124,7 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
         ))
         .await;
         if drink_beer {
-            misc::decrease_brain(
-                state,
-                BrainLevel(g.rng.random(2)),
-                CauseOfDeath::DrankTooMuchBeer,
-            );
+            misc::decrease_brain(state, g.rng.random(2), CauseOfDeath::DrankTooMuchBeer);
             state.player.charisma += g.rng.random(2);
         }
         if hour_pass {

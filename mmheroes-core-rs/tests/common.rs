@@ -176,7 +176,7 @@ macro_rules! assert_characteristics {
         struct Characterisctis {
             health: mmheroes_core::logic::characteristics::HealthLevel,
             money: i16,
-            brain: i16,
+            brain: mmheroes_core::logic::characteristics::BrainLevel,
             stamina: i16,
             charisma: i16,
         }
@@ -184,7 +184,7 @@ macro_rules! assert_characteristics {
             Characterisctis {
                 health: $state.player().health(),
                 money: $state.player().money().0,
-                brain: $state.player().brain().0,
+                brain: $state.player().brain(),
                 stamina: $state.player().stamina().0,
                 charisma: $state.player().charisma().0,
             },
@@ -226,35 +226,29 @@ macro_rules! assert_subject_knowledge {
                     .status_for_subject(
                         mmheroes_core::logic::Subject::AlgebraAndNumberTheory
                     )
-                    .knowledge()
-                    .0,
+                    .knowledge(),
                 calculus: $state
                     .player()
                     .status_for_subject(mmheroes_core::logic::Subject::Calculus)
-                    .knowledge()
-                    .0,
+                    .knowledge(),
                 geometry: $state
                     .player()
                     .status_for_subject(
                         mmheroes_core::logic::Subject::GeometryAndTopology
                     )
-                    .knowledge()
-                    .0,
+                    .knowledge(),
                 cs: $state
                     .player()
                     .status_for_subject(mmheroes_core::logic::Subject::ComputerScience)
-                    .knowledge()
-                    .0,
+                    .knowledge(),
                 english: $state
                     .player()
                     .status_for_subject(mmheroes_core::logic::Subject::English)
-                    .knowledge()
-                    .0,
+                    .knowledge(),
                 pe: $state
                     .player()
                     .status_for_subject(mmheroes_core::logic::Subject::PhysicalEducation)
-                    .knowledge()
-                    .0,
+                    .knowledge(),
             },
             SubjectKnowledge {
                 algebra: $algebra_knowledge,
