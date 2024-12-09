@@ -38,7 +38,7 @@ pub(super) async fn handle_router_action(
             go_to_cafe(g, state).await
         }
         Action::InteractWithClassmate(classmate) => {
-            assert_matches!(
+            assert_eq!(
                 state.classmates[classmate].current_location(),
                 ClassmateLocation::Location(Location::PUNK)
             );

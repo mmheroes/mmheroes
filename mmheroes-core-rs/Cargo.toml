@@ -5,9 +5,11 @@ authors = ["Sergej Jaskiewicz <jaskiewiczs@icloud.com>"]
 edition = "2021"
 
 [dependencies]
-assert_matches = "1.5.0"
 bitfield-struct = "0.9.3"
 strum = { version = "0.26.3", features = ["derive"] }
+
+[dev-dependencies]
+assert_matches = "1.5.0"
 
 [features]
 default = ["std"]

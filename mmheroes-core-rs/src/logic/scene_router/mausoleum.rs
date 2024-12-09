@@ -21,7 +21,7 @@ pub(in crate::logic) async fn handle_router_action(
         }
         Action::Rest => rest(g, state).await,
         Action::InteractWithClassmate(classmate) => {
-            assert_matches!(
+            assert_eq!(
                 state.classmates[classmate].current_location(),
                 ClassmateLocation::Location(Location::Mausoleum)
             );

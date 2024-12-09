@@ -15,7 +15,7 @@ pub(in crate::logic) async fn handle_router_action(
         Action::GoToCafePDMI => go_to_cafe(g, state).await,
         Action::GoToPUNKFromPDMI => train::go_from_pdmi(g, state).await,
         Action::InteractWithClassmate(classmate) => {
-            assert_matches!(
+            assert_eq!(
                 state.classmates[classmate].current_location(),
                 ClassmateLocation::Location(Location::PDMI)
             );

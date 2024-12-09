@@ -30,7 +30,7 @@ pub(super) async fn handle_router_action(
         }
         Action::SurfInternet => surf_internet(g, state).await,
         Action::InteractWithClassmate(classmate) => {
-            assert_matches!(
+            assert_eq!(
                 state.classmates[classmate].current_location(),
                 ClassmateLocation::Location(Location::ComputerClass)
             );

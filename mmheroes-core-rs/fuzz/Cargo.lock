@@ -9,12 +9,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c5eb01a9ab8a3369f2f7632b9461c34f5920bd454774bab5b9fc6744f21d6143"
 
 [[package]]
-name = "assert_matches"
-version = "1.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b34d609dfbaf33d6889b2b7106d3ca345eacad44200913df5ba02bfd31d2ba9"
-
-[[package]]
 name = "bitfield-struct"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -51,7 +45,6 @@ dependencies = [
 name = "mmheroes-core"
 version = "0.1.0"
 dependencies = [
- "assert_matches",
  "bitfield-struct",
  "strum",
 ]

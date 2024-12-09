@@ -38,7 +38,6 @@ pub mod sleep;
 use crate::random;
 
 use crate::util::async_support::*;
-use assert_matches::*;
 use core::cell::{Ref, RefCell};
 use core::future::Future;
 use core::pin::Pin;
