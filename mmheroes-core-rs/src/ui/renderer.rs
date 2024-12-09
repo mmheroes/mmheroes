@@ -60,14 +60,12 @@ impl<C: RendererRequestConsumer> Renderer<C> {
     }
 
     pub(in crate::ui) fn write_str(&mut self, s: &str) {
-        use unicode_segmentation::UnicodeSegmentation;
-
         if s.is_empty() {
             return;
         }
 
-        for grapheme in s.graphemes(true) {
-            if grapheme == "\n" {
+        for c in s.chars() {
+            if c == '\n' {
                 self.column = 0;
                 self.line += 1;
             } else {
