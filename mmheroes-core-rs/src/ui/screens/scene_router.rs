@@ -170,7 +170,7 @@ fn display_character_stats(
     }
     writeln!(r);
 
-    match player.charisma().assessment() {
+    match CharismaAssessment::from_charisma_level(player.charisma()) {
         CharismaAssessment::VeryIntroverted => {
             write_colored!(Magenta, r, "Очень замкнутый товарищ")
         }

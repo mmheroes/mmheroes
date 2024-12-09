@@ -104,7 +104,7 @@ pub type HealthLevel = i16;
 define_characteristic!(Money);
 pub type BrainLevel = i16;
 pub type StaminaLevel = i16;
-define_characteristic!(CharismaLevel);
+pub type CharismaLevel = i16;
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum HealthAssessment {
@@ -345,17 +345,17 @@ pub enum CharismaAssessment {
     TonsOfFriends,
 }
 
-impl CharismaLevel {
-    pub fn assessment(&self) -> CharismaAssessment {
+impl CharismaAssessment {
+    pub fn from_charisma_level(charisma_level: CharismaLevel) -> CharismaAssessment {
         use CharismaAssessment::*;
         let scale = [
-            (CharismaLevel(1), VeryIntroverted),
-            (CharismaLevel(2), PreferSolitariness),
-            (CharismaLevel(3), VeryHardToTalkToPeople),
-            (CharismaLevel(4), NotEasyToTalkToPeople),
-            (CharismaLevel(5), Normal),
-            (CharismaLevel(6), ManyFriends),
+            (1, VeryIntroverted),
+            (2, PreferSolitariness),
+            (3, VeryHardToTalkToPeople),
+            (4, NotEasyToTalkToPeople),
+            (5, Normal),
+            (6, ManyFriends),
         ];
-        *crate::util::assess(&scale, self, &TonsOfFriends)
+        *crate::util::assess(&scale, &charisma_level, &TonsOfFriends)
     }
 }

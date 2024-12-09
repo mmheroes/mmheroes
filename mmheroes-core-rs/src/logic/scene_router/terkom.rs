@@ -116,7 +116,7 @@ pub(super) async fn work(g: &mut InternalGameState<'_>, state: &mut GameState) {
 }
 
 fn earned_money(rng: &mut crate::random::Rng, player: &Player) -> Money {
-    let mut income = rng.random(player.brain() + player.charisma().0);
+    let mut income = rng.random(player.brain() + player.charisma());
     income = rng.random(income);
     income += 1;
     while income > 4 {

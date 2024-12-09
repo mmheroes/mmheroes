@@ -313,7 +313,7 @@ async fn npc_try_approach(
     let garlic = state.player.garlic;
     loop {
         let times_approached = approached_classmates.count() as i16;
-        if state.player.charisma.0 / 2 <= times_approached || times_approached > 3 {
+        if state.player.charisma / 2 <= times_approached || times_approached > 3 {
             break;
         }
         for &classmate in Classmate::VARIANTS {
@@ -327,7 +327,7 @@ async fn npc_try_approach(
             if !state.classmates[classmate].is_at_exam(subject) {
                 continue;
             }
-            if state.player.charisma.0 / 2 > times_approached {
+            if state.player.charisma / 2 > times_approached {
                 approached_classmates.add(classmate);
                 classmate_wants_something(g, state, subject, classmate).await;
 
@@ -395,7 +395,7 @@ async fn suffer_exam(
     *knowledge -= knowledge_penalty.clamp(0, *knowledge);
 
     let too_smart =
-        subject == Subject::GeometryAndTopology && charisma.0 * 2 + 26 < *knowledge;
+        subject == Subject::GeometryAndTopology && charisma * 2 + 26 < *knowledge;
     if too_smart {
         solved_problems = 0;
     }
@@ -619,7 +619,7 @@ async fn exam_ends(
                 return ExamResult::Continue;
             }
             if subject.mental_load() * 2 + state.current_time().0 as i16 * 6
-                < state.player.charisma.0 * 3 + g.rng.random_in_range(20..40)
+                < state.player.charisma * 3 + g.rng.random_in_range(20..40)
             {
                 g.set_screen_and_wait_for_any_key(GameScreen::Exam(
                     ExamScene::ProfessorLingers(state.clone(), subject),

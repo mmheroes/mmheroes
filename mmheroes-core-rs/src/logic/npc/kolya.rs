@@ -1,8 +1,7 @@
 use crate::logic::actions::YesOrNoAction;
 use crate::logic::Subject::AlgebraAndNumberTheory;
 use crate::logic::{
-    misc, CauseOfDeath, CharismaLevel, GameScreen, GameState, InternalGameState,
-    Location, Money, Player,
+    misc, CauseOfDeath, GameScreen, GameState, InternalGameState, Location, Money, Player,
 };
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -35,7 +34,7 @@ pub enum KolyaInteraction {
 use KolyaInteraction::*;
 
 fn can_solve_algebra_problems(rng: &mut crate::random::Rng, player: &mut Player) -> bool {
-    if player.charisma <= rng.random(CharismaLevel(10)) {
+    if player.charisma <= rng.random(10) {
         return false;
     }
     player

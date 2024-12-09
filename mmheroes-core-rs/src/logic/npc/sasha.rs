@@ -14,9 +14,7 @@ pub enum SashaInteraction {
 }
 
 use crate::logic::actions::{illegal_action, ActionVec};
-use crate::logic::{
-    Action, CharismaLevel, GameScreen, GameState, InternalGameState, Location, Subject,
-};
+use crate::logic::{Action, GameScreen, GameState, InternalGameState, Location, Subject};
 use SashaInteraction::*;
 
 pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
@@ -32,7 +30,7 @@ pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameStat
     );
     let new_interaction = match g.wait_for_action().await {
         Action::RequestLectureNotesFromSasha(subject) => {
-            if state.player.charisma > CharismaLevel(g.rng.random(18))
+            if state.player.charisma > g.rng.random(18)
                 && state.sasha_has_lecture_notes(subject)
             {
                 state

@@ -1,6 +1,6 @@
 use crate::logic::actions::TerkomEmploymentAction;
 use crate::logic::{
-    misc, CauseOfDeath, CharismaLevel, GameScreen, GameState, InternalGameState, Location,
+    misc, CauseOfDeath, GameScreen, GameState, InternalGameState, Location,
 };
 use strum::VariantArray;
 
@@ -78,8 +78,7 @@ use GrishaInteraction::*;
 
 pub(super) async fn interact(g: &mut InternalGameState<'_>, state: &mut GameState) {
     assert_eq!(state.location(), Location::Mausoleum);
-    let mut has_enough_charisma =
-        || state.player.charisma > g.rng.random(CharismaLevel(20));
+    let mut has_enough_charisma = || state.player.charisma > g.rng.random(20);
     if !state.player.is_employed_at_terkom() && has_enough_charisma() {
         match g
             .set_screen_and_wait_for_action::<TerkomEmploymentAction>(

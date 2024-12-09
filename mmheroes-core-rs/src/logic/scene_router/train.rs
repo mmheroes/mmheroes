@@ -146,5 +146,5 @@ pub(super) async fn go_by_train(
 }
 
 pub(in crate::logic) fn inspectors(rng: &mut Rng, state: &GameState) -> bool {
-    state.player.charisma < CharismaLevel(rng.random(10))
+    state.player.charisma < rng.random(10)
 }

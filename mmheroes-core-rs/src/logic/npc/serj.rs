@@ -89,10 +89,10 @@ pub(super) async fn interact(
     state: &mut GameState,
     exam_in_progress: Option<Subject>,
 ) {
-    let serj_leaves = state.player.charisma < g.rng.random(CharismaLevel(9));
+    let serj_leaves = state.player.charisma < g.rng.random(9);
 
-    if g.rng.random(state.player.charisma.0) > g.rng.random_in_range(2..5)
-        && state.player.charisma.0 * 2 + 20 > state.player.health
+    if g.rng.random(state.player.charisma) > g.rng.random_in_range(2..5)
+        && state.player.charisma * 2 + 20 > state.player.health
     {
         g.set_screen_and_wait_for_any_key(GameScreen::SerjInteraction(
             state.clone(),
@@ -101,8 +101,8 @@ pub(super) async fn interact(
         ))
         .await;
 
-        state.player.health += state.player.charisma.0;
-        state.player.health += g.rng.random(state.player.charisma.0);
+        state.player.health += state.player.charisma;
+        state.player.health += g.rng.random(state.player.charisma);
 
         if let Some(current_subject) = exam_in_progress {
             let knowledge = &mut state
@@ -113,7 +113,7 @@ pub(super) async fn interact(
                 *knowledge -= g.rng.random(3);
             }
         }
-    } else if g.rng.random(state.player.charisma.0) > g.rng.random_in_range(2..8) {
+    } else if g.rng.random(state.player.charisma) > g.rng.random_in_range(2..8) {
         if state.player.status_for_subject(PhysicalEducation).knowledge < 10 {
             g.set_screen_and_wait_for_any_key(GameScreen::SerjInteraction(
                 state.clone(),

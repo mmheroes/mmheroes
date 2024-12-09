@@ -41,7 +41,7 @@ pub(in crate::logic) async fn hour_pass(
     }
 
     // TODO: Написать на это тест
-    if state.player.charisma <= CharismaLevel(0) {
+    if state.player.charisma <= 0 {
         state.player.health = 0;
         state.player.cause_of_death = Some(CauseOfDeath::Paranoia)
     }

@@ -53,11 +53,11 @@ async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) {
     match g.wait_for_action().await {
         Action::OrderCola => {
             player.money -= Money::cola_cost();
-            player.health += g.rng.random(player.charisma.0) + 3;
+            player.health += g.rng.random(player.charisma) + 3;
         }
         Action::OrderSoup => {
             player.money -= Money::soup_cost();
-            player.health += g.rng.random(player.charisma.0) + 5;
+            player.health += g.rng.random(player.charisma) + 5;
         }
         Action::OrderBeer => {
             player.money -= Money::beer_cost();
@@ -70,14 +70,14 @@ async fn rest(g: &mut InternalGameState<'_>, state: &mut GameState) {
             if g.rng.roll_dice(2) {
                 player.stamina += 1;
             }
-            player.health += g.rng.random(player.charisma.0);
+            player.health += g.rng.random(player.charisma);
             if player.brain <= 0 {
                 player.health = 0;
                 player.cause_of_death = Some(CauseOfDeath::BeerAlcoholism);
             }
         }
         Action::RestByOurselvesInMausoleum => {
-            player.health += g.rng.random(player.charisma.0);
+            player.health += g.rng.random(player.charisma);
         }
         Action::NoRestIsNoGood => return,
         action => illegal_action!(action),

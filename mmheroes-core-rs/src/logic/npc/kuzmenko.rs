@@ -1,6 +1,6 @@
 use crate::logic::{
-    timetable, CharismaLevel, Duration, GameScreen, GameState, InternalGameState,
-    Location, Subject, Time,
+    timetable, Duration, GameScreen, GameState, InternalGameState, Location, Subject,
+    Time,
 };
 use crate::random;
 use strum::VariantArray;
@@ -65,7 +65,7 @@ fn additional_exam_day_index(rng: &mut random::Rng, state: &mut GameState) -> Op
     let mut additional_exam_day_idx: Option<u8> = None;
     for i in (tomorrow..=saturday).rev() {
         let day = state.timetable.day_mut(i);
-        let has_enough_charisma = state.player.charisma > rng.random(CharismaLevel(18));
+        let has_enough_charisma = state.player.charisma > rng.random(18);
         let can_add_exam = day.exam(Subject::ComputerScience).is_none();
         if has_enough_charisma && can_add_exam {
             let exam_start_time = Time(rng.random_in_range(10..15));

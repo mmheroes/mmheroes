@@ -175,27 +175,27 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
                 false,
                 self.rng.random_in_range(4..7),
                 self.rng.random_in_range(4..7),
-                CharismaLevel(self.rng.random_in_range(4..7)),
+                self.rng.random_in_range(4..7),
             ),
             actions::PlayStyle::CleverStudent => (
                 false,
                 self.rng.random_in_range(5..10),
                 self.rng.random_in_range(2..5),
-                CharismaLevel(self.rng.random_in_range(2..5)),
+                self.rng.random_in_range(2..5),
             ),
             actions::PlayStyle::ImpudentStudent => (
                 false,
                 self.rng.random_in_range(2..5),
                 self.rng.random_in_range(5..10),
-                CharismaLevel(self.rng.random_in_range(2..5)),
+                self.rng.random_in_range(2..5),
             ),
             actions::PlayStyle::SociableStudent => (
                 false,
                 self.rng.random_in_range(2..5),
                 self.rng.random_in_range(2..5),
-                CharismaLevel(self.rng.random_in_range(5..10)),
+                self.rng.random_in_range(5..10),
             ),
-            actions::PlayStyle::GodMode => (true, 30, 30, CharismaLevel(30)),
+            actions::PlayStyle::GodMode => (true, 30, 30, 30),
         };
 
         let health = self.rng.random(stamina * 2) + 40;

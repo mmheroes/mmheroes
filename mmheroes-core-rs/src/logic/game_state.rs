@@ -239,9 +239,7 @@ mod tests {
     #[test]
     fn test_game_state_bits() {
         let mut rng = random::Rng::new(0);
-        let player = Player::new(false, 10, 11, 12, CharismaLevel(13), |subject| {
-            subject as i16
-        });
+        let player = Player::new(false, 10, 11, 12, 13, |subject| subject as i16);
         let mut state =
             GameState::new(player, Timetable::random(&mut rng), Location::Dorm);
         assert_eq!(state.bits.0, 0b1_100_111_00_01000_000);
