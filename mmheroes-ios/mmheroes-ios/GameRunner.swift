@@ -17,9 +17,9 @@ private struct ConsoleLine: Codable {
 @MainActor
 final class GameRunner {
 
-    static let numberOfLines = 24
+    static let numberOfLines = Int(MMHEROES_TERMINAL_HEIGHT)
 
-    static let numberOfColumns = 80
+    static let numberOfColumns = Int(MMHEROES_TERMINAL_WIDTH)
 
     private var lines = [ConsoleLine](repeating: ConsoleLine(), count: numberOfLines)
 
