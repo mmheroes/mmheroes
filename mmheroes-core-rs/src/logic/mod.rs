@@ -174,33 +174,31 @@ impl<'a: 'b, 'b> InternalGameState<'a> {
             actions::PlayStyle::RandomStudent => (
                 false,
                 self.rng.random_in_range(4..7),
-                StaminaLevel(self.rng.random_in_range(4..7)),
+                self.rng.random_in_range(4..7),
                 CharismaLevel(self.rng.random_in_range(4..7)),
             ),
             actions::PlayStyle::CleverStudent => (
                 false,
                 self.rng.random_in_range(5..10),
-                StaminaLevel(self.rng.random_in_range(2..5)),
+                self.rng.random_in_range(2..5),
                 CharismaLevel(self.rng.random_in_range(2..5)),
             ),
             actions::PlayStyle::ImpudentStudent => (
                 false,
                 self.rng.random_in_range(2..5),
-                StaminaLevel(self.rng.random_in_range(5..10)),
+                self.rng.random_in_range(5..10),
                 CharismaLevel(self.rng.random_in_range(2..5)),
             ),
             actions::PlayStyle::SociableStudent => (
                 false,
                 self.rng.random_in_range(2..5),
-                StaminaLevel(self.rng.random_in_range(2..5)),
+                self.rng.random_in_range(2..5),
                 CharismaLevel(self.rng.random_in_range(5..10)),
             ),
-            actions::PlayStyle::GodMode => {
-                (true, 30, StaminaLevel(30), CharismaLevel(30))
-            }
+            actions::PlayStyle::GodMode => (true, 30, 30, CharismaLevel(30)),
         };
 
-        let health = self.rng.random(stamina.0 * 2) + 40;
+        let health = self.rng.random(stamina * 2) + 40;
 
         Player::new(god_mode, health, brain, stamina, charisma, |_| {
             self.rng.random(brain)

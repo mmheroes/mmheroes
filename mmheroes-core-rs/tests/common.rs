@@ -177,7 +177,7 @@ macro_rules! assert_characteristics {
             health: mmheroes_core::logic::characteristics::HealthLevel,
             money: i16,
             brain: mmheroes_core::logic::characteristics::BrainLevel,
-            stamina: i16,
+            stamina: mmheroes_core::logic::characteristics::StaminaLevel,
             charisma: i16,
         }
         assert_eq!(
@@ -185,7 +185,7 @@ macro_rules! assert_characteristics {
                 health: $state.player().health(),
                 money: $state.player().money().0,
                 brain: $state.player().brain(),
-                stamina: $state.player().stamina().0,
+                stamina: $state.player().stamina(),
                 charisma: $state.player().charisma().0,
             },
             Characterisctis {

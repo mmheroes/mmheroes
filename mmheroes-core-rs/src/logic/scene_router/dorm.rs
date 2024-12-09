@@ -95,7 +95,7 @@ async fn study_subject(
         "Нельзя воспользоваться конспектом, так как его на самом деле нет"
     );
     let brain_or_stamina = if subject == Subject::PhysicalEducation {
-        state.player.stamina.0
+        state.player.stamina
     } else {
         state.player.brain
     };
@@ -116,8 +116,8 @@ async fn study_subject(
         *knowledge += 10
     }
     assert!(*knowledge >= 0);
-    assert!(state.player.stamina >= StaminaLevel(0));
-    let mut health_penalty = 10 - g.rng.random(state.player.stamina.0);
+    assert!(state.player.stamina >= 0);
+    let mut health_penalty = 10 - g.rng.random(state.player.stamina);
     if health_penalty < 0 || use_lecture_notes {
         health_penalty = 0;
     }

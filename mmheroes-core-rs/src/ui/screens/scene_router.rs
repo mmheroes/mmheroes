@@ -138,7 +138,7 @@ fn display_character_stats(
     }
     writeln!(r);
 
-    match player.stamina().assessment() {
+    match StaminaAssessment::from_stamina_level(player.stamina()) {
         StaminaAssessment::MamaTakeMeBack => {
             write_colored!(Magenta, r, "Мама, роди меня обратно!")
         }

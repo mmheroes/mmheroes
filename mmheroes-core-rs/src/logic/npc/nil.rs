@@ -1,6 +1,6 @@
 use crate::logic::{
     actions, misc, CauseOfDeath, CharismaLevel, GameScreen, GameState, InternalGameState,
-    Money, StaminaLevel, Subject,
+    Money, Subject,
 };
 
 #[derive(Debug, Clone)]
@@ -81,7 +81,7 @@ pub(super) async fn interact(
             let player = &mut state.player;
             player.brain -= g.rng.random(2);
             player.charisma -= g.rng.random(CharismaLevel(2));
-            player.stamina -= g.rng.random(StaminaLevel(2));
+            player.stamina -= g.rng.random(2);
         }
     }
 }

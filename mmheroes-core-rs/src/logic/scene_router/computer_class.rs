@@ -82,9 +82,7 @@ async fn play_mmheroes(g: &mut InternalGameState<'_>, state: &mut GameState) {
         .await;
     g.set_screen_and_wait_for_any_key(GameScreen::PlayMmheroes(Wait))
         .await;
-    if state.player.stamina.0 + state.player.brain as i16 - (state.recursion() as i16 * 5)
-        < 8
-    {
+    if state.player.stamina + state.player.brain - (state.recursion() as i16 * 5) < 8 {
         misc::decrease_health(state, 100, CauseOfDeath::SplitPersonality);
     }
 

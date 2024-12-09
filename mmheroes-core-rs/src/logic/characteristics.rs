@@ -103,7 +103,7 @@ macro_rules! define_characteristic {
 pub type HealthLevel = i16;
 define_characteristic!(Money);
 pub type BrainLevel = i16;
-define_characteristic!(StaminaLevel);
+pub type StaminaLevel = i16;
 define_characteristic!(CharismaLevel);
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
@@ -305,19 +305,19 @@ pub enum StaminaAssessment {
     GreatThingsAwaitUs,
 }
 
-impl StaminaLevel {
-    pub fn assessment(&self) -> StaminaAssessment {
+impl StaminaAssessment {
+    pub fn from_stamina_level(stamina_level: StaminaLevel) -> StaminaAssessment {
         use StaminaAssessment::*;
         let scale = [
-            (StaminaLevel(0), MamaTakeMeBack),
-            (StaminaLevel(1), CompletelyOverstudied),
-            (StaminaLevel(2), ICantTakeIt),
-            (StaminaLevel(3), IWishItAllEndedSoon),
-            (StaminaLevel(4), ALittleMoreAndThenRest),
-            (StaminaLevel(5), ABitTired),
-            (StaminaLevel(6), ReadyForEverything),
+            (0, MamaTakeMeBack),
+            (1, CompletelyOverstudied),
+            (2, ICantTakeIt),
+            (3, IWishItAllEndedSoon),
+            (4, ALittleMoreAndThenRest),
+            (5, ABitTired),
+            (6, ReadyForEverything),
         ];
-        *crate::util::assess(&scale, self, &GreatThingsAwaitUs)
+        *crate::util::assess(&scale, &stamina_level, &GreatThingsAwaitUs)
     }
 }
 

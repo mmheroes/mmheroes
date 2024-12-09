@@ -390,7 +390,7 @@ async fn suffer_exam(
         number_of_problems_accepted(&mut g.rng, state, subject, in_train);
 
     let knowledge_penalty =
-        g.rng.random(subject.mental_load()) - g.rng.random(state.player.stamina.0);
+        g.rng.random(subject.mental_load()) - g.rng.random(state.player.stamina);
     let knowledge = &mut state.player.status_for_subject_mut(subject).knowledge;
     *knowledge -= knowledge_penalty.clamp(0, *knowledge);
 
@@ -421,9 +421,9 @@ async fn suffer_exam(
         .more_problems_solved(solved_problems);
 
     let stamina = if in_train {
-        state.player.stamina.0 * 2 / 3
+        state.player.stamina * 2 / 3
     } else {
-        state.player.stamina.0
+        state.player.stamina
     };
 
     let health_penalty = max(subject.health_penalty() - g.rng.random(stamina), 0);
