@@ -1,5 +1,5 @@
 mod cafe;
-pub(in crate::logic) mod computer_class;
+pub mod computer_class;
 pub mod dorm;
 pub mod exams;
 pub(in crate::logic) mod mausoleum;
@@ -91,10 +91,10 @@ async fn scene_computer_class(
     if state.player.has_internet() {
         available_actions.push(Action::SurfInternet);
     }
+    add_classmates(&mut available_actions, state);
     if state.player.has_mmheroes_floppy() {
         available_actions.push(Action::PlayMMHEROES);
     }
-    add_classmates(&mut available_actions, state);
     available_actions.push(Action::IAmDone);
     Some(available_actions)
 }

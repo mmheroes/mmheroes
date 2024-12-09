@@ -72,6 +72,7 @@ pub(in crate::ui) fn display_initial_parameters(
 
 pub(in crate::ui) fn display_ding(
     r: &mut Renderer<impl RendererRequestConsumer>,
+    recursion: bool,
 ) -> WaitingState {
     r.clear_screen();
     r.set_color(Color::Green, Color::Black);
@@ -84,7 +85,9 @@ pub(in crate::ui) fn display_ding(
     writeln!(r, "ДДДДДДЗЗЗЗЗЗЗЗЗЗЗЗЗИИИИИИИИИИННННННННННННЬ !!!!!!!!!!");
     sleep(r, Milliseconds(1000));
     r.set_color(Color::White, Color::Black);
-    writeln!(r, "Ты просыпаешься от звонка будильника 22-го мая в 8:00.");
+    if !recursion {
+        writeln!(r, "Ты просыпаешься от звонка будильника 22-го мая в 8:00.");
+    }
     writeln!(r, "Неожиданно ты осознаешь, что началась зачетная неделя,");
     writeln!(
         r,

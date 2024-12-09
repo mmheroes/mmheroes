@@ -36,7 +36,7 @@ pub(super) async fn handle_router_action(
             );
             interact_with_classmate(g, state, classmate, None).await
         }
-        Action::PlayMMHEROES => todo!("Поиграть в MMHEROES"),
+        Action::PlayMMHEROES => play_mmheroes(g, state).await,
         _ => illegal_action!(action),
     }
 }
@@ -61,4 +61,44 @@ async fn surf_internet(g: &mut InternalGameState<'_>, state: &mut GameState) {
         state.player.brain += 1;
     }
     misc::hour_pass(g, state, None).await
+}
+
+#[derive(Debug, Copy, Clone)]
+pub enum PlayMmheroesScene {
+    /// "Неожиданно ты осознаешь, что началась зачетная неделя…"
+    Ding,
+
+    /// "СТОП! ЧТО-ТО ТАКОЕ ТЫ УЖЕ ВИДЕЛ!!!"
+    Wait,
+
+    /// "Не каждый способен пережить такое потрясение…"
+    NotEveryoneCanSurviveThis,
+}
+
+async fn play_mmheroes(g: &mut InternalGameState<'_>, state: &mut GameState) {
+    use PlayMmheroesScene::*;
+    state.add_recursion_level();
+    g.set_screen_and_wait_for_any_key(GameScreen::PlayMmheroes(Ding))
+        .await;
+    g.set_screen_and_wait_for_any_key(GameScreen::PlayMmheroes(Wait))
+        .await;
+    if state.player.stamina.0 + state.player.brain.0 - (state.recursion() as i16 * 5) < 8
+    {
+        misc::decrease_health(state, HealthLevel(100), CauseOfDeath::SplitPersonality);
+    }
+
+    misc::hour_pass(g, state, None).await;
+
+    if state.player.health <= 0 {
+        return;
+    }
+
+    g.set_screen_and_wait_for_any_key(GameScreen::PlayMmheroes(
+        NotEveryoneCanSurviveThis,
+    ))
+    .await;
+
+    state
+        .timetable
+        .randomize_from_day(state.current_day_index(), &mut g.rng);
 }

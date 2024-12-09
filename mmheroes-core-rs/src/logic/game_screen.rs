@@ -110,6 +110,9 @@ pub enum GameScreen {
     /// герой нашёл в интернете решение задачи по информатике.
     SurfInternet { found_program: bool },
 
+    /// Попытка поиграть в игру внутри игры.
+    PlayMmheroes(scene_router::computer_class::PlayMmheroesScene),
+
     /// Экран "Класс закрывается. Пошли домой!"
     ComputerClassClosing(GameState),
 
@@ -213,6 +216,7 @@ impl GameScreen {
             | NeighborInvites(dorm::NeighborInvitation::TooBad)
             | Dreaming(_)
             | SurfInternet { .. }
+            | PlayMmheroes(_)
             | ExamIntro(_)
             | Exam(ExamScene::ExamSuffering { .. })
             | Exam(ExamScene::IgnoredClassmate { .. })

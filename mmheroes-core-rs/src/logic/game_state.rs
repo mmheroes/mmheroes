@@ -29,7 +29,10 @@ struct GameStateBits {
     #[bits(1, default = true)]
     terkom_has_places: bool,
 
-    #[bits(15)]
+    #[bits(5)]
+    recursion: u8,
+
+    #[bits(10)]
     _padding: u32,
 }
 
@@ -153,6 +156,14 @@ impl GameState {
 
     pub(in crate::logic) fn set_terkom_has_places(&mut self, value: bool) {
         self.bits.set_terkom_has_places(value)
+    }
+
+    pub(in crate::logic) fn recursion(&self) -> u8 {
+        self.bits.recursion()
+    }
+
+    pub(in crate::logic) fn add_recursion_level(&mut self) {
+        self.bits.set_recursion(self.bits.recursion() + 1);
     }
 }
 

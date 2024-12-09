@@ -274,7 +274,7 @@ impl<
                 self.state_holder.observable_state().available_actions(),
                 self.state_holder.observable_state().mode(),
             ),
-            Ding => screens::initial::display_ding(&mut self.renderer),
+            Ding => screens::initial::display_ding(&mut self.renderer, false),
             Timetable(state) => {
                 screens::timetable::display_timetable(&mut self.renderer, state)
             }
@@ -447,6 +447,9 @@ impl<
                     &mut self.renderer,
                     *found_program,
                 )
+            }
+            PlayMmheroes(scene) => {
+                screens::scene_router::display_play_mmheroes(&mut self.renderer, *scene)
             }
             ComputerClassClosing(state) => {
                 screens::scene_router::display_computer_class_closing(

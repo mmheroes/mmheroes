@@ -222,7 +222,7 @@ pub struct Timetable {
 }
 
 impl Timetable {
-    pub(crate) fn random(rng: &mut crate::random::Rng) -> Timetable {
+    pub(in crate::logic) fn random(rng: &mut crate::random::Rng) -> Timetable {
         let mut days = [Day {
             index: 0,
             exams: [None; Subject::COUNT],
@@ -261,6 +261,18 @@ impl Timetable {
             }
         }
         Timetable { days }
+    }
+
+    pub(in crate::logic) fn randomize_from_day(
+        &mut self,
+        day_index: u8,
+        rng: &mut crate::random::Rng,
+    ) {
+        let old_timetable = self.clone();
+        *self = Timetable::random(rng);
+        for i in 0..=day_index {
+            *self.day_mut(i) = old_timetable.day(i).clone();
+        }
     }
 
     pub fn day(&self, index: u8) -> &Day {

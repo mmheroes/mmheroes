@@ -364,3 +364,53 @@ pub(in crate::ui) fn display_invitation_from_neighbor(
         }
     }
 }
+
+pub(in crate::ui) fn display_play_mmheroes(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    scene: scene_router::computer_class::PlayMmheroesScene,
+) -> WaitingState {
+    use scene_router::computer_class::PlayMmheroesScene::*;
+    match scene {
+        Ding => screens::initial::display_ding(r, true),
+        Wait => {
+            r.clear_screen();
+            writeln_colored!(WhiteBright, r, "!!!!!! СТОП! !!!!!!");
+            writeln!(r);
+            writeln!(r, "ЧТО-ТО ТАКОЕ ТЫ УЖЕ ВИДЕЛ!!!");
+            writeln!(r, "Оглядевшись вокруг, ты осознаешь, что, вроде бы,");
+            writeln!(
+                r,
+                "экстраординарного не произошло. Ты просто играешь в компьютерную"
+            );
+            writeln!(
+                r,
+                "игру не самого лучшего качества, в которой тебе вдруг предложили..."
+            );
+            writeln!(r, "СЫГРАТЬ В ЭТУ САМУЮ ИГРУ! [...]");
+            r.flush();
+            WaitingState::PressAnyKey
+        }
+        NotEveryoneCanSurviveThis => {
+            writeln!(r);
+            writeln_colored!(
+                YellowBright,
+                r,
+                "Не каждый способен пережить такое потрясение."
+            );
+            writeln!(r, "Постепенно к тебе приходит осознание того, что");
+            writeln!(
+                r,
+                "на самом деле, все это - компьютерная игра, и, следовательно,"
+            );
+            writeln!(r, "эти события происходят только в твоем воображении.");
+            writeln!(
+                r,
+                "Вовремя выйдя из странного трансцендентального состояния,"
+            );
+            writeln!(r, "ты обнаруживаешь себя в компьютерном классе Мат-Меха.");
+            writeln!(r, "Правда, мир вокруг тебя, похоже, несколько иной,");
+            writeln!(r, "нежели он был час минут назад...");
+            wait_for_any_key(r)
+        }
+    }
+}
