@@ -67,7 +67,9 @@ mod screen {
 }
 
 mod high_scores {
-    use mmheroes_core::ui::high_scores::{decode, encode, HighScore, BUFFER_SIZE, SCORE_COUNT};
+    use mmheroes_core::ui::high_scores::{
+        decode, encode, HighScore, BUFFER_SIZE, SCORE_COUNT,
+    };
     use std::fs::*;
     use std::io::Read;
 
