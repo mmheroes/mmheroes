@@ -164,6 +164,7 @@ async fn show_help(g: &mut InternalGameState<'_>, state: &GameState) {
 }
 
 #[derive(Debug)]
+#[allow(clippy::large_enum_variant)]
 pub enum NeighborInvitation {
     /// "К тебе ломится сосед и приглашает тебя …"
     InvitePrompt(GameState, NeighborInvitationOccasion),

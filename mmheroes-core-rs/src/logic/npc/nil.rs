@@ -3,6 +3,7 @@ use crate::logic::{
 };
 
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum NilInteraction {
     /// "Маладой чилавек, вы мне не паможите решить задачу?
     /// А то я сигодня ни в зуб нагой ..."

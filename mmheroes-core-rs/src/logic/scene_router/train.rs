@@ -22,6 +22,7 @@ pub enum TrainScene {
 }
 
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum BaltiyskiyRailwayStationScene {
     /// "Ты в Питере, на Балтийском вокзале. Куда направляемся?"
     Prompt(GameState),

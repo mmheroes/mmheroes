@@ -83,6 +83,7 @@ pub(in crate::ui) fn display_train_algebra_exam(
     )
 }
 
+#[allow(clippy::too_many_arguments)]
 fn display_train<R: RendererRequestConsumer>(
     r: &mut Renderer<R>,
     available_actions: &[Action],
@@ -91,7 +92,7 @@ fn display_train<R: RendererRequestConsumer>(
     start_line: Line,
     prompt_line: Line,
     no_money_color: Color,
-    gatecrash: &dyn Fn(&mut Renderer<R>, bool) -> (),
+    gatecrash: &dyn Fn(&mut Renderer<R>, bool),
 ) -> WaitingState {
     match interaction {
         TrainScene::NoPointToGoToPDMI => {

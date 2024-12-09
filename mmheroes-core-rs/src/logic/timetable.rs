@@ -112,7 +112,7 @@ impl TryFrom<Time> for u64 {
     type Error = core::convert::Infallible;
 
     fn try_from(value: Time) -> Result<Self, Self::Error> {
-        u64::try_from(value.0)
+        Ok(u64::from(value.0))
     }
 }
 
@@ -178,7 +178,7 @@ impl Exam {
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Day {
     index: u8,
     exams: [Option<Exam>; Subject::COUNT],
@@ -223,9 +223,11 @@ pub struct Timetable {
 
 impl Timetable {
     pub(in crate::logic) fn random(rng: &mut crate::random::Rng) -> Timetable {
-        let mut days = [Day {
-            index: 0,
-            exams: [None; Subject::COUNT],
+        let mut days = [const {
+            Day {
+                index: 0,
+                exams: [None; Subject::COUNT],
+            }
         }; NUM_DAYS];
 
         for (i, day) in days.iter_mut().enumerate() {

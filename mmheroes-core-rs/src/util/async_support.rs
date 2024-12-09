@@ -116,7 +116,7 @@ struct MyFuture<'a, Input, Output> {
     shared_future_data: &'a RefCell<Option<FutureData<Input, Output>>>,
 }
 
-impl<'a, Input: Any + Unpin, Output: Any + Unpin> Future for MyFuture<'a, Input, Output> {
+impl<Input: Any + Unpin, Output: Any + Unpin> Future for MyFuture<'_, Input, Output> {
     type Output = Input;
 
     fn poll(mut self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Input> {

@@ -1,6 +1,7 @@
 use super::*;
 
 #[derive(Debug, Clone)]
+#[allow(clippy::large_enum_variant)]
 pub enum AndrewInteraction {
     /// "Обратиться к Эндрю за помощью?"
     PromptHelpFromAndrew(GameState),
