@@ -283,6 +283,9 @@ impl<
                 self.state_holder.observable_state().available_actions(),
                 state,
             ),
+            Midnight(state) => {
+                screens::scene_router::display_midnight(&mut self.renderer, state)
+            }
             Study(state) => screens::scene_router::display_study_options(
                 &mut self.renderer,
                 self.state_holder.observable_state().available_actions(),

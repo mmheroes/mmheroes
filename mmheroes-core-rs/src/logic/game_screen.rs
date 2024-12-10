@@ -34,6 +34,9 @@ pub enum GameScreen {
     /// Кафе в ПУНКе или ПОМИ
     Cafe(GameState),
 
+    /// В зависимости от локации, экран с сообщением о том, что пора домой.
+    Midnight(GameState),
+
     /// Электричка из ПУНКа в ПОМИ
     TrainToPDMI(GameState, scene_router::train::TrainScene),
 
@@ -162,6 +165,7 @@ impl GameScreen {
         match self {
             Timetable(state)
             | SceneRouter(state)
+            | Midnight(state)
             | Study(state)
             | PromptUseLectureNotes(state)
             | HighScores(state)

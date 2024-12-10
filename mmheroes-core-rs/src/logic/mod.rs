@@ -317,6 +317,6 @@ mod memory_tests {
     fn whole_game_memory() {
         let state_holder = StateHolder::new(GameMode::Normal);
         let game = create_game(0, &state_holder);
-        assert_eq!(size_of_val(&game), 1712);
+        assert_eq!(size_of_val(&game), 1696);
     }
 }

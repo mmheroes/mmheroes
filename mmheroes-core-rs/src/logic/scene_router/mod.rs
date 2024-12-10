@@ -103,9 +103,6 @@ async fn scene_dorm(
         Time((23 - core::cmp::max(50 - state.player.health, 0) / 12) as u8);
     let current_time = state.current_time();
     if current_time > time_to_sleep || current_time <= Time(3) {
-        // В оригинальной реализации есть проверка current_time <= Time(3), но она,
-        // кажется, никогда не должна быть истинной.
-        assert!(current_time > Time(3), "В такое время уже нужно спать");
         g.set_screen_and_wait_for_any_key(GameScreen::CantStayAwake(state.clone()))
             .await;
         sleep::sleep(g, state).await;

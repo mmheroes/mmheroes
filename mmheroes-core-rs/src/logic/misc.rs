@@ -49,22 +49,20 @@ pub(in crate::logic) async fn hour_pass(
     if state.current_time() == Time(24) {
         state.midnight();
         state.next_day();
-        midnight(g, state).await;
-    }
-}
-
-pub(in crate::logic) async fn midnight(
-    g: &mut InternalGameState<'_>,
-    state: &mut GameState,
-) {
-    match state.location() {
-        Location::PUNK => todo!("sub_1E907"),
-        Location::PDMI => todo!("sub_1E7F8"),
-        Location::ComputerClass => {
-            unreachable!("Компьютерный класс уже должен быть закрыт в полночь!")
+        match state.location() {
+            Location::PUNK | Location::PDMI | Location::Mausoleum => {
+                g.set_screen_and_wait_for_any_key(GameScreen::Midnight(state.clone()))
+                    .await;
+                if state.location() == Location::PDMI {
+                    decrease_health(state, 4, CauseOfDeath::FellAsleepInTheTrain);
+                }
+                state.set_location(Location::Dorm);
+            }
+            Location::Dorm => sleep::sleep(g, state).await,
+            Location::ComputerClass => {
+                unreachable!("Компьютерный класс уже должен быть закрыт в полночь!")
+            }
         }
-        Location::Dorm => sleep::sleep(g, state).await,
-        Location::Mausoleum => todo!("sub_1E993"),
     }
 }
 

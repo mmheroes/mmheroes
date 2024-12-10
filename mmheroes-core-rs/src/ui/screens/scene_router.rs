@@ -414,3 +414,31 @@ pub(in crate::ui) fn display_play_mmheroes(
         }
     }
 }
+
+pub(in crate::ui) fn display_midnight(
+    r: &mut Renderer<impl RendererRequestConsumer>,
+    state: &GameState,
+) -> WaitingState {
+    r.clear_screen();
+    r.set_color(Color::White, Color::Black);
+    match state.location() {
+        Location::PUNK => {
+            writeln!(r, "Вахтерша глядит на тебя странными глазами:");
+            writeln!(
+                r,
+                "что может делать бедный студент в университете в полночь?"
+            );
+            writeln!(r, "Не зная ответ на этот вопрос, ты спешишь в общагу.");
+        }
+        Location::PDMI => {
+            writeln!(r, "Ты глядишь на часы и видишь: уже полночь!");
+            writeln!(r, "На последней электричке ты едешь домой, в общагу.");
+        }
+        Location::Mausoleum => {
+            writeln!(r, "Мавзолей закрывается.");
+            writeln!(r, "Пора домой!");
+        }
+        Location::ComputerClass | Location::Dorm => unreachable!(),
+    }
+    wait_for_any_key(r)
+}
