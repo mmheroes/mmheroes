@@ -136,9 +136,14 @@ impl ClassmateInfo {
             Misha => {
                 typically_in(Location::PUNK, self);
                 maybe_on_exam(rng, current_location, today, self, || {
-                    Subject::all_subjects()
-                        .rev()
-                        .filter(|&subject| subject != Subject::PhysicalEducation)
+                    [
+                        Subject::English,
+                        Subject::GeometryAndTopology,
+                        Subject::Calculus,
+                        Subject::AlgebraAndNumberTheory,
+                    ]
+                    .iter()
+                    .cloned()
                 })
             }
             Serj => {
