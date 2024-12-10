@@ -275,7 +275,7 @@ mod memory_tests {
     #[test]
     fn observable_game_state_memory() {
         let observable_game_state = ObservableGameState::new(GameMode::Normal);
-        assert_eq!(size_of_val(&observable_game_state), 288);
+        assert_eq!(size_of_val(&observable_game_state), 216);
     }
 
     #[test]
@@ -290,33 +290,33 @@ mod memory_tests {
 
     #[test]
     fn exam_memory() {
-        assert_eq!(size_of::<timetable::Exam>(), 4);
+        assert_eq!(size_of::<timetable::Exam>(), 2);
     }
 
     #[test]
     fn day_memory() {
-        assert_eq!(size_of::<Day>(), 25);
+        assert_eq!(size_of::<Day>(), 14);
     }
 
     #[test]
     fn timetable_memory() {
-        assert_eq!(size_of::<Timetable>(), 150);
+        assert_eq!(size_of::<Timetable>(), 84);
     }
 
     #[test]
     fn game_state_memory() {
-        assert_eq!(size_of::<GameState>(), 232);
+        assert_eq!(size_of::<GameState>(), 164);
     }
 
     #[test]
     fn game_screen_memory() {
-        assert_eq!(size_of::<GameScreen>(), 240);
+        assert_eq!(size_of::<GameScreen>(), 172);
     }
 
     #[test]
     fn whole_game_memory() {
         let state_holder = StateHolder::new(GameMode::Normal);
         let game = create_game(0, &state_holder);
-        assert_eq!(size_of_val(&game), 1696);
+        assert_eq!(size_of_val(&game), 1416);
     }
 }

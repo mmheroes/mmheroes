@@ -208,14 +208,14 @@ pub enum Location {
 }
 
 impl Location {
-    const fn from_bits(bits: u8) -> Location {
+    pub(super) const fn from_bits(bits: u8) -> Location {
         match Location::from_repr(bits as usize) {
             Some(location) => location,
             None => panic!("Invalid location"),
         }
     }
 
-    const fn into_bits(self) -> u8 {
+    pub(super) const fn into_bits(self) -> u8 {
         self as _
     }
 

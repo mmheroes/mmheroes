@@ -1,6 +1,7 @@
 pub use crate::logic::{Location, Subject};
 
 use crate::logic::{GameScreen, GameState, InternalGameState};
+use bitfield_struct::bitfield;
 use core::fmt::{Display, Formatter};
 use core::ops::{Add, AddAssign, Rem, Sub};
 use strum::EnumCount;
@@ -132,69 +133,101 @@ impl TryFrom<Duration> for u64 {
     }
 }
 
-#[derive(Copy, Clone, Debug, Eq, PartialEq)]
-pub struct Exam {
+#[bitfield(u16, debug = true, default = false)]
+#[derive(Eq, PartialEq)]
+struct ExamBits {
+    #[bits(3)]
     subject: Subject,
+
+    #[bits(5)]
     from: Time,
+
+    #[bits(5)]
     to: Time,
+
+    #[bits(3, default = Location::PUNK)]
     location: Location,
 }
 
+#[derive(Debug, Clone, Copy, Eq, PartialEq)]
+pub struct Exam {
+    bits: ExamBits,
+}
+
 impl Exam {
-    pub(in crate::logic) fn new(
+    pub const NO_EXAM: Exam = Exam {
+        bits: ExamBits::new(),
+    };
+
+    pub(in crate::logic) const fn new(
         subject: Subject,
         from: Time,
         to: Time,
         location: Location,
     ) -> Exam {
         Exam {
-            subject,
-            from,
-            to,
-            location,
+            bits: ExamBits::new()
+                .with_subject(subject)
+                .with_from(from)
+                .with_to(to)
+                .with_location(location),
         }
     }
 
-    pub fn subject(&self) -> Subject {
-        self.subject
+    pub fn is_some(self) -> bool {
+        self != Exam::NO_EXAM
+    }
+
+    pub fn subject(self) -> Subject {
+        self.bits.subject()
     }
 
     /// Время начала зачёта
-    pub fn from(&self) -> Time {
-        self.from
+    pub fn from(self) -> Time {
+        self.bits.from()
     }
 
     /// Время окончания зачёта
-    pub fn to(&self) -> Time {
-        self.to
+    pub fn to(self) -> Time {
+        self.bits.to()
     }
 
     pub(in crate::logic) fn one_hour_more(&mut self) {
-        self.to += Duration(1);
+        self.bits.set_to(self.bits.to() + Duration(1));
     }
 
-    pub fn location(&self) -> Location {
-        self.location
+    pub fn location(self) -> Location {
+        self.bits.location()
     }
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Day {
     index: u8,
-    exams: [Option<Exam>; Subject::COUNT],
+    exams: [Exam; Subject::COUNT],
 }
 
 impl Day {
-    pub fn exam(&self, subject: Subject) -> Option<&Exam> {
-        self.exams[subject as usize].as_ref()
+    pub fn exam(&self, subject: Subject) -> Option<Exam> {
+        let exam = self.exams[subject as usize];
+        if exam.is_some() {
+            Some(exam)
+        } else {
+            None
+        }
     }
 
     pub(in crate::logic) fn exam_mut(&mut self, subject: Subject) -> Option<&mut Exam> {
-        self.exams[subject as usize].as_mut()
+        let exam = &mut self.exams[subject as usize];
+        if exam.is_some() {
+            Some(exam)
+        } else {
+            None
+        }
     }
 
     pub(in crate::logic) fn add_exam(&mut self, exam: Exam) {
-        self.exams[exam.subject as usize] = Some(exam)
+        self.exams[exam.subject() as usize] = exam
     }
 
     pub fn index(&self) -> usize {
@@ -202,7 +235,7 @@ impl Day {
     }
 
     pub fn exams(&self) -> impl Iterator<Item = &Exam> {
-        self.exams.iter().filter_map(|exam| exam.as_ref())
+        self.exams.iter().filter(|&exam| exam.is_some())
     }
 
     pub fn current_exams(
@@ -211,7 +244,7 @@ impl Day {
         time: Time,
     ) -> impl Iterator<Item = &Exam> {
         self.exams().filter(move |exam| {
-            exam.location == location && time >= exam.from && time < exam.to
+            exam.location() == location && time >= exam.from() && time < exam.to()
         })
     }
 }
@@ -226,7 +259,7 @@ impl Timetable {
         let mut days = [const {
             Day {
                 index: 0,
-                exams: [None; Subject::COUNT],
+                exams: [const { Exam::NO_EXAM }; Subject::COUNT],
             }
         }; NUM_DAYS];
 
@@ -314,140 +347,67 @@ mod tests {
                     Day {
                         index: 0,
                         exams: [
-                            None,
-                            Some(Exam {
-                                subject: Calculus,
-                                from: Time(13),
-                                to: Time(16),
-                                location: PUNK,
-                            }),
-                            None,
-                            None,
-                            None,
-                            Some(Exam {
-                                subject: PhysicalEducation,
-                                from: Time(12),
-                                to: Time(13),
-                                location: PUNK,
-                            }),
+                            Exam::NO_EXAM,
+                            Exam::new(Calculus, Time(13), Time(16), PUNK),
+                            Exam::NO_EXAM,
+                            Exam::NO_EXAM,
+                            Exam::NO_EXAM,
+                            Exam::new(PhysicalEducation, Time(12), Time(13), PUNK),
                         ],
                     },
                     Day {
                         index: 1,
                         exams: [
-                            Some(Exam {
-                                subject: AlgebraAndNumberTheory,
-                                from: Time(10),
-                                to: Time(12),
-                                location: PUNK,
-                            }),
-                            Some(Exam {
-                                subject: Calculus,
-                                from: Time(10),
-                                to: Time(13),
-                                location: PUNK,
-                            }),
-                            None,
-                            None,
-                            Some(Exam {
-                                subject: English,
-                                from: Time(11),
-                                to: Time(13),
-                                location: PUNK,
-                            }),
-                            None,
+                            Exam::new(AlgebraAndNumberTheory, Time(10), Time(12), PUNK),
+                            Exam::new(Calculus, Time(10), Time(13), PUNK),
+                            Exam::NO_EXAM,
+                            Exam::NO_EXAM,
+                            Exam::new(English, Time(11), Time(13), PUNK),
+                            Exam::NO_EXAM,
                         ],
                     },
                     Day {
                         index: 2,
                         exams: [
-                            Some(Exam {
-                                subject: AlgebraAndNumberTheory,
-                                from: Time(14),
-                                to: Time(17),
-                                location: PDMI,
-                            }),
-                            Some(Exam {
-                                subject: Calculus,
-                                from: Time(14),
-                                to: Time(17),
-                                location: PUNK,
-                            }),
-                            None,
-                            None,
-                            None,
-                            Some(Exam {
-                                subject: PhysicalEducation,
-                                from: Time(12),
-                                to: Time(13),
-                                location: PUNK,
-                            }),
+                            Exam::new(AlgebraAndNumberTheory, Time(14), Time(17), PDMI),
+                            Exam::new(Calculus, Time(14), Time(17), PUNK),
+                            Exam::NO_EXAM,
+                            Exam::NO_EXAM,
+                            Exam::NO_EXAM,
+                            Exam::new(PhysicalEducation, Time(12), Time(13), PUNK),
                         ],
                     },
                     Day {
                         index: 3,
-                        exams: [None, None, None, None, None, None],
+                        exams: [
+                            Exam::NO_EXAM,
+                            Exam::NO_EXAM,
+                            Exam::NO_EXAM,
+                            Exam::NO_EXAM,
+                            Exam::NO_EXAM,
+                            Exam::NO_EXAM,
+                        ],
                     },
                     Day {
                         index: 4,
                         exams: [
-                            Some(Exam {
-                                subject: AlgebraAndNumberTheory,
-                                from: Time(9),
-                                to: Time(12),
-                                location: PDMI,
-                            }),
-                            None,
-                            Some(Exam {
-                                subject: GeometryAndTopology,
-                                from: Time(12),
-                                to: Time(14),
-                                location: PDMI,
-                            }),
-                            Some(Exam {
-                                subject: ComputerScience,
-                                from: Time(16),
-                                to: Time(18),
-                                location: ComputerClass,
-                            }),
-                            Some(Exam {
-                                subject: English,
-                                from: Time(12),
-                                to: Time(14),
-                                location: PUNK,
-                            }),
-                            None,
+                            Exam::new(AlgebraAndNumberTheory, Time(9), Time(12), PDMI),
+                            Exam::NO_EXAM,
+                            Exam::new(GeometryAndTopology, Time(12), Time(14), PDMI),
+                            Exam::new(ComputerScience, Time(16), Time(18), ComputerClass),
+                            Exam::new(English, Time(12), Time(14), PUNK),
+                            Exam::NO_EXAM,
                         ],
                     },
                     Day {
                         index: 5,
                         exams: [
-                            Some(Exam {
-                                subject: AlgebraAndNumberTheory,
-                                from: Time(12),
-                                to: Time(14),
-                                location: PUNK,
-                            }),
-                            Some(Exam {
-                                subject: Calculus,
-                                from: Time(12),
-                                to: Time(15),
-                                location: PUNK,
-                            }),
-                            Some(Exam {
-                                subject: GeometryAndTopology,
-                                from: Time(14),
-                                to: Time(16),
-                                location: PDMI,
-                            }),
-                            Some(Exam {
-                                subject: ComputerScience,
-                                from: Time(11),
-                                to: Time(12),
-                                location: ComputerClass,
-                            }),
-                            None,
-                            None,
+                            Exam::new(AlgebraAndNumberTheory, Time(12), Time(14), PUNK),
+                            Exam::new(Calculus, Time(12), Time(15), PUNK),
+                            Exam::new(GeometryAndTopology, Time(14), Time(16), PDMI),
+                            Exam::new(ComputerScience, Time(11), Time(12), ComputerClass),
+                            Exam::NO_EXAM,
+                            Exam::NO_EXAM,
                         ],
                     },
                 ],
