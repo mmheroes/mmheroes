@@ -347,6 +347,9 @@ pub(in crate::ui) fn display_exam(
                     writeln_random_color(r, rng, "Ты готов к любым испытаниям.");
                 }
                 EnglishExamFeeling::Money => {
+                    // FIXME: Эта логика неправильная. Если у игрока изначально не было
+                    //   денег, то исполнится первая ветка, но на самом деле деньги
+                    //   появятся!
                     if state.player().money() == 0 {
                         writeln_random_color(
                             r,
