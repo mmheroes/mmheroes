@@ -1,10 +1,8 @@
 mod common;
 
-use assert_matches::assert_matches;
 use common::*;
 use mmheroes_core::logic::actions::PlayStyle;
-use mmheroes_core::logic::grisha::{GrishaInteraction, GrishaReply};
-use mmheroes_core::logic::{Action, CauseOfDeath, Classmate, GameMode, GameScreen, Time};
+use mmheroes_core::logic::GameMode;
 
 #[test]
 fn grisha() {
@@ -13,761 +11,974 @@ fn grisha() {
 
     // Ждём когда в мавзолее появится Гриша, идём в Мавзолей
     replay_game(game_ui, "2↓r2↓r6↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(10));
-            assert_characteristics!(
-                state,
-                health: 64,
-                money: 0,
-                brain: 5,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 10:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (64)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
-    assert!(state
-        .observable_state()
-        .available_actions()
-        .contains(&Action::InteractWithClassmate(Classmate::Grisha)));
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
 
     // Подходим к Грише. Он поит пивом, проходит час.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::ThirdYearStudentsDontAttendLectures,
-                drink_beer: true,
-                hour_pass: true,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(10));
-            assert_characteristics!(
-                state,
-                health: 64,
-                money: 0,
-                brain: 5,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 10:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (64)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова свежая (5)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Гриша:"На третьем курсе на лекции уже никто не ходит. Почти никто."
+И еще по пиву...
+И еще один час прошел в бесплодных разговорах...
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
 
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(11));
-            assert_characteristics!(
-                state,
-                health: 64,
-                money: 0,
-                brain: 4,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 11:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (64)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова в норме (4)                          Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+С меня хватит!                                   Физ-ра  ----           0/1
+    "
     );
-    assert!(!state
-        .observable_state()
-        .available_actions()
-        .contains(&Action::InteractWithClassmate(Classmate::Grisha)));
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
 
     // Гриша ушёл. Отдыхаем шесть часов, пока он не появится.
     replay_game(game_ui, "3↓2r3↓2r3↓2r3↓2r3↓2r3↓2r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 4,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова в норме (4)                          Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
-    assert!(state
-        .observable_state()
-        .available_actions()
-        .contains(&Action::InteractWithClassmate(Classmate::Grisha)));
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
 
     // Снова подходим к Грише. Он предлагает устроиться в ТЕРКОМ
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::PromptEmploymentAtTerkom
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 4,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова в норме (4)                          Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+"А ты не хочешь устроиться в ТЕРКОМ? Может, кое-чего подзаработаешь..."
+
+Да, мне бы не помешало.▁
+Нет, я лучше поучусь уще чуток.
+    "#
     );
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
 
     // Соглашаемся
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::CongratulationsYouAreNowEmployed
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 4,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова в норме (4)                          Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+"А ты не хочешь устроиться в ТЕРКОМ? Может, кое-чего подзаработаешь..."
+
+Да, мне бы не помешало.
+Нет, я лучше поучусь уще чуток.
+
+
+"Поздравляю, теперь ты можешь идти в "контору"!"
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
 
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 4,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова в норме (4)                          Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
+    assert!(!state.game_state().player().has_internet());
+    assert!(state.game_state().player().is_employed_at_terkom());
 
     // Снова подходим к Грише. Он подсказывает адрес прокси-сервера.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::ProxyAddress
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 4,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова в норме (4)                          Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+"Кстати, я тут знаю один качественно работающий прокси-сервер..."
+
+Ты записываешь адрес. Вдруг пригодится?
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
+    );
+    assert!(!state.game_state().player().has_internet());
+    assert!(state.game_state().player().is_employed_at_terkom());
+
+    replay_game(game_ui, "r");
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова в норме (4)                          Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
+    );
+    assert!(state.game_state().player().has_internet());
+    assert!(state.game_state().player().is_employed_at_terkom());
+
+    // Снова подходим к Грише. Он просто выкидывает реплику.
+    replay_game(game_ui, "2↑r");
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова в норме (4)                          Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Гриша:"Вот, бери пример с Коли."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
 
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 4,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова в норме (4)                          Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
+    );
+
+    // Снова подходим к Грише. Он поит пивом.
+    replay_game(game_ui, "2↑r");
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова в норме (4)                          Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Гриша:"Имена главных халявчиков и алкоголиков висят на баобабе."
+И еще по пиву...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
+    );
+
+    replay_game(game_ui, "r");
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
 
     // Снова подходим к Грише. Он просто выкидывает реплику.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::TakeExampleFromKolya,
-                drink_beer: false,
-                hour_pass: false,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 4,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Гриша:"Чтобы получить диплом, учиться совершенно необязательно!"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 4,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
 
     // Снова подходим к Грише. Он поит пивом.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::NamesOfFreebieLovers,
-                drink_beer: true,
-                hour_pass: false,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 4,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Гриша:"Правильно, лучше посидим здесь и оттянемся!"
+И еще по пиву...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
 
     // Снова подходим к Грише. Он просто выкидывает реплику.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::NoNeedToStudyToGetDiploma,
-                drink_beer: false,
-                hour_pass: false,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Гриша:"Ну вот, ты готовился... Помогло это тебе?"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
 
     // Снова подходим к Грише. Он поит пивом.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::SitHereAndChill,
-                drink_beer: true,
-                hour_pass: false,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя много друзей (5)                     Физ-ра                0   Плохо
+
+Гриша:"Ненавижу Льва Толстого! Вчера "Войну и мир" <йк> ксерил..."
+И еще по пиву...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (6)               Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
 
     // Снова подходим к Грише. Он просто выкидывает реплику.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::YouStudiedDidItHelp,
-                drink_beer: false,
-                hour_pass: false,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (6)               Физ-ра                0   Плохо
+
+Гриша:"Чтобы получить диплом, учиться совершенно необязательно!"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (6)               Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
 
     // Снова подходим к Грише. Он поит пивом.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::HateLevTolstoy,
-                drink_beer: true,
-                hour_pass: false,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 5,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (6)               Физ-ра                0   Плохо
+
+Гриша:"Вот у механиков - у них халява!"
+И еще по пиву...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 6,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (7)               Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
 
     // Снова подходим к Грише. Он просто выкидывает реплику.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::NoNeedToStudyToGetDiploma,
-                drink_beer: false,
-                hour_pass: false,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 6,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (7)               Физ-ра                0   Плохо
+
+Гриша:"На третьем курсе на лекции уже никто не ходит. Почти никто."
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 6,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (7)               Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
 
     // Снова подходим к Грише. Он поит пивом.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::MechanicsHaveFreebie,
-                drink_beer: true,
-                hour_pass: false,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 6,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
-    );
-    replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 7,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Голова почти в норме (3)                    Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (7)               Физ-ра                0   Плохо
+
+Гриша:"А в ПОМИ лучше вообще не ездить!"
+И еще по пиву...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
 
-    // Снова подходим к Грише. Он просто выкидывает реплику.
-    replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::ThirdYearStudentsDontAttendLectures,
-                drink_beer: false,
-                hour_pass: false,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 7,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
-    );
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 7,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Думать трудно (2)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (7)               Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
 
     // Снова подходим к Грише. Он поит пивом.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::DontGoToPDMI,
-                drink_beer: true,
-                hour_pass: false,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 3,
-                stamina: 4,
-                charisma: 7,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
-    );
-    replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 2,
-                stamina: 4,
-                charisma: 7,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Думать трудно (2)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (7)               Физ-ра                0   Плохо
+
+Гриша:"Чтобы получить диплом, учиться совершенно необязательно!"
+И еще по пиву...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
 
-    // Снова подходим к Грише. Он поит пивом.
-    replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::NoNeedToStudyToGetDiploma,
-                drink_beer: true,
-                hour_pass: false,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 2,
-                stamina: 4,
-                charisma: 7,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
-    );
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 2,
-                stamina: 4,
-                charisma: 8,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Думать трудно (2)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (8)               Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
 
     // Снова подходим к Грише. Он поит пивом, проходит час
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::FreebieComeToMe,
-                drink_beer: true,
-                hour_pass: true,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(17));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 2,
-                stamina: 4,
-                charisma: 8,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 17:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Думать трудно (2)                           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (8)               Физ-ра                0   Плохо
+
+Гриша:"Прийди же, о халява!"
+И еще по пиву...
+И еще один час прошел в бесплодных разговорах...
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(18));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 1,
-                stamina: 4,
-                charisma: 8,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 18:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Думать практически невозможно (1)           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (8)               Физ-ра                0   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ПУНК  13-15    0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     ----           0/2
+Коля                                             ИнЯз    ПУНК  14-16    0/3
+Гриша                                            Физ-ра  ----           0/1
+С меня хватит!
+    "
     );
 
     // Снова подходим к Грише. Он поит пивом, проходит час. Умираем от пива.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::NamesOfFreebieLovers,
-                drink_beer: true,
-                hour_pass: true,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(18));
-            assert_characteristics!(
-                state,
-                health: 70,
-                money: 0,
-                brain: 1,
-                stamina: 4,
-                charisma: 8,
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 18:00   Версия gamma3.14   Алгебра и Т.Ч.        2   Плохо
+Самочувствие: отличное (70)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 3   Плохо
+Думать практически невозможно (1)           Информатика           0   Плохо
+Немного устал (4)                           English               4   Плохо
+У тебя очень много друзей (8)               Физ-ра                0   Плохо
+
+Гриша:"Имена главных халявчиков и алкоголиков висят на баобабе."
+И еще по пиву...
+И еще один час прошел в бесплодных разговорах...
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GameEnd(state) => {
-            assert_eq!(state.current_time(), Time(19));
-            assert_characteristics!(
-                state,
-                health: 0,
-                money: 0,
-                brain: 0,
-                stamina: 4,
-                charisma: 8,
-            );
-            assert_matches!(
-                state.player().cause_of_death(),
-                Some(CauseOfDeath::DrankTooMuchBeer)
-            );
-            assert!(state.player().has_internet());
-            assert!(state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Легче лбом колоть орехи,
+чем учиться на МАТ-МЕХе.
+Губит людей не пиво, а избыток пива.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "
     );
 }
 
@@ -778,157 +989,221 @@ fn grisha_refuse_terkom() {
 
     // Идём в Мавзолей, ждём когда там появится Гриша
     replay_game(game_ui, "6↓r2↑2r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(9));
-            assert_characteristics!(
-                state,
-                health: 46,
-                money: 0,
-                brain: 4,
-                stamina: 3,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 9:00    Версия gamma3.14   Алгебра и Т.Ч.        1   Плохо
+Самочувствие: отличное (46)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 1   Плохо
+Голова в норме (4)                          Информатика           1   Плохо
+Еще немного и пора отдыхать (3)             English               0   Плохо
+У тебя много друзей (5)                     Физ-ра                2   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ----           0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     Компы 16-17    0/2
+Гриша                                            ИнЯз    ПУНК  13-15    0/3
+С меня хватит!                                   Физ-ра  ----           0/1
+    "
     );
-    assert!(state
-        .observable_state()
-        .available_actions()
-        .contains(&Action::InteractWithClassmate(Classmate::Grisha)));
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
 
     // Подходим к Грише. Он поит пивом.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::CantBeExpelledInFourthYear,
-                drink_beer: true,
-                hour_pass: false,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(9));
-            assert_characteristics!(
-                state,
-                health: 46,
-                money: 0,
-                brain: 4,
-                stamina: 3,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 9:00    Версия gamma3.14   Алгебра и Т.Ч.        1   Плохо
+Самочувствие: отличное (46)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 1   Плохо
+Голова в норме (4)                          Информатика           1   Плохо
+Еще немного и пора отдыхать (3)             English               0   Плохо
+У тебя много друзей (5)                     Физ-ра                2   Плохо
+
+Гриша:"А с четвертого курса вылететь уже почти невозможно."
+И еще по пиву...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
+
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(9));
-            assert_characteristics!(
-                state,
-                health: 46,
-                money: 0,
-                brain: 4,
-                stamina: 3,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 9:00    Версия gamma3.14   Алгебра и Т.Ч.        1   Плохо
+Самочувствие: отличное (46)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 1   Плохо
+Голова в норме (4)                          Информатика           1   Плохо
+Еще немного и пора отдыхать (3)             English               0   Плохо
+У тебя много друзей (5)                     Физ-ра                2   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ----           0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     Компы 16-17    0/2
+Гриша                                            ИнЯз    ПУНК  13-15    0/3
+С меня хватит!                                   Физ-ра  ----           0/1
+    "
     );
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
 
     // Снова подходим к Грише. Он предлагает устроиться в ТЕРКОМ.
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(_, GrishaInteraction::PromptEmploymentAtTerkom)
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 9:00    Версия gamma3.14   Алгебра и Т.Ч.        1   Плохо
+Самочувствие: отличное (46)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 1   Плохо
+Голова в норме (4)                          Информатика           1   Плохо
+Еще немного и пора отдыхать (3)             English               0   Плохо
+У тебя много друзей (5)                     Физ-ра                2   Плохо
+
+"А ты не хочешь устроиться в ТЕРКОМ? Может, кое-чего подзаработаешь..."
+
+Да, мне бы не помешало.▁
+Нет, я лучше поучусь уще чуток.
+    "#
     );
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
 
     // Отказываемся
     replay_game(game_ui, "↓r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::AsYouWantButDontOverstudy
-        ) => {
-            assert_eq!(state.current_time(), Time(9));
-            assert_characteristics!(
-                state,
-                health: 46,
-                money: 0,
-                brain: 4,
-                stamina: 3,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 9:00    Версия gamma3.14   Алгебра и Т.Ч.        1   Плохо
+Самочувствие: отличное (46)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 1   Плохо
+Голова в норме (4)                          Информатика           1   Плохо
+Еще немного и пора отдыхать (3)             English               0   Плохо
+У тебя много друзей (5)                     Физ-ра                2   Плохо
+
+"А ты не хочешь устроиться в ТЕРКОМ? Может, кое-чего подзаработаешь..."
+
+Да, мне бы не помешало.
+Нет, я лучше поучусь уще чуток.
+
+
+"Как хочешь. Только смотри, не заучись там ..."
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
 
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(9));
-            assert_characteristics!(
-                state,
-                health: 46,
-                money: 0,
-                brain: 4,
-                stamina: 3,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 9:00    Версия gamma3.14   Алгебра и Т.Ч.        1   Плохо
+Самочувствие: отличное (46)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 1   Плохо
+Голова в норме (4)                          Информатика           1   Плохо
+Еще немного и пора отдыхать (3)             English               0   Плохо
+У тебя много друзей (5)                     Физ-ра                2   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ----           0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     Компы 16-17    0/2
+Гриша                                            ИнЯз    ПУНК  13-15    0/3
+С меня хватит!                                   Физ-ра  ----           0/1
+    "
     );
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
 
     // Снова подходим к Грише. Проходит час
     replay_game(game_ui, "2↑r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::GrishaInteraction(
-            state,
-            GrishaInteraction::RandomReply {
-                reply: GrishaReply::NamesOfFreebieLovers,
-                drink_beer: false,
-                hour_pass: true,
-            }
-        ) => {
-            assert_eq!(state.current_time(), Time(9));
-            assert_characteristics!(
-                state,
-                health: 46,
-                money: 0,
-                brain: 4,
-                stamina: 3,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        r#"
+Сегодня 22е мая; 9:00    Версия gamma3.14   Алгебра и Т.Ч.        1   Плохо
+Самочувствие: отличное (46)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 1   Плохо
+Голова в норме (4)                          Информатика           1   Плохо
+Еще немного и пора отдыхать (3)             English               0   Плохо
+У тебя много друзей (5)                     Физ-ра                2   Плохо
+
+Гриша:"Имена главных халявчиков и алкоголиков висят на баобабе."
+И еще один час прошел в бесплодных разговорах...
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Нажми любую клавишу ...▁
+    "#
     );
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
+
     replay_game(game_ui, "r");
-    assert_matches!(
-        state.observable_state().screen(),
-        GameScreen::SceneRouter(state) => {
-            assert_eq!(state.current_time(), Time(10));
-            assert_characteristics!(
-                state,
-                health: 46,
-                money: 0,
-                brain: 4,
-                stamina: 3,
-                charisma: 5,
-            );
-            assert!(!state.player().has_internet());
-            assert!(!state.player().is_employed_at_terkom());
-        }
+    assert_ui!(
+        game_ui,
+        "
+Сегодня 22е мая; 10:00   Версия gamma3.14   Алгебра и Т.Ч.        1   Плохо
+Самочувствие: отличное (46)                 Мат. Анализ           0   Плохо
+Финансы: Надо получить деньги за май...     Геометрия и Топология 1   Плохо
+Голова в норме (4)                          Информатика           1   Плохо
+Еще немного и пора отдыхать (3)             English               0   Плохо
+У тебя много друзей (5)                     Физ-ра                2   Плохо
+
+Ты в мавзолее. Что делать?
+
+Идти в ПУНК▁                                     АиТЧ    ----           0/12
+Поехать в ПОМИ                                   МатАн   ----           0/10
+Идти в общагу                                    ГиТ     ----           0/3
+Отдыхать                                         Инф     Компы 16-17    0/2
+Коля                                             ИнЯз    ПУНК  13-15    0/3
+С меня хватит!                                   Физ-ра  ----           0/1
+    "
     );
+    assert!(!state.game_state().player().has_internet());
+    assert!(!state.game_state().player().is_employed_at_terkom());
 }

@@ -1,6 +1,6 @@
 use assert_matches::assert_matches;
 use mmheroes_core::logic::actions::PlayStyle;
-use mmheroes_core::logic::{Game, GameMode, GameScreen, StateHolder};
+use mmheroes_core::logic::{Game, GameMode, GameScreen, GameState, StateHolder};
 use mmheroes_core::ui::recording::{InputRecordingParser, InputRecordingParserError};
 use mmheroes_core::ui::renderer::RendererRequestConsumer;
 use mmheroes_core::ui::*;
@@ -137,6 +137,17 @@ pub fn replay_until_dorm<G: Game>(
         state.observable_state().screen(),
         GameScreen::SceneRouter(_)
     );
+}
+
+pub trait AsGameState {
+    #[allow(dead_code)] // false positive
+    fn game_state(&self) -> core::cell::Ref<GameState>;
+}
+
+impl AsGameState for StateHolder {
+    fn game_state(&self) -> core::cell::Ref<GameState> {
+        core::cell::Ref::map(self.observable_state(), |s| s.screen().state().unwrap())
+    }
 }
 
 #[macro_export]
