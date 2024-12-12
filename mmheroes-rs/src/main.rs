@@ -104,12 +104,24 @@ mod high_scores {
 
 use screen::ScreenRAII;
 
-fn getch(window: &ScreenRAII) -> ui::Input {
+fn getch<G, C>(window: &ScreenRAII, game_ui: &mut GameUI<'_, G, C, String>) -> ui::Input {
     loop {
         let ui_input = match window.getch() {
             None | Some(pancurses::Input::KeyResize) => continue,
             Some(pancurses::Input::KeyUp) => ui::Input::KeyUp,
             Some(pancurses::Input::KeyDown) => ui::Input::KeyDown,
+            Some(pancurses::Input::Character('\u{1b}')) => {
+                if cfg!(debug_assertions) {
+                    // В отладочной конфигурации по нажатию Esc печатаем шаги.
+                    // Удобно для тестирования.
+                    endwin();
+                    game_ui.flush_input_recorder().unwrap();
+                    println!("Шаги: {}", game_ui.recorded_input().unwrap());
+                    std::process::exit(0);
+                } else {
+                    ui::Input::Other
+                }
+            }
             Some(pancurses::Input::Character('\n')) => ui::Input::Enter,
             Some(_) => ui::Input::Other,
         };
@@ -248,13 +260,13 @@ fn main() -> ExitCode {
             Ok(()) => {}
             Err(error) => panic!("Parsing steps failed: {:?}", error),
         }
-        getch(&window)
+        getch(&window, &mut game_ui)
     } else {
         ui::Input::Enter
     };
 
     while game_ui.continue_game(input) {
-        input = getch(&window);
+        input = getch(&window, &mut game_ui);
     }
 
     if game_ui.has_bug() {

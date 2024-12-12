@@ -26,7 +26,7 @@ pub trait RendererRequestConsumer {
     fn consume_request(&mut self, request: RendererRequest);
 }
 
-pub(in crate::ui) struct Renderer<C: RendererRequestConsumer> {
+pub(in crate::ui) struct Renderer<C> {
     request_consumer: C,
     line: Line,
     column: Column,

@@ -119,7 +119,7 @@ enum SoftwareState {
 pub struct GameUI<
     'game,
     G,
-    C: RendererRequestConsumer,
+    C,
     InputSink: core::fmt::Write + Display = recording::NoInputRecording,
 > {
     seed: u64,
@@ -157,14 +157,6 @@ impl<
             high_scores: high_scores.unwrap_or(default_high_scores),
             software_state: SoftwareState::Healthy,
             input_recorder: input_sink.map(InputRecorder::new),
-        }
-    }
-
-    pub fn flush_input_recorder(&mut self) -> core::fmt::Result {
-        if let Some(input_recorder) = &mut self.input_recorder {
-            input_recorder.flush()
-        } else {
-            Ok(())
         }
     }
 
@@ -507,6 +499,22 @@ impl<
 
     pub fn request_consumer(&self) -> &C {
         self.renderer.request_consumer()
+    }
+}
+
+impl<G, C, InputSink: core::fmt::Write + Display> GameUI<'_, G, C, InputSink> {
+    pub fn flush_input_recorder(&mut self) -> core::fmt::Result {
+        if let Some(input_recorder) = &mut self.input_recorder {
+            input_recorder.flush()
+        } else {
+            Ok(())
+        }
+    }
+
+    pub fn recorded_input(&self) -> Option<&InputSink> {
+        self.input_recorder
+            .as_ref()
+            .map(|input_recorder| input_recorder.output())
     }
 }
 
