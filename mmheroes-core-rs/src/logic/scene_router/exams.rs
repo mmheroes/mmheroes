@@ -7,7 +7,7 @@ use actions::{
     NpcApproachAction,
 };
 use core::cmp::{max, min};
-use strum::VariantArray;
+use strum::{EnumCount, EnumIter, VariantArray};
 
 pub(super) async fn go_to_professor(
     g: &mut InternalGameState<'_>,
@@ -439,7 +439,7 @@ async fn suffer_exam(
     }
 }
 
-#[derive(Debug, Copy, Clone, VariantArray)]
+#[derive(Debug, Copy, Clone, EnumIter, EnumCount)]
 pub enum EnglishExamFeeling {
     /// "Тебе сильно поплохело.
     /// Фея была явно не в настроении."
@@ -472,10 +472,7 @@ pub enum EnglishExamFeeling {
     /// "Ты готов к любым испытаниям."
     ReadyForEverything,
 
-    /// "Пока твои глаза были закрыты, кто-то утащил твои деньги!!!"
-    /// или
-    /// "Ты нашел в своем кармане какие-то деньги!"
-    Money,
+    Money(EnglishExamFeelingMoney),
 
     /// "Ты чувствуешь, что от тебя сильно несет чесноком.
     /// Не знаю, выветрится ли такой сильный запах..."
@@ -483,6 +480,16 @@ pub enum EnglishExamFeeling {
 
     /// "Странное чувство быстро прошло."
     QuicklyFadedAway,
+}
+
+#[derive(Debug, Copy, Clone, Default)]
+pub enum EnglishExamFeelingMoney {
+    /// "Пока твои глаза были закрыты, кто-то утащил твои деньги!!!"
+    #[default]
+    Stolen,
+
+    /// "Ты нашел в своем кармане какие-то деньги!"
+    Found,
 }
 
 async fn exam_passed(
@@ -503,13 +510,24 @@ async fn exam_passed(
             );
         }
         Subject::English => {
-            const FEELING_COUNT: usize = EnglishExamFeeling::VARIANTS.len() + 2;
-            let mut possible_feelings =
-                TinyVec::<_, FEELING_COUNT>::from(EnglishExamFeeling::VARIANTS);
+            const FEELING_COUNT: usize = EnglishExamFeeling::COUNT + 2;
+            let mut possible_feelings = TinyVec::<_, FEELING_COUNT>::new();
+            for feeling in EnglishExamFeeling::iter() {
+                let feeling = if let EnglishExamFeeling::Money(_) = feeling {
+                    EnglishExamFeeling::Money(if state.player.money > 0 {
+                        EnglishExamFeelingMoney::Stolen
+                    } else {
+                        EnglishExamFeelingMoney::Found
+                    })
+                } else {
+                    feeling
+                };
+                possible_feelings.push(feeling);
+            }
 
             // Запах чеснока чуть более вероятен
-            possible_feelings
-                .extend(core::iter::repeat(EnglishExamFeeling::SmellOfGarlic).take(2));
+            possible_feelings.push(EnglishExamFeeling::SmellOfGarlic);
+            possible_feelings.push(EnglishExamFeeling::SmellOfGarlic);
 
             let feeling = *g.rng.random_element(&possible_feelings);
             g.set_screen_and_wait_for_any_key(GameScreen::Exam(
@@ -554,12 +572,11 @@ async fn exam_passed(
                 EnglishExamFeeling::ReadyForEverything => {
                     state.player.stamina += g.rng.random_in_range(1..4);
                 }
-                EnglishExamFeeling::Money => {
-                    if state.player.money > 0 {
-                        state.player.money = Money(0)
-                    } else {
-                        state.player.money = Money(20)
-                    }
+                EnglishExamFeeling::Money(EnglishExamFeelingMoney::Stolen) => {
+                    state.player.money = Money(0);
+                }
+                EnglishExamFeeling::Money(EnglishExamFeelingMoney::Found) => {
+                    state.player.money = Money(20);
                 }
                 EnglishExamFeeling::SmellOfGarlic => {
                     let garlic = g.rng.random_in_range(1..5);

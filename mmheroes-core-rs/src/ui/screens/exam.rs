@@ -1,5 +1,5 @@
 use crate::logic::scene_router::exams::{
-    BenefitsOfRunning, EnglishExamFeeling, ExamIntro, ExamScene,
+    BenefitsOfRunning, EnglishExamFeeling, EnglishExamFeelingMoney, ExamIntro, ExamScene,
 };
 use crate::logic::{Action, GameState, Subject};
 use crate::ui::dialog::dialog;
@@ -346,23 +346,19 @@ pub(in crate::ui) fn display_exam(
                 EnglishExamFeeling::ReadyForEverything => {
                     writeln_random_color(r, rng, "Ты готов к любым испытаниям.");
                 }
-                EnglishExamFeeling::Money => {
-                    // FIXME: Эта логика неправильная. Если у игрока изначально не было
-                    //   денег, то исполнится первая ветка, но на самом деле деньги
-                    //   появятся!
-                    if state.player().money() == 0 {
-                        writeln_random_color(
-                            r,
-                            rng,
-                            "Пока твои глаза были закрыты, кто-то утащил твои деньги!!!",
-                        );
-                    } else {
-                        writeln_random_color(
-                            r,
-                            rng,
-                            "Ты нашел в своем кармане какие-то деньги!",
-                        );
-                    }
+                EnglishExamFeeling::Money(EnglishExamFeelingMoney::Stolen) => {
+                    writeln_random_color(
+                        r,
+                        rng,
+                        "Пока твои глаза были закрыты, кто-то утащил твои деньги!!!",
+                    );
+                }
+                EnglishExamFeeling::Money(EnglishExamFeelingMoney::Found) => {
+                    writeln_random_color(
+                        r,
+                        rng,
+                        "Ты нашел в своем кармане какие-то деньги!",
+                    );
                 }
                 EnglishExamFeeling::SmellOfGarlic => {
                     writeln_random_color(
